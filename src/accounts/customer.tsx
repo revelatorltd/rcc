@@ -75,7 +75,9 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
         name: customer.name,
         facts: [
           { identifier: customer.id, standard: "id" },
-          { identifier: record.stripe, standard: "id" },
+          // ISSUED by Stripe and not by Revelator: the chip leads with the mark of the service it
+          // belongs to, so the two codes side by side are not two of the same.
+          { identifier: record.stripe, standard: "id", issuer: "stripe" },
           { as: "date", value: customer.created },
         ],
         // ONE command stands out, and it is the step owed next: a customer with no subscription
