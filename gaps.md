@@ -28,6 +28,8 @@ Churned, Terminated), the form for a set that divides into parts a reader moves 
 | 9 | A **long name** in the record header — cut at 335 of 960 px at 1440 wide, beside the mark and three controls | full name | truncated (Bluefen Distri…) |
 | 10 | A **Stripe ID** told apart from Revelator's own — the Stripe mark on its chip. No Stripe mark in the set, and an identifier chip draws its standard's mark itself: asked of the system (2026-10-16) | `Stripe cus_…` chip | an identifier among the facts, unlabelled |
 | 11 | Subscription coupon, note and creation date | columns | not held by the fixtures yet |
+| 12 | **Revelator Revenue** and **Client Revenue** as metrics, so one TrendCard can tab between them — asked of the system (2026-10-16) | — | two stat cards, last complete month |
+| 13 | An **empty state in a card's grey recess**, centred and filling a card stretched by its row. `Slot layout="empty"` holding the EmptyState is refused by check:page (no SlotItem); inside a SlotItem the EmptyState is squeezed and clipped; and the empty slot does not grow (170 of 280 px). Asked of the system (2026-10-16) | — | the EmptyState straight in the card, no recess |
 
 ## Not built yet
 

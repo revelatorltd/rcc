@@ -109,11 +109,11 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
   const owed = customer.subscriptions.length === 0;
   return (
     <DetailOverview>
-      {/* What the customer is worth NOW — three peers, none read against another. */}
+      {/* What the customer is worth NOW — two peers, none read against another. To be ONE trend
+          card with a tab each once the system has the two metrics (gaps.md). */}
       <StatCardRow>
         <StatCard name="Revelator revenue" hint="Revelator's share of the last complete month" as="money" value={record.revelatorRevenue} />
         <StatCard name="Client revenue" hint="What the customer's catalogue earned in the last complete month" as="money" value={record.clientRevenue} />
-        <StatCard name="Live releases" as="count" value={record.liveReleases} />
       </StatCardRow>
       <DetailOverviewGrid>
         <FacetCard
