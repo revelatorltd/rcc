@@ -23,8 +23,8 @@ export interface Subscription {
 export interface Customer {
   id: string;
   name: string;
-  /** The organization whose mark the customer wears — Revelator's own for the demo account. */
-  organization: OrganizationSlug;
+  /** The organization whose mark the customer wears, where it has one — the demo account has none. */
+  organization?: OrganizationSlug;
   email?: string;
   status: CustomerStatus;
   type: CustomerType;
@@ -55,7 +55,7 @@ export const CUSTOMERS: readonly Customer[] = [
   { id: "420", name: "Harrow Street Sound", organization: "harrow-street-sound", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Rharrow420")], dspRate: 0, created: day(2025, 7, 1) },
   { id: "413", name: "Mistral Arcade", organization: "mistral-arcade", email: "hello@mistralarcade.fr", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rmistral413")], dspRate: 20, created: day(2025, 3, 18) },
   { id: "406", name: "Cinderwell Music", organization: "cinderwell-music", email: "ops@cinderwell.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcinder406")], dspRate: 12, created: day(2024, 11, 26) },
-  { id: "232", name: "RCC Demo Account", organization: "revelator", email: "demo@revelator.example", status: "Active", type: "Demo", subscriptions: [{ id: "sub_1PdemoPro", sandbox: true, product: "Revelator Pro" }, { id: "sub_1PdemoAPI", sandbox: true, product: "API" }], dspRate: 15, created: day(2024, 3, 12) },
+  { id: "232", name: "RCC Demo Account", email: "demo@revelator.example", status: "Active", type: "Demo", subscriptions: [{ id: "sub_1PdemoPro", sandbox: true, product: "Revelator Pro" }, { id: "sub_1PdemoAPI", sandbox: true, product: "API" }], dspRate: 15, created: day(2024, 3, 12) },
   { id: "219", name: "Foxglove Ridge Records", organization: "foxglove-ridge-records", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Pfoxglove219")], dspRate: 20, created: day(2023, 9, 5) },
 ];
 
