@@ -131,21 +131,25 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
   return (
     <DetailOverview>
       {/* How what the customer is worth has MOVED: what Revelator earned from it and what its
-          catalogue earned, two cards read one against the other over the same months. */}
-      <DetailOverviewTrends>
-        <TrendCard
-          metric="Revelator Revenue"
-          period="Last 12 Months"
-          labels={LABELS}
-          values={monthlyOf(record.revelatorRevenue)}
-        />
-        <TrendCard
-          metric="Client Revenue"
-          period="Last 12 Months"
-          labels={LABELS}
-          values={monthlyOf(record.clientRevenue)}
-        />
-      </DetailOverviewTrends>
+          catalogue earned, two cards read one against the other over the same months. NONE while
+          it is onboarding: nothing is live yet, so there is no movement to read — the band is
+          left out rather than drawn empty. */}
+      {customer.status === "Onboarding" ? null : (
+        <DetailOverviewTrends>
+          <TrendCard
+            metric="Revelator Revenue"
+            period="Last 12 Months"
+            labels={LABELS}
+            values={monthlyOf(record.revelatorRevenue)}
+          />
+          <TrendCard
+            metric="Client Revenue"
+            period="Last 12 Months"
+            labels={LABELS}
+            values={monthlyOf(record.clientRevenue)}
+          />
+        </DetailOverviewTrends>
+      )}
       <DetailOverviewGrid>
         <FacetCard
           title="Details"
