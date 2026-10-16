@@ -9,7 +9,6 @@ Reference: the RCC prototype (`Platform Ops Accounts.dc.html`, Accounts → Cust
 
 | # | Asked for | Prototype | Here, until decided |
 | - | --------- | --------- | ------------------- |
-| 1 | A customer's **status** — Active, Onboarding, Churned, Terminated — as a badge beside its name and a column. A `customer` family asked of the system (2026-10-16) | coloured badge | the index's readings; not on the record |
 | 2 | A customer's **subscription state** — linked, or none yet | Linked / Needs subscription badge | not drawn; filterable (No subscription) |
 | 3 | A **second line** under a record's name (its email) | email under the name | an Email column |
 | 4 | **Type** (Client, Warner entity, Demo) | badge | text: a category, not a state |
@@ -24,7 +23,7 @@ Churned, Terminated), the form for a set that divides into parts a reader moves 
 
 | # | Asked for | Prototype | Here, until decided |
 | - | --------- | --------- | ------------------- |
-| 8 | The customer's status and subscription state on the band | Client · Subscription linked badges | not drawn (gaps 1, 2) |
+| 8 | The customer's subscription state on the band | Subscription linked badge | not drawn (gap 2) |
 | 9 | A **long name** in the record header — cut at 335 of 960 px at 1440 wide, beside the mark and three controls | full name | truncated (Bluefen Distri…) |
 | 11 | Subscription coupon, note and creation date | columns | not held by the fixtures yet |
 

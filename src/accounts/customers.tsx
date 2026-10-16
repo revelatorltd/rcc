@@ -1,4 +1,4 @@
-import { Avatar, CollectionPage } from "@revelator/pro-ui";
+import { Avatar, Badge, CollectionPage } from "@revelator/pro-ui";
 
 import { customerHref } from "../route";
 import { CUSTOMERS, RECORDS, type Customer } from "./mock";
@@ -11,9 +11,9 @@ const PRODUCTS = ["Enterprise", "Revelator Pro", "API"] as const;
  * The customers — who holds a contract with Revelator, each the account a tenant is signed up
  * under.
  *
- * A COLLECTION PAGE: the set's name, what grows it, and the one index. What the customer's status
- * and its subscription's state are drawn as waits on the system (gaps.md), so neither is a column
- * yet; both are still reachable as filters, which read the record and draw nothing.
+ * A COLLECTION PAGE: the set's name, what grows it, and the one index. The customer's status is
+ * both the readings it divides by and a badge on each row; its subscription's state waits on the
+ * system (gaps.md) and is only a filter.
  */
 export function Customers() {
   return (
@@ -42,6 +42,15 @@ export function Customers() {
             as: "identifier",
             standard: "id",
             value: (one) => one.id,
+          },
+          {
+            name: "Status",
+            // Ordered by where the customer stands, the order the readings take — not by the word.
+            value: (one) => STATUSES.indexOf(one.status),
+            cell: (one) => <Badge status={`customer:${one.status}`} />,
+            // Every row of a single status's reading would say the same word: the column is read
+            // on All only.
+            readings: ["All"],
           },
           { name: "Email", value: (one) => one.email ?? "", cell: (one) => one.email },
           { name: "Type", value: (one) => one.type, cell: (one) => one.type },

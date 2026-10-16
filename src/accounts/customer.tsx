@@ -75,6 +75,7 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
         // are plainly one thing.
         mark: <Avatar kind="organization" name={customer.name} />,
         name: customer.name,
+        status: `customer:${customer.status}`,
         facts: [
           { identifier: customer.id, standard: "id" },
           // ISSUED by Stripe and not by Revelator: the chip leads with the mark of the service it
