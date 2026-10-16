@@ -1,7 +1,9 @@
 import { Avatar, CollectionPage } from "@revelator/pro-ui";
 
-import { CUSTOMERS, type Customer } from "./mock";
+import { customerHref } from "../route";
+import { CUSTOMERS, RECORDS, type Customer } from "./mock";
 
+const STATUSES: readonly Customer["status"][] = ["Active", "Onboarding", "Churned", "Terminated"];
 const TYPES: readonly Customer["type"][] = ["Client", "Warner entity", "Demo"];
 const PRODUCTS = ["Enterprise", "Revelator Pro", "API"] as const;
 
@@ -29,6 +31,7 @@ export function Customers() {
           // SQUARE, because a customer is a company and not a person.
           mark: (one) => <Avatar kind="organization" name={one.name} />,
           sortable: true,
+          opens: (one) => customerHref(one.id),
         },
         // Opens on the newest: a customer is looked for most while it is being set up.
         sort: { column: "Created", direction: "descending" },
@@ -42,18 +45,17 @@ export function Customers() {
           },
           { name: "Email", value: (one) => one.email ?? "", cell: (one) => one.email },
           { name: "Type", value: (one) => one.type, cell: (one) => one.type },
-          { name: "Tenants", as: "count", value: (one) => one.tenants },
+          { name: "Tenants", as: "count", value: (one) => RECORDS[one.id]!.tenants.length },
           { name: "DSP rate", as: "percent", value: (one) => one.dspRate },
           { name: "Created", as: "date", value: (one) => one.created },
         ],
+        // STATUS as readings and not a filter: the customers divide into parts a reader moves
+        // between — the live ones, the ones being set up, the ones gone — each counted.
+        readings: [
+          { name: "All", holds: () => true },
+          ...STATUSES.map((status) => ({ name: status, holds: (one: Customer) => one.status === status })),
+        ],
         filters: [
-          {
-            kind: "anyOf",
-            key: "status",
-            label: "Status",
-            options: ["Active", "Onboarding", "Churned", "Terminated"],
-            of: (one) => one.status,
-          },
           {
             kind: "anyOf",
             key: "type",
@@ -87,8 +89,8 @@ export function Customers() {
           },
         ],
         totals: [{ count: true }],
-        commands: () => [
-          { label: "Open" },
+        commands: (one) => [
+          { label: "Open", opens: customerHref(one.id) },
           { label: "Add subscription" },
           { label: "Sign up new tenant" },
         ],
