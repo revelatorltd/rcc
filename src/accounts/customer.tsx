@@ -2,10 +2,18 @@ import type { ReactNode } from "react";
 import {
   Alert,
   Avatar,
+  DetailOverview,
+  DetailOverviewGrid,
   DetailPage,
+  FacetCard,
   FactCard,
   Metadata,
   RecordIndex,
+  Slot,
+  SlotItem,
+  Text,
+  TitledCard,
+  WayOut,
   type DetailFacet,
   type RecordNavProps,
   type ShellPlace,
@@ -22,9 +30,9 @@ import { RECORDS, customerById, type Customer, type CustomerRecord } from "./moc
 /**
  * One customer, as a record with facets.
  *
- * What the customer IS lives in the band and the Overview — who it is, the company, the contract.
- * What it HOLDS — subscriptions, contacts, tenants — is a facet each, because each is a set a
- * reader pages through and adds to.
+ * The band says WHO; every facet below it is a page of its own — the Details (the account, the
+ * billing details, the contract), and the three sets the customer holds. The Overview reads none
+ * of them in full: it is the recap, one tile per facet, each saying what it comes to and the way in.
  */
 export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet }) {
   const customer = customerById(id);
@@ -34,6 +42,10 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
   // band's, which stands over every facet; a facet repeating it would draw the same command twice.
   const FACETS: Record<CustomerFacet, { header?: DetailFacet; body: ReactNode }> = {
     Overview: { body: <CustomerOverview customer={customer} record={record} /> },
+    Details: {
+      header: { name: "Details", more: [{ label: "Edit customer" }] },
+      body: <CustomerDetails customer={customer} record={record} />,
+    },
     Subscriptions: {
       header: { name: "Subscriptions" },
       body: <CustomerSubscriptions customer={customer} />,
@@ -75,28 +87,105 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
 }
 
 /**
- * What the customer is: the next step where one is owed, then the account, the billing details
- * and the contract.
+ * The recap: one tile per facet, each with what it comes to and the way into it.
  *
- * The next step is an ALERT and not a fact, because it is the one thing on the page to act on:
- * no tenant can be signed up until a subscription is linked.
+ * The next step owed is not an alert over the tiles — the overview holds no alert — but a VERDICT
+ * on the figure it is about: no subscription is a warning on Subscriptions, and a subscription
+ * with no tenant yet is the cue on Tenants. Where nothing is owed, the figures stand bare.
  */
 function CustomerOverview({ customer, record }: { customer: Customer; record: CustomerRecord }) {
-  const linked = customer.subscriptions.length > 0;
+  const live = customer.subscriptions.filter((one) => !one.sandbox).length;
+  const sandboxes = customer.subscriptions.length - live;
+  const production = record.tenants.filter((one) => !one.sandbox).length;
+  const owed = customer.subscriptions.length === 0;
+  const ready = !owed && record.tenants.length === 0;
+  return (
+    <DetailOverview>
+      <DetailOverviewGrid>
+        <FacetCard
+          title="Details"
+          opens={customerHref(customer.id, "Details")}
+          facts={[
+            { label: "Customer type", value: customer.type },
+            { label: "Country", value: record.country },
+            { label: "New or existing", value: record.newCustomer ? "New" : "Existing" },
+          ]}
+        />
+        <FacetCard
+          title="Distribution contract"
+          opens={customerHref(customer.id, "Details")}
+          figures={[
+            { label: "DSP", as: "percent", value: customer.dspRate },
+            { label: "UGC", as: "percent", value: record.ugcRate },
+            { label: "YouTube channel", as: "percent", value: record.youtubeRate },
+          ]}
+        />
+        <FacetCard
+          title="Subscriptions"
+          count={customer.subscriptions.length}
+          opens={customerHref(customer.id, "Subscriptions")}
+          figures={[
+            {
+              label: "Live",
+              as: "count",
+              value: live,
+              marks: owed
+                ? [{ intent: "warn", name: "warning", label: "No subscription linked: no tenant can be signed up" }]
+                : undefined,
+            },
+            { label: "Sandbox", as: "count", value: sandboxes },
+          ]}
+        />
+        <TitledCard
+          title="Contacts"
+          count={record.contacts.length}
+          trail={<WayOut opens={customerHref(customer.id, "Contacts")} />}
+        >
+          <Slot layout="list">
+            {record.contacts.map((one) => (
+              <SlotItem key={one.email}>
+                <Avatar kind="person" name={one.name} />
+                <Text kind="title">{one.name}</Text>
+              </SlotItem>
+            ))}
+          </Slot>
+        </TitledCard>
+        <FacetCard
+          title="Tenants"
+          count={record.tenants.length}
+          opens={customerHref(customer.id, "Tenants")}
+          figures={[
+            {
+              label: "Production",
+              as: "count",
+              value: production,
+              marks: ready
+                ? [{ intent: "info", name: "info", label: "Subscription linked: ready for a tenant" }]
+                : undefined,
+            },
+            { label: "Demo or sandbox", as: "count", value: record.tenants.length - production },
+          ]}
+        />
+      </DetailOverviewGrid>
+    </DetailOverview>
+  );
+}
+
+/**
+ * What the customer is, in full: the next step where one is owed, then the account, the billing
+ * details and the contract.
+ *
+ * TWO CARDS for the company and not one, split by the question each answers: who the customer is
+ * to Revelator, and what an invoice to it says.
+ */
+function CustomerDetails({ customer, record }: { customer: Customer; record: CustomerRecord }) {
   return (
     <Metadata>
-      {!linked ? (
+      {customer.subscriptions.length === 0 ? (
         <Alert intent="warn" title="Add the subscription">
           No tenant can be signed up until this customer has a subscription linked.
         </Alert>
-      ) : record.tenants.length === 0 ? (
-        <Alert intent="info" title="Ready for a tenant">
-          The subscription is linked. Sign up the tenant next.
-        </Alert>
       ) : null}
-      {/* TWO CARDS and not one, split by the question each answers: who the customer is to
-          Revelator, and what an invoice to it says. Under one heading, a reader looking for the
-          tax ID reads past the comment on how the deal was won. */}
       <FactCard
         title="Account"
         facts={[

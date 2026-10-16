@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 export type AccountsPage = "customers";
 
 /** A customer's facets, in the order its nav lists them — the one it opens on first. */
-export const CUSTOMER_FACETS = ["Overview", "Subscriptions", "Contacts", "Tenants"] as const;
+export const CUSTOMER_FACETS = ["Overview", "Details", "Subscriptions", "Contacts", "Tenants"] as const;
 export type CustomerFacet = (typeof CUSTOMER_FACETS)[number];
 
 export type Route =
