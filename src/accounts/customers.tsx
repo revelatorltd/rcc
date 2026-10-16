@@ -1,6 +1,7 @@
-import { Avatar, Badge, CollectionPage } from "@revelator/pro-ui";
+import { Badge, CollectionPage } from "@revelator/pro-ui";
 
 import { customerHref } from "../route";
+import { customerMark } from "./mark";
 import { CUSTOMERS, RECORDS, type Customer } from "./mock";
 
 const STATUSES: readonly Customer["status"][] = ["Active", "Onboarding", "Churned", "Terminated"];
@@ -28,8 +29,8 @@ export function Customers() {
         identity: {
           title: "Name",
           name: (one) => one.name,
-          // SQUARE, because a customer is a company and not a person.
-          mark: (one) => <Avatar kind="organization" name={one.name} />,
+          // The customer's own mark — square, because a customer is a company and not a person.
+          mark: (one) => customerMark(one),
           sortable: true,
           opens: (one) => customerHref(one.id),
         },

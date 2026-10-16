@@ -31,6 +31,7 @@ import {
   customerHref,
   type CustomerFacet,
 } from "../route";
+import { customerMark } from "./mark";
 import { MONTHS, RECORDS, customerById, monthlyOf, type Customer, type CustomerRecord } from "./mock";
 
 /**
@@ -73,7 +74,7 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
       record={{
         // SQUARE, the same mark the index's row wears, so the row pressed and the band landed on
         // are plainly one thing.
-        mark: <Avatar kind="organization" name={customer.name} />,
+        mark: customerMark(customer),
         name: customer.name,
         status: `customer:${customer.status}`,
         facts: [

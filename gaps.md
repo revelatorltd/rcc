@@ -27,12 +27,6 @@ Churned, Terminated), the form for a set that divides into parts a reader moves 
 | 9 | A **long name** in the record header — cut at 335 of 960 px at 1440 wide, beside the mark and three controls | full name | truncated (Bluefen Distri…) |
 | 11 | Subscription coupon, note and creation date | columns | not held by the fixtures yet |
 
-## The customers' marks
-
-| # | Asked for | Prototype | Here, until decided |
-| - | --------- | --------- | ------------------- |
-| 15 | **A logo per customer** in its avatar — invented marks in the system's organizations, one per customer. Asked of the system (2026-10-16) | — | initials on the tone the name keys |
-
 ## Not built yet
 
 - **New customer** — a full-page form in the prototype; to be walked before it is written.

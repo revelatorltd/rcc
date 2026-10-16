@@ -1,3 +1,5 @@
+import type { OrganizationSlug } from "@revelator/pro-ui/assets";
+
 /**
  * The accounts RCC holds — invented, hand-written, never copied from the prototype or the product.
  * Stored newest first, so an index that opens on its entry date reads them as they were written.
@@ -21,6 +23,8 @@ export interface Subscription {
 export interface Customer {
   id: string;
   name: string;
+  /** The organization whose mark the customer wears — Revelator's own for the demo account. */
+  organization: OrganizationSlug;
   email?: string;
   status: CustomerStatus;
   type: CustomerType;
@@ -33,26 +37,26 @@ export interface Customer {
 const enterprise = (id: string): Subscription => ({ id, sandbox: false, product: "Enterprise" });
 
 export const CUSTOMERS: readonly Customer[] = [
-  { id: "512", name: "Lowtide Assembly", email: "office@lowtide-assembly.co", status: "Onboarding", type: "Client", subscriptions: [], dspRate: 12, created: day(2026, 10, 15) },
-  { id: "509", name: "Verdant Static", email: "accounts@verdantstatic.io", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rverdant509")], dspRate: 5, created: day(2026, 10, 13) },
-  { id: "506", name: "Atlas Harbor Music", email: "label@atlasharbor.nl", status: "Onboarding", type: "Warner entity", subscriptions: [], dspRate: 0, created: day(2026, 10, 11) },
-  { id: "501", name: "Paperkite Sound", email: "hi@paperkite.fm", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rpaperkite501")], dspRate: 3, created: day(2026, 10, 2) },
-  { id: "497", name: "Ninefold Records", status: "Onboarding", type: "Warner entity", subscriptions: [enterprise("sub_1Rninefold497")], dspRate: 0, created: day(2026, 9, 24) },
-  { id: "490", name: "Corvid Lane", email: "team@corvidlane.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcorvid490")], dspRate: 15, created: day(2026, 9, 3) },
-  { id: "483", name: "Silverbirch Publishing House", email: "rights@silverbirchph.co.uk", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rsilver483")], dspRate: 20, created: day(2026, 8, 19) },
-  { id: "476", name: "Marlow Tide Entertainment", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rmarlow476")], dspRate: 20, created: day(2026, 7, 7) },
-  { id: "469", name: "Opaline", email: "ops@opaline.audio", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Ropaline469"), { id: "sub_1Ropaline469api", sandbox: false, product: "API" }], dspRate: 10, created: day(2026, 6, 28) },
-  { id: "462", name: "Brackenridge Audio", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rbracken462")], dspRate: 20, created: day(2026, 5, 16) },
-  { id: "455", name: "Eastgate Music Partners", email: "finance@eastgatemusic.de", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Reastgate455")], dspRate: 0, created: day(2026, 4, 30) },
-  { id: "448", name: "Thistle & Thorn", email: "label@thistleandthorn.ie", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rthistle448")], dspRate: 18, created: day(2026, 3, 12) },
-  { id: "441", name: "Grainfield Collective", status: "Onboarding", type: "Client", subscriptions: [enterprise("sub_1Rgrain441")], dspRate: 20, created: day(2026, 2, 21) },
-  { id: "434", name: "Kestrel Point Recordings", email: "admin@kestrelpoint.com", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rkestrel434")], dspRate: 15, created: day(2025, 12, 4) },
-  { id: "427", name: "Bluefen Distribution", email: "support@bluefen.dist", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rbluefen427"), { id: "sub_1Rbluefen427api", sandbox: false, product: "API" }], dspRate: 8, created: day(2025, 10, 9) },
-  { id: "420", name: "Harrow Street Sound", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Rharrow420")], dspRate: 0, created: day(2025, 7, 1) },
-  { id: "413", name: "Mistral Arcade", email: "hello@mistralarcade.fr", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rmistral413")], dspRate: 20, created: day(2025, 3, 18) },
-  { id: "406", name: "Cinderwell Music", email: "ops@cinderwell.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcinder406")], dspRate: 12, created: day(2024, 11, 26) },
-  { id: "232", name: "RCC Demo Account", email: "demo@revelator.example", status: "Active", type: "Demo", subscriptions: [{ id: "sub_1PdemoPro", sandbox: true, product: "Revelator Pro" }, { id: "sub_1PdemoAPI", sandbox: true, product: "API" }], dspRate: 15, created: day(2024, 3, 12) },
-  { id: "219", name: "Foxglove Ridge Records", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Pfoxglove219")], dspRate: 20, created: day(2023, 9, 5) },
+  { id: "512", name: "Lowtide Assembly", organization: "lowtide-assembly", email: "office@lowtide-assembly.co", status: "Onboarding", type: "Client", subscriptions: [], dspRate: 12, created: day(2026, 10, 15) },
+  { id: "509", name: "Verdant Static", organization: "verdant-static", email: "accounts@verdantstatic.io", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rverdant509")], dspRate: 5, created: day(2026, 10, 13) },
+  { id: "506", name: "Atlas Harbor Music", organization: "atlas-harbor-music", email: "label@atlasharbor.nl", status: "Onboarding", type: "Warner entity", subscriptions: [], dspRate: 0, created: day(2026, 10, 11) },
+  { id: "501", name: "Paperkite Sound", organization: "paperkite-sound", email: "hi@paperkite.fm", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rpaperkite501")], dspRate: 3, created: day(2026, 10, 2) },
+  { id: "497", name: "Ninefold Records", organization: "ninefold-records", status: "Onboarding", type: "Warner entity", subscriptions: [enterprise("sub_1Rninefold497")], dspRate: 0, created: day(2026, 9, 24) },
+  { id: "490", name: "Corvid Lane", organization: "corvid-lane", email: "team@corvidlane.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcorvid490")], dspRate: 15, created: day(2026, 9, 3) },
+  { id: "483", name: "Silverbirch Publishing House", organization: "silverbirch-publishing-house", email: "rights@silverbirchph.co.uk", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rsilver483")], dspRate: 20, created: day(2026, 8, 19) },
+  { id: "476", name: "Marlow Tide Entertainment", organization: "marlow-tide-entertainment", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rmarlow476")], dspRate: 20, created: day(2026, 7, 7) },
+  { id: "469", name: "Opaline", organization: "opaline", email: "ops@opaline.audio", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Ropaline469"), { id: "sub_1Ropaline469api", sandbox: false, product: "API" }], dspRate: 10, created: day(2026, 6, 28) },
+  { id: "462", name: "Brackenridge Audio", organization: "brackenridge-audio", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rbracken462")], dspRate: 20, created: day(2026, 5, 16) },
+  { id: "455", name: "Eastgate Music Partners", organization: "eastgate-music-partners", email: "finance@eastgatemusic.de", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Reastgate455")], dspRate: 0, created: day(2026, 4, 30) },
+  { id: "448", name: "Thistle & Thorn", organization: "thistle-and-thorn", email: "label@thistleandthorn.ie", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rthistle448")], dspRate: 18, created: day(2026, 3, 12) },
+  { id: "441", name: "Grainfield Collective", organization: "grainfield-collective", status: "Onboarding", type: "Client", subscriptions: [enterprise("sub_1Rgrain441")], dspRate: 20, created: day(2026, 2, 21) },
+  { id: "434", name: "Kestrel Point Recordings", organization: "kestrel-point-recordings", email: "admin@kestrelpoint.com", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rkestrel434")], dspRate: 15, created: day(2025, 12, 4) },
+  { id: "427", name: "Bluefen Distribution", organization: "bluefen-distribution", email: "support@bluefen.dist", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rbluefen427"), { id: "sub_1Rbluefen427api", sandbox: false, product: "API" }], dspRate: 8, created: day(2025, 10, 9) },
+  { id: "420", name: "Harrow Street Sound", organization: "harrow-street-sound", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Rharrow420")], dspRate: 0, created: day(2025, 7, 1) },
+  { id: "413", name: "Mistral Arcade", organization: "mistral-arcade", email: "hello@mistralarcade.fr", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rmistral413")], dspRate: 20, created: day(2025, 3, 18) },
+  { id: "406", name: "Cinderwell Music", organization: "cinderwell-music", email: "ops@cinderwell.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcinder406")], dspRate: 12, created: day(2024, 11, 26) },
+  { id: "232", name: "RCC Demo Account", organization: "revelator", email: "demo@revelator.example", status: "Active", type: "Demo", subscriptions: [{ id: "sub_1PdemoPro", sandbox: true, product: "Revelator Pro" }, { id: "sub_1PdemoAPI", sandbox: true, product: "API" }], dspRate: 15, created: day(2024, 3, 12) },
+  { id: "219", name: "Foxglove Ridge Records", organization: "foxglove-ridge-records", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Pfoxglove219")], dspRate: 20, created: day(2023, 9, 5) },
 ];
 
 /** Someone at the customer Revelator writes to, and what they are written to about. */
