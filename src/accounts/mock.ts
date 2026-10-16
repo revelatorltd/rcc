@@ -120,4 +120,16 @@ export const RECORDS: Record<string, CustomerRecord> = {
   "219": { stripe: "cus_P2foxglove219", revelatorRevenue: 1215, clientRevenue: 6075, phone: "+1 512 555 0133", country: "United States", taxType: "US EIN", taxId: "80-5521847", ugcRate: 20, youtubeRate: 20, misc: 0, newCustomer: false, contacts: [{ name: "June Calloway", email: "june@foxgloveridge.example", roles: ["Primary"] }], tenants: [tenant("571902", "Foxglove Ridge Records", "3 - Growth", day(2023, 9, 11))] },
 };
 
+/** The last twelve complete months, oldest first — October 2025 to September 2026. */
+export const MONTHS = Array.from({ length: 12 }, (_, at) => new Date(2025, 9 + at, 1));
+
+/**
+ * How a customer's month moves around its last one — a hand-drawn shape, the same for every
+ * customer, scaled to what each earned; nothing is drawn before the customer joined.
+ */
+const SHAPE = [0.62, 0.66, 0.71, 0.69, 0.74, 0.8, 0.78, 0.85, 0.9, 0.88, 0.95, 1];
+
+export const monthlyOf = (lastMonth: number, joined: Date) =>
+  MONTHS.map((month, at) => (month < new Date(joined.getFullYear(), joined.getMonth(), 1) ? 0 : Math.round(lastMonth * SHAPE[at]!)));
+
 export const customerById = (id: string) => CUSTOMERS.find((one) => one.id === id) ?? CUSTOMERS[0]!;

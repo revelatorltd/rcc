@@ -3,8 +3,10 @@ import {
   Alert,
   Avatar,
   Button,
+  Chip,
   DetailOverview,
   DetailOverviewGrid,
+  DetailOverviewTrends,
   DetailPage,
   EmptyState,
   FacetCard,
@@ -13,11 +15,11 @@ import {
   RecordIndex,
   Slot,
   SlotItem,
-  StatCard,
-  StatCardRow,
   Text,
   TitledCard,
+  TrendCard,
   WayOut,
+  formatDate,
   type DetailFacet,
   type RecordNavProps,
   type ShellPlace,
@@ -29,7 +31,7 @@ import {
   customerHref,
   type CustomerFacet,
 } from "../route";
-import { RECORDS, customerById, type Customer, type CustomerRecord } from "./mock";
+import { MONTHS, RECORDS, customerById, monthlyOf, type Customer, type CustomerRecord } from "./mock";
 
 /**
  * One customer, as a record with facets.
@@ -78,7 +80,9 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
           // ISSUED by Stripe and not by Revelator: the chip leads with the mark of the service it
           // belongs to, so the two codes side by side are not two of the same.
           { identifier: record.stripe, standard: "id", issuer: "stripe" },
-          { as: "date", value: customer.created },
+          // WHO holds the contract — a client, an entity of Warner's, Revelator's own demo — in
+          // place of the day it joined: it changes what every rate below it means.
+          { text: customer.type },
         ],
         // ONE command stands out, and it is the step owed next: a customer with no subscription
         // can take no tenant, so it is offered the subscription; past that, the tenant. The other
@@ -97,10 +101,23 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
   );
 }
 
+/** The months the trends are read over, labelled as a monthly axis reads them. */
+const LABELS = MONTHS.map((month) => formatDate(month, "month", { onAxis: true }));
+
+/**
+ * A country, as the flag it flies and its name — the way a country is drawn wherever it is a value.
+ */
+const country = (named: string) => (
+  <Chip>
+    <Avatar kind="place" name={named} />
+    {named}
+  </Chip>
+);
+
 /**
  * The recap: one tile per facet, each with what it comes to and the way into it.
  *
- * Over the tiles, what the customer is worth now. A facet with nothing in it yet is not a tile of
+ * Over the tiles, how what the customer is worth has moved. A facet with nothing in it yet is not a tile of
  * zeros but an empty card holding what starts it — the subscription, then the first tenant — so
  * the next step owed stands where its absence is read.
  */
@@ -111,19 +128,29 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
   const owed = customer.subscriptions.length === 0;
   return (
     <DetailOverview>
-      {/* What the customer is worth NOW — two peers, none read against another. To be ONE trend
-          card with a tab each once the system has the two metrics (gaps.md). */}
-      <StatCardRow>
-        <StatCard name="Revelator revenue" hint="Revelator's share of the last complete month" as="money" value={record.revelatorRevenue} />
-        <StatCard name="Client revenue" hint="What the customer's catalogue earned in the last complete month" as="money" value={record.clientRevenue} />
-      </StatCardRow>
+      {/* How what the customer is worth has MOVED: what Revelator earned from it and what its
+          catalogue earned, two cards read one against the other over the same months. */}
+      <DetailOverviewTrends>
+        <TrendCard
+          metric="Revelator Revenue"
+          period="Last 12 Months"
+          labels={LABELS}
+          values={monthlyOf(record.revelatorRevenue, customer.created)}
+        />
+        <TrendCard
+          metric="Client Revenue"
+          period="Last 12 Months"
+          labels={LABELS}
+          values={monthlyOf(record.clientRevenue, customer.created)}
+        />
+      </DetailOverviewTrends>
       <DetailOverviewGrid>
         <FacetCard
           title="Details"
           opens={customerHref(customer.id, "Details")}
           facts={[
             { label: "Customer type", value: customer.type },
-            { label: "Country", value: record.country },
+            { label: "Country", value: country(record.country) },
             { label: "New or existing", value: record.newCustomer ? "New" : "Existing" },
           ]}
         />
@@ -140,9 +167,11 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
             than a row of zeros nobody acts on. */}
         {owed ? (
           <TitledCard title="Subscriptions">
-            <EmptyState title="No subscription yet" detail="No tenant can be signed up until one is linked.">
-              <Button>Add subscription</Button>
-            </EmptyState>
+            <Slot layout="empty">
+              <EmptyState title="No subscription yet" detail="No tenant can be signed up until one is linked.">
+                <Button>Add subscription</Button>
+              </EmptyState>
+            </Slot>
           </TitledCard>
         ) : (
           <FacetCard
@@ -171,12 +200,14 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
         </TitledCard>
         {record.tenants.length === 0 ? (
           <TitledCard title="Tenants">
-            <EmptyState
-              title="No tenant yet"
-              detail={owed ? "A tenant follows the subscription." : "The subscription is linked: sign up the first tenant."}
-            >
-              {owed ? null : <Button>Sign up new tenant</Button>}
-            </EmptyState>
+            <Slot layout="empty">
+              <EmptyState
+                title="No tenant yet"
+                detail={owed ? "A tenant follows the subscription." : "The subscription is linked: sign up the first tenant."}
+              >
+                {owed ? null : <Button>Sign up new tenant</Button>}
+              </EmptyState>
+            </Slot>
           </TitledCard>
         ) : (
           <FacetCard
@@ -224,7 +255,7 @@ function CustomerDetails({ customer, record }: { customer: Customer; record: Cus
           { label: "Email", value: customer.email },
           { label: "Phone", value: record.phone },
           { label: "Address", value: record.address },
-          { label: "Country", value: record.country },
+          { label: "Country", value: country(record.country) },
           { label: "Tax ID type", value: record.taxType },
           { label: "Tax ID", value: record.taxId },
         ]}

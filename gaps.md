@@ -9,7 +9,7 @@ Reference: the RCC prototype (`Platform Ops Accounts.dc.html`, Accounts → Cust
 
 | # | Asked for | Prototype | Here, until decided |
 | - | --------- | --------- | ------------------- |
-| 1 | A customer's **status** — Active, Onboarding, Churned, Terminated | coloured badge | not drawn; filterable |
+| 1 | A customer's **status** — Active, Onboarding, Churned, Terminated — as a badge beside its name and a column. A `customer` family asked of the system (2026-10-16) | coloured badge | the index's readings; not on the record |
 | 2 | A customer's **subscription state** — linked, or none yet | Linked / Needs subscription badge | not drawn; filterable (No subscription) |
 | 3 | A **second line** under a record's name (its email) | email under the name | an Email column |
 | 4 | **Type** (Client, Warner entity, Demo) | badge | text: a category, not a state |
@@ -27,8 +27,6 @@ Churned, Terminated), the form for a set that divides into parts a reader moves 
 | 8 | The customer's status and subscription state on the band | Client · Subscription linked badges | not drawn (gaps 1, 2) |
 | 9 | A **long name** in the record header — cut at 335 of 960 px at 1440 wide, beside the mark and three controls | full name | truncated (Bluefen Distri…) |
 | 11 | Subscription coupon, note and creation date | columns | not held by the fixtures yet |
-| 12 | **Revelator Revenue** and **Client Revenue** as metrics, so one TrendCard can tab between them — asked of the system (2026-10-16) | — | two stat cards, last complete month |
-| 13 | An **empty state in a card's grey recess**, centred and filling a card stretched by its row. `Slot layout="empty"` holding the EmptyState is refused by check:page (no SlotItem); inside a SlotItem the EmptyState is squeezed and clipped; and the empty slot does not grow (170 of 280 px). Asked of the system (2026-10-16) | — | the EmptyState straight in the card, no recess |
 
 ## Not built yet
 
