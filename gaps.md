@@ -26,7 +26,7 @@ Churned, Terminated), the form for a set that divides into parts a reader moves 
 | - | --------- | --------- | ------------------- |
 | 8 | The customer's status and subscription state on the band | Client · Subscription linked badges | not drawn (gaps 1, 2) |
 | 9 | A **long name** in the record header — cut at 335 of 960 px at 1440 wide, beside the mark and three controls | full name | truncated (Bluefen Distri…) |
-| 10 | A Stripe ID told apart from Revelator's own | `Stripe cus_…` chip | an identifier among the facts, unlabelled |
+| 10 | A **Stripe ID** told apart from Revelator's own — the Stripe mark on its chip. No Stripe mark in the set, and an identifier chip draws its standard's mark itself: asked of the system (2026-10-16) | `Stripe cus_…` chip | an identifier among the facts, unlabelled |
 | 11 | Subscription coupon, note and creation date | columns | not held by the fixtures yet |
 
 ## Not built yet

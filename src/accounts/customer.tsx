@@ -2,15 +2,19 @@ import type { ReactNode } from "react";
 import {
   Alert,
   Avatar,
+  Button,
   DetailOverview,
   DetailOverviewGrid,
   DetailPage,
+  EmptyState,
   FacetCard,
   FactCard,
   Metadata,
   RecordIndex,
   Slot,
   SlotItem,
+  StatCard,
+  StatCardRow,
   Text,
   TitledCard,
   WayOut,
@@ -37,6 +41,7 @@ import { RECORDS, customerById, type Customer, type CustomerRecord } from "./moc
 export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet }) {
   const customer = customerById(id);
   const record = RECORDS[customer.id]!;
+  const owed = customer.subscriptions.length === 0;
 
   // EVERY facet but the landing one names itself. Adding a subscription or a tenant is the
   // band's, which stands over every facet; a facet repeating it would draw the same command twice.
@@ -73,11 +78,15 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
           { identifier: record.stripe, standard: "id" },
           { as: "date", value: customer.created },
         ],
-        actions: [
-          { label: "Add subscription" },
-          { label: "Sign up new tenant", primary: true },
+        // ONE command stands out, and it is the step owed next: a customer with no subscription
+        // can take no tenant, so it is offered the subscription; past that, the tenant. The other
+        // waits in the overflow — and on the Overview, in the card of what is still missing.
+        actions: [{ label: owed ? "Add subscription" : "Sign up new tenant", primary: true }],
+        more: [
+          { label: owed ? "Sign up new tenant" : "Add subscription" },
+          { label: "Edit customer" },
+          { label: "Open in Stripe" },
         ],
-        more: [{ label: "Edit customer" }, { label: "Open in Stripe" }],
       }}
       facet={shown.header}
     >
@@ -89,18 +98,23 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
 /**
  * The recap: one tile per facet, each with what it comes to and the way into it.
  *
- * The next step owed is not an alert over the tiles — the overview holds no alert — but a VERDICT
- * on the figure it is about: no subscription is a warning on Subscriptions, and a subscription
- * with no tenant yet is the cue on Tenants. Where nothing is owed, the figures stand bare.
+ * Over the tiles, what the customer is worth now. A facet with nothing in it yet is not a tile of
+ * zeros but an empty card holding what starts it — the subscription, then the first tenant — so
+ * the next step owed stands where its absence is read.
  */
 function CustomerOverview({ customer, record }: { customer: Customer; record: CustomerRecord }) {
   const live = customer.subscriptions.filter((one) => !one.sandbox).length;
   const sandboxes = customer.subscriptions.length - live;
   const production = record.tenants.filter((one) => !one.sandbox).length;
   const owed = customer.subscriptions.length === 0;
-  const ready = !owed && record.tenants.length === 0;
   return (
     <DetailOverview>
+      {/* What the customer is worth NOW — three peers, none read against another. */}
+      <StatCardRow>
+        <StatCard name="Revelator revenue" hint="Revelator's share of the last complete month" as="money" value={record.revelatorRevenue} />
+        <StatCard name="Client revenue" hint="What the customer's catalogue earned in the last complete month" as="money" value={record.clientRevenue} />
+        <StatCard name="Live releases" as="count" value={record.liveReleases} />
+      </StatCardRow>
       <DetailOverviewGrid>
         <FacetCard
           title="Details"
@@ -120,22 +134,25 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
             { label: "YouTube channel", as: "percent", value: record.youtubeRate },
           ]}
         />
-        <FacetCard
-          title="Subscriptions"
-          count={customer.subscriptions.length}
-          opens={customerHref(customer.id, "Subscriptions")}
-          figures={[
-            {
-              label: "Live",
-              as: "count",
-              value: live,
-              marks: owed
-                ? [{ intent: "warn", name: "warning", label: "No subscription linked: no tenant can be signed up" }]
-                : undefined,
-            },
-            { label: "Sandbox", as: "count", value: sandboxes },
-          ]}
-        />
+        {/* EMPTY, the card offers what starts it — the one way out of its emptiness — rather
+            than a row of zeros nobody acts on. */}
+        {owed ? (
+          <TitledCard title="Subscriptions">
+            <EmptyState title="No subscription yet" detail="No tenant can be signed up until one is linked.">
+              <Button>Add subscription</Button>
+            </EmptyState>
+          </TitledCard>
+        ) : (
+          <FacetCard
+            title="Subscriptions"
+            count={customer.subscriptions.length}
+            opens={customerHref(customer.id, "Subscriptions")}
+            figures={[
+              { label: "Live", as: "count", value: live },
+              { label: "Sandbox", as: "count", value: sandboxes },
+            ]}
+          />
+        )}
         <TitledCard
           title="Contacts"
           count={record.contacts.length}
@@ -150,22 +167,26 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
             ))}
           </Slot>
         </TitledCard>
-        <FacetCard
-          title="Tenants"
-          count={record.tenants.length}
-          opens={customerHref(customer.id, "Tenants")}
-          figures={[
-            {
-              label: "Production",
-              as: "count",
-              value: production,
-              marks: ready
-                ? [{ intent: "info", name: "info", label: "Subscription linked: ready for a tenant" }]
-                : undefined,
-            },
-            { label: "Demo or sandbox", as: "count", value: record.tenants.length - production },
-          ]}
-        />
+        {record.tenants.length === 0 ? (
+          <TitledCard title="Tenants">
+            <EmptyState
+              title="No tenant yet"
+              detail={owed ? "A tenant follows the subscription." : "The subscription is linked: sign up the first tenant."}
+            >
+              {owed ? null : <Button>Sign up new tenant</Button>}
+            </EmptyState>
+          </TitledCard>
+        ) : (
+          <FacetCard
+            title="Tenants"
+            count={record.tenants.length}
+            opens={customerHref(customer.id, "Tenants")}
+            figures={[
+              { label: "Production", as: "count", value: production },
+              { label: "Demo or sandbox", as: "count", value: record.tenants.length - production },
+            ]}
+          />
+        )}
       </DetailOverviewGrid>
     </DetailOverview>
   );

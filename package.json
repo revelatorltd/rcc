@@ -8,7 +8,7 @@
     "ds:update": "node scripts/ds-update.mjs"
   },
   "dependencies": {
-    "@revelator/pro-ui": "file:vendor/revelator-pro-ui-0.1.0-67dc5829.tgz",
+    "@revelator/pro-ui": "file:vendor/revelator-pro-ui-0.1.0-ad0e4af3.tgz",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
