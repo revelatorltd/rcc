@@ -135,13 +135,13 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
           metric="Revelator Revenue"
           period="Last 12 Months"
           labels={LABELS}
-          values={monthlyOf(record.revelatorRevenue, customer.created)}
+          values={monthlyOf(record.revelatorRevenue)}
         />
         <TrendCard
           metric="Client Revenue"
           period="Last 12 Months"
           labels={LABELS}
-          values={monthlyOf(record.clientRevenue, customer.created)}
+          values={monthlyOf(record.clientRevenue)}
         />
       </DetailOverviewTrends>
       <DetailOverviewGrid>
