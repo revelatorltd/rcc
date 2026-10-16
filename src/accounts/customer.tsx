@@ -140,13 +140,13 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
             metric="Revelator Revenue"
             period="Last 12 Months"
             labels={LABELS}
-            values={monthlyOf(record.revelatorRevenue)}
+            values={monthlyOf(record.revelatorRevenue, customer.ended)}
           />
           <TrendCard
             metric="Client Revenue"
             period="Last 12 Months"
             labels={LABELS}
-            values={monthlyOf(record.clientRevenue)}
+            values={monthlyOf(record.clientRevenue, customer.ended)}
           />
         </DetailOverviewTrends>
       )}
@@ -251,6 +251,8 @@ function CustomerDetails({ customer, record }: { customer: Customer; record: Cus
         facts={[
           { label: "Customer type", value: customer.type },
           { label: "New or existing", value: record.newCustomer ? "New" : "Existing" },
+          // Only where the contract was ended: the day the revenue stops.
+          ...(customer.ended ? [{ label: "Contract ended", as: "date" as const, value: customer.ended }] : []),
           { label: "Comment", value: record.comment },
         ]}
       />

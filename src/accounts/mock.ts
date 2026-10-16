@@ -32,6 +32,8 @@ export interface Customer {
   /** The share of DSP revenue Revelator keeps, in percent. */
   dspRate: number;
   created: Date;
+  /** The day the contract ended — the customer left, or Revelator ended it — after which it earns nothing. */
+  ended?: Date;
 }
 
 const enterprise = (id: string): Subscription => ({ id, sandbox: false, product: "Enterprise" });
@@ -44,16 +46,16 @@ export const CUSTOMERS: readonly Customer[] = [
   { id: "497", name: "Ninefold Records", organization: "ninefold-records", status: "Onboarding", type: "Warner entity", subscriptions: [enterprise("sub_1Rninefold497")], dspRate: 0, created: day(2026, 9, 24) },
   { id: "490", name: "Corvid Lane", organization: "corvid-lane", email: "team@corvidlane.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcorvid490")], dspRate: 15, created: day(2026, 9, 3) },
   { id: "483", name: "Silverbirch Publishing House", organization: "silverbirch-publishing-house", email: "rights@silverbirchph.co.uk", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rsilver483")], dspRate: 20, created: day(2026, 8, 19) },
-  { id: "476", name: "Marlow Tide Entertainment", organization: "marlow-tide-entertainment", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rmarlow476")], dspRate: 20, created: day(2026, 7, 7) },
+  { id: "476", name: "Marlow Tide Entertainment", organization: "marlow-tide-entertainment", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rmarlow476")], dspRate: 20, created: day(2026, 7, 7), ended: day(2026, 9, 1) },
   { id: "469", name: "Opaline", organization: "opaline", email: "ops@opaline.audio", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Ropaline469"), { id: "sub_1Ropaline469api", sandbox: false, product: "API" }], dspRate: 10, created: day(2026, 6, 28) },
-  { id: "462", name: "Brackenridge Audio", organization: "brackenridge-audio", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rbracken462")], dspRate: 20, created: day(2026, 5, 16) },
+  { id: "462", name: "Brackenridge Audio", organization: "brackenridge-audio", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rbracken462")], dspRate: 20, created: day(2026, 5, 16), ended: day(2026, 8, 1) },
   { id: "455", name: "Eastgate Music Partners", organization: "eastgate-music-partners", email: "finance@eastgatemusic.de", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Reastgate455")], dspRate: 0, created: day(2026, 4, 30) },
   { id: "448", name: "Thistle & Thorn", organization: "thistle-and-thorn", email: "label@thistleandthorn.ie", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rthistle448")], dspRate: 18, created: day(2026, 3, 12) },
   { id: "441", name: "Grainfield Collective", organization: "grainfield-collective", status: "Onboarding", type: "Client", subscriptions: [enterprise("sub_1Rgrain441")], dspRate: 20, created: day(2026, 2, 21) },
-  { id: "434", name: "Kestrel Point Recordings", organization: "kestrel-point-recordings", email: "admin@kestrelpoint.com", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rkestrel434")], dspRate: 15, created: day(2025, 12, 4) },
+  { id: "434", name: "Kestrel Point Recordings", organization: "kestrel-point-recordings", email: "admin@kestrelpoint.com", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rkestrel434")], dspRate: 15, created: day(2025, 12, 4), ended: day(2026, 6, 1) },
   { id: "427", name: "Bluefen Distribution", organization: "bluefen-distribution", email: "support@bluefen.dist", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rbluefen427"), { id: "sub_1Rbluefen427api", sandbox: false, product: "API" }], dspRate: 8, created: day(2025, 10, 9) },
   { id: "420", name: "Harrow Street Sound", organization: "harrow-street-sound", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Rharrow420")], dspRate: 0, created: day(2025, 7, 1) },
-  { id: "413", name: "Mistral Arcade", organization: "mistral-arcade", email: "hello@mistralarcade.fr", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rmistral413")], dspRate: 20, created: day(2025, 3, 18) },
+  { id: "413", name: "Mistral Arcade", organization: "mistral-arcade", email: "hello@mistralarcade.fr", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rmistral413")], dspRate: 20, created: day(2025, 3, 18), ended: day(2026, 7, 1) },
   { id: "406", name: "Cinderwell Music", organization: "cinderwell-music", email: "ops@cinderwell.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcinder406")], dspRate: 12, created: day(2024, 11, 26) },
   { id: "232", name: "RCC Demo Account", email: "demo@revelator.example", status: "Active", type: "Demo", subscriptions: [{ id: "sub_1PdemoPro", sandbox: true, product: "Revelator Pro" }, { id: "sub_1PdemoAPI", sandbox: true, product: "API" }], dspRate: 15, created: day(2024, 3, 12) },
   { id: "219", name: "Foxglove Ridge Records", organization: "foxglove-ridge-records", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Pfoxglove219")], dspRate: 20, created: day(2023, 9, 5) },
@@ -129,11 +131,12 @@ export const MONTHS = Array.from({ length: 12 }, (_, at) => new Date(2025, 9 + a
 
 /**
  * How a customer's month moves around its last one — a hand-drawn shape, the same for every
- * customer, scaled to what each earned. Invented, so every customer reads a full year.
+ * customer, scaled to what each earned. Invented, so every customer reads a full year — except
+ * one whose contract has ended, churned or terminated, which earns nothing from the month it ended.
  */
 const SHAPE = [0.62, 0.66, 0.71, 0.69, 0.74, 0.8, 0.78, 0.85, 0.9, 0.88, 0.95, 1];
 
-export const monthlyOf = (lastMonth: number) =>
-  MONTHS.map((_, at) => Math.round(lastMonth * SHAPE[at]!));
+export const monthlyOf = (lastMonth: number, ended?: Date) =>
+  MONTHS.map((month, at) => (ended && month >= ended ? 0 : Math.round(lastMonth * SHAPE[at]!)));
 
 export const customerById = (id: string) => CUSTOMERS.find((one) => one.id === id) ?? CUSTOMERS[0]!;
