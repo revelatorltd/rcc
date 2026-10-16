@@ -75,7 +75,8 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
 }
 
 /**
- * What the customer is: the next step where one is owed, then the company and the contract.
+ * What the customer is: the next step where one is owed, then the account, the billing details
+ * and the contract.
  *
  * The next step is an ALERT and not a fact, because it is the one thing on the page to act on:
  * no tenant can be signed up until a subscription is linked.
@@ -93,8 +94,19 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
           The subscription is linked. Sign up the tenant next.
         </Alert>
       ) : null}
+      {/* TWO CARDS and not one, split by the question each answers: who the customer is to
+          Revelator, and what an invoice to it says. Under one heading, a reader looking for the
+          tax ID reads past the comment on how the deal was won. */}
       <FactCard
-        title="Company"
+        title="Account"
+        facts={[
+          { label: "Customer type", value: customer.type },
+          { label: "New or existing", value: record.newCustomer ? "New" : "Existing" },
+          { label: "Comment", value: record.comment },
+        ]}
+      />
+      <FactCard
+        title="Billing details"
         facts={[
           { label: "Company name", value: customer.name },
           { label: "Email", value: customer.email },
@@ -103,9 +115,6 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
           { label: "Country", value: record.country },
           { label: "Tax ID type", value: record.taxType },
           { label: "Tax ID", value: record.taxId },
-          { label: "Customer type", value: customer.type },
-          { label: "New or existing", value: record.newCustomer ? "New" : "Existing" },
-          { label: "Comment", value: record.comment },
         ]}
       />
       <FactCard
