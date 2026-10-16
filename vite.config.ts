@@ -1,4 +1,4 @@
-import { createReadStream, readdirSync, readFileSync } from "node:fs";
+import { createReadStream, existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
@@ -12,8 +12,8 @@ const BASE = process.env.APP_BASE ?? "/";
 /** The design system's file assets, where the installed package keeps them. */
 const SYSTEM_ASSETS = "node_modules/@revelator/pro-ui/dist/assets";
 
-/** The app's own public files, addressed from the root in its sources. */
-const PUBLIC = readdirSync("public");
+/** The app's own public files, addressed from the root in its sources — none, where it has none. */
+const PUBLIC = existsSync("public") ? readdirSync("public") : [];
 
 /**
  * The system's FILE assets, served where the package says they are.
@@ -38,7 +38,7 @@ const systemAssets = (): Plugin => ({
   },
   transform(code, id) {
     if (BASE === "/" || !/\.(js|ts|tsx)$/.test(id.split("?")[0] ?? "")) return null;
-    const roots = new RegExp(`(["'\`])/(assets/[\\w-]+\\.svg|${PUBLIC.join("|")})`, "g");
+    const roots = new RegExp(`(["'\`])/(assets/[\\w-]+\\.svg${PUBLIC.map((one) => `|${one}`).join("")})`, "g");
     return roots.test(code) ? code.replace(roots, `$1${BASE}$2`) : null;
   },
   generateBundle() {

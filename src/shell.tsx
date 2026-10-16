@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppShell, type ShellPlace, type ShellProduct } from "@revelator/pro-ui";
+import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
 import { accountsHref } from "./route";
 
@@ -9,7 +10,8 @@ import { accountsHref } from "./route";
  * than somewhere else.
  */
 const PRODUCT: ShellProduct = {
-  workspace: { name: "RCC", mark: "/revelator.svg" },
+  // The workspace is Revelator's own, so it wears the organization's mark the system ships.
+  workspace: { name: "RCC", mark: ORGANIZATIONS.revelator.art },
   destinations: [
     {
       name: "Accounts",
