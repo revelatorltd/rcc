@@ -65,6 +65,8 @@ export function EditSettingsChanges({ payee, ...held }: HeldBy & { payee: Payee 
 export function Payees() {
   const rows = payees();
   const pictures = new Map(rows.map((one) => [one.enterprise.name, enterprisePicture(one.enterprise)]));
+  const names = new Map(rows.map((one) => [one.payeeId, one.name]));
+  const payorName = (one: Payee) => names.get(one.payorId) ?? one.payorId;
   return (
     <CollectionPage
       title="Payees"
@@ -74,14 +76,14 @@ export function Payees() {
         rowKey: (one) => one.payeeId,
         noun: { one: "payee", many: "payees" },
         identity: {
-          title: "Name",
+          title: "Payee",
           name: (one) => one.name,
           mark: (one) => payeeMark(one),
           sortable: true,
           opens: (one) => payeeHref(one.payeeId),
         },
-        sort: { column: "Name", direction: "ascending" },
-        searchBy: ["Name", "Payee ID", "Enterprise ID", "Enterprise", "Contact ID", "Contact", "Email", "Payor IDs"],
+        sort: { column: "Payee", direction: "ascending" },
+        searchBy: ["Payee", "Payee ID", "Enterprise ID", "Enterprise", "Payor", "Parent enterprise", "Contact ID", "Contact", "Email", "Payor IDs"],
         columns: [
           { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
           {
@@ -102,11 +104,28 @@ export function Payees() {
           },
           { name: "On trial", value: (one) => (one.onTrial ? 1 : 0), cell: (one) => yesNo(one.onTrial) },
           { name: "Locked out", value: (one) => (one.lockedOut ? 1 : 0), cell: (one) => yesNo(one.lockedOut) },
+          {
+            // WHO PAYS IT, by name: a client account's parent's payee, or the payee itself.
+            name: "Payor",
+            as: "entities",
+            value: (one) => [payorName(one)],
+            noun: { one: "payor", many: "payors" },
+            entity: "organization",
+            picture: (named) => pictures.get(named),
+          },
+          {
+            name: "Parent enterprise",
+            as: "entities",
+            value: (one) => (one.enterprise.parent ? [one.enterprise.parent.name] : []),
+            noun: { one: "parent enterprise", many: "parent enterprises" },
+            entity: "organization",
+            picture: (named) => pictures.get(named),
+          },
           { name: "Contact ID", as: "identifier", standard: "id", value: (one) => one.contactId },
           { name: "Contact", value: (one) => one.contact ?? "", cell: (one) => one.contact },
           { name: "Email", value: (one) => one.email ?? "", cell: (one) => one.email },
           { name: "Payment blocked", value: (one) => (one.paymentBlocked ? 1 : 0), cell: (one) => yesNo(one.paymentBlocked) },
-          { name: "Payor IDs", value: (one) => one.payorIds.join(", "), cell: (one) => one.payorIds.join(", ") },
+          { name: "Payor IDs", hidden: true, value: (one) => one.payorIds.join(", "), cell: (one) => one.payorIds.join(", ") },
           { name: "Currency", hidden: true, value: (one) => one.currency, cell: (one) => one.currency },
         ],
         readings: [
