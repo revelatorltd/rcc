@@ -48,10 +48,27 @@ share read down the column with its figure.
 | 14 | A **second identifier on the band** that says whose it is (Enterprise ID beside Payee ID) | two labelled chips | the enterprise ID alone on the band; the payee ID in Details |
 | 15 | A **long value in a facet tile** (a white label's domain) | — | runs over its label; the tile shows the white label's title instead |
 
+## Forms (customers and tenants)
+
+Reference: `vCustNew`, `vSubNew`, `vSignup`, `vCfgEdit`, `vEntEdit`, `vAddUser`, `vImport`,
+`vPartnerForm` and the white label form in the prototype.
+
+| # | Asked for | Prototype | Here, until decided |
+| - | --------- | --------- | ------------------- |
+| 16 | A **field whose options follow another answer**: the tax ID types of the country picked, the subscriptions of the customer picked, a Warner entity's rates held at 0 | the select refills, or disables, as the answer above it changes | every tax ID type is offered, and one left blank follows the country; only customers with a subscription are offered, and the commit links the one that fits; a Warner entity's rates are saved as 0 whatever was typed |
+| 17 | A **yes-or-no answer** in a declared form | a checkbox (Is sandbox, Trial?, Locked out?) | a choice of Yes and No; where the answer names something, a choice of what (Production, Demo, API sandbox) |
+| 18 | **Word of what a commit did** — a toast | a toast after every save | none: each form returns to the page that shows what it added |
+| 19 | A wizard that **opens another and comes back** to its draft (sign-up → new customer or subscription → sign-up) | the sign-up's draft is set aside and restored | a tip sends the reader to the customer first; the sign-up offers only customers that can take a tenant |
+
+Decided by RCC rather than asked:
+
+- **Add user** adds a team member by name and email. The prototype searches the product's users, a
+  set RCC does not hold until Users is built.
+- **Edit enterprise** asks only what RCC holds: name, plan, partner, currency, minimum payment,
+  and the account's standing. The product's other enterprise settings stay the product's.
+- What leaves RCC stays without an address: Impersonate, Open in Stripe, Billing, Export, and
+  Download template. Impersonating the owner from the setup marks the step tried, as the prototype does.
+
 ## Not built yet
 
-- **Forms the tenant pages start** — Sign up new tenant, Link customer, Create white label, Create
-  API partner, Add user, Import client accounts, Edit enterprise, Edit tenant configuration, Convert
-  to production. Offered without an address until each is walked and built.
-- **New customer** — a full-page form in the prototype; to be walked before it is written.
 - **Enterprises, Partners, Payees, Users, White labels** — in the nav, inert.

@@ -29,10 +29,13 @@ import {
 import {
   CUSTOMER_FACETS,
   accountsHref,
+  customerFormHref,
   customerHref,
+  signUpTenantHref,
   tenantHref,
   type CustomerFacet,
 } from "../route";
+import { AddContact } from "./add-contact";
 import { customerMark } from "./mark";
 import { MONTHS, RECORDS, customerById, isSandbox, monthlyOf, progressOf, tenantsOf, type Customer, type CustomerRecord } from "./mock";
 import { tenantMark } from "./tenants";
@@ -54,7 +57,7 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
   const FACETS: Record<CustomerFacet, { header?: DetailFacet; body: ReactNode }> = {
     Overview: { body: <CustomerOverview customer={customer} record={record} /> },
     Details: {
-      header: { name: "Details", more: [{ label: "Edit customer" }] },
+      header: { name: "Details", more: [{ label: "Edit customer", opens: customerFormHref(customer.id, "edit") }] },
       body: <CustomerDetails customer={customer} record={record} />,
     },
     Subscriptions: {
@@ -62,7 +65,7 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
       body: <CustomerSubscriptions customer={customer} />,
     },
     Contacts: {
-      header: { name: "Contacts", actions: [{ label: "Add contact", creates: true }] },
+      header: { name: "Contacts", actions: [{ label: "Add contact", creates: true, dialog: <AddContact customerId={customer.id} /> }] },
       body: <CustomerContacts record={record} />,
     },
     Tenants: {
@@ -71,6 +74,8 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
     },
   };
   const shown = FACETS[facet];
+  const addSubscription = { label: "Add subscription", opens: customerFormHref(customer.id, "add-subscription") };
+  const signUpTenant = { label: "Sign up new tenant", opens: signUpTenantHref(customer.id) };
 
   return (
     <DetailPage
@@ -92,10 +97,11 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
         // ONE command stands out, and it is the step owed next: a customer with no subscription
         // can take no tenant, so it is offered the subscription; past that, the tenant. The other
         // waits in the overflow — and on the Overview, in the card of what is still missing.
-        actions: [{ label: owed ? "Add subscription" : "Sign up new tenant", primary: true }],
+        actions: [owed ? { ...addSubscription, primary: true } : { ...signUpTenant, primary: true }],
         more: [
-          { label: owed ? "Sign up new tenant" : "Add subscription" },
-          { label: "Edit customer" },
+          owed ? { label: "Sign up new tenant", unavailable: "Add a subscription first." } : addSubscription,
+          { label: "Edit customer", opens: customerFormHref(customer.id, "edit") },
+          // Stripe is another service, which this rebuild does not open.
           { label: "Open in Stripe" },
         ],
       }}
@@ -179,7 +185,9 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
           <TitledCard title="Subscriptions">
             <Slot layout="empty">
               <EmptyState title="No subscription yet" detail="No tenant can be signed up until one is linked.">
-                <Button>Add subscription</Button>
+                <Button asChild>
+                  <a href={customerFormHref(customer.id, "add-subscription")}>Add subscription</a>
+                </Button>
               </EmptyState>
             </Slot>
           </TitledCard>
@@ -215,7 +223,11 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
                 title="No tenant yet"
                 detail={owed ? "A tenant follows the subscription." : "The subscription is linked: sign up the first tenant."}
               >
-                {owed ? null : <Button>Sign up new tenant</Button>}
+                {owed ? null : (
+                  <Button asChild>
+                    <a href={signUpTenantHref(customer.id)}>Sign up new tenant</a>
+                  </Button>
+                )}
               </EmptyState>
             </Slot>
           </TitledCard>
@@ -300,6 +312,9 @@ function CustomerSubscriptions({ customer }: { customer: Customer }) {
           value: (one) => (one.sandbox ? "Sandbox" : "Live"),
           cell: (one) => (one.sandbox ? "Sandbox" : "Live"),
         },
+        { name: "Coupon", value: (one) => one.coupon ?? "", cell: (one) => one.coupon },
+        { name: "Note", value: (one) => one.note ?? "", cell: (one) => one.note },
+        { name: "Linked", as: "date", value: (one) => one.linked },
       ]}
       chooser={false}
       empty={{ holder: "this customer", line: true }}

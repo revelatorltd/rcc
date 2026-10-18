@@ -1,4 +1,5 @@
 import { formatMeta } from "@revelator/pro-ui";
+import { useSyncExternalStore } from "react";
 import type { OrganizationSlug } from "@revelator/pro-ui/assets";
 
 /**
@@ -19,6 +20,12 @@ export interface Subscription {
   /** A sandbox subscription carries demo and test tenants, never a live catalogue. */
   sandbox: boolean;
   product: "Enterprise" | "Revelator Pro" | "API";
+  /** The discount Stripe applies to it, where one was given. */
+  coupon?: string;
+  /** What it is for, where the product does not say it — demo tenants, a Warner imprint. */
+  note?: string;
+  /** The day it was linked in RCC, where it was linked here. */
+  linked?: Date;
 }
 
 export interface Customer {
@@ -39,7 +46,7 @@ export interface Customer {
 
 const enterprise = (id: string): Subscription => ({ id, sandbox: false, product: "Enterprise" });
 
-export const CUSTOMERS: readonly Customer[] = [
+export let CUSTOMERS: readonly Customer[] = [
   { id: "512", name: "Lowtide Assembly", organization: "lowtide-assembly", email: "office@lowtide-assembly.co", status: "Onboarding", type: "Client", subscriptions: [], dspRate: 12, created: day(2026, 10, 15) },
   { id: "509", name: "Verdant Static", organization: "verdant-static", email: "accounts@verdantstatic.io", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rverdant509")], dspRate: 5, created: day(2026, 10, 13) },
   { id: "506", name: "Atlas Harbor Music", organization: "atlas-harbor-music", email: "label@atlasharbor.nl", status: "Onboarding", type: "Warner entity", subscriptions: [], dspRate: 0, created: day(2026, 10, 11) },
@@ -67,7 +74,7 @@ export interface Contact {
   name: string;
   email: string;
   phone?: string;
-  roles: readonly ("Primary" | "Billing" | "Royalties" | "Technical")[];
+  roles: readonly ("Primary" | "Billing" | "Royalties" | "Technical" | "Legal")[];
 }
 
 /** What a customer's record holds beyond its row: the company, the contract and its people. Its tenants are their own set (TENANTS). */
@@ -92,7 +99,7 @@ export interface CustomerRecord {
 }
 
 
-export const RECORDS: Record<string, CustomerRecord> = {
+export let RECORDS: Readonly<Record<string, CustomerRecord>> = {
   "512": { stripe: "cus_R8lowtide512", revelatorRevenue: 320, clientRevenue: 2670, phone: "+61 2 5550 1188", address: "44 Kent St, 2000", country: "Australia", taxType: "AU ABN", taxId: "51 824 753 556", ugcRate: 15, youtubeRate: 10, misc: 0, newCustomer: true, comment: "Signed at the Sydney showcase", contacts: [{ name: "Harriet Vale", email: "harriet@lowtide-assembly.co", roles: ["Primary", "Billing"] }] },
   "509": { stripe: "cus_R8verdant509", revelatorRevenue: 410, clientRevenue: 8200, phone: "+1 415 555 0172", address: "210 Valencia St, 94103", country: "United States of America", taxType: "US EIN", taxId: "84-2219073", ugcRate: 8, youtubeRate: 6.5, misc: 0, newCustomer: true, contacts: [{ name: "Omar Reyes", email: "omar@verdantstatic.io", phone: "+1 415 555 0173", roles: ["Primary"] }, { name: "Lena Brandt", email: "billing@verdantstatic.io", roles: ["Billing"] }] },
   "506": { stripe: "cus_R8atlas506", revelatorRevenue: 260, clientRevenue: 9480, phone: "+31 20 555 0161", address: "Prinsengracht 412, 1016 JA", country: "Netherlands", taxType: "EU VAT", taxId: "NL862204517B01", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: true, comment: "Warner Benelux imprint", contacts: [{ name: "Sanne Kuipers", email: "sanne@atlasharbor.nl", roles: ["Primary", "Royalties"] }] },
@@ -159,6 +166,21 @@ export interface TenantStore {
   displayed: boolean;
 }
 
+/** The record a tenant loads under: its domain, how it signs people in, and what it shows. */
+export interface WhiteLabel {
+  id: string;
+  domain: string;
+  title: string;
+  allowSignup: boolean;
+  /** Whether the client bought white label — its own domain and sign-in page, unlocked. */
+  enabled?: boolean;
+  allowForgotPassword?: boolean;
+  showRevelatorBranding?: boolean;
+  termsUrl?: string;
+  faqUrl?: string;
+  helpUrl?: string;
+}
+
 /** A tenant — an enterprise signed up under a customer, the workspace its catalogue lives in. */
 export interface Tenant {
   enterpriseId: string;
@@ -179,10 +201,18 @@ export interface Tenant {
   currency: string;
   /** The smallest payout a payee of the tenant is paid, in its currency. */
   minimumPayment: number;
+  /** The domain its configuration names — where the tenant loads, once it has a white label. */
+  domain?: string;
   /** The white label record the tenant loads under — none, and the tenant does not load. */
-  whiteLabel?: { id: string; domain: string; title: string; allowSignup: boolean };
+  whiteLabel?: WhiteLabel;
+  /** Who it was signed up for, where it was signed up here; otherwise the customer's primary contact. */
+  owner?: { name: string; email: string };
+  /** What Revelator keeps of the tenant's revenue, in percent — the customer's, where it was not set apart. */
+  rates?: { dsp: number; ugc: number; youtube: number };
   /** How many of the stores are switched on and shown. */
   storesLive: number;
+  /** Each store as it was switched by hand, once one has been — replacing the count above. */
+  stores?: readonly TenantStore[];
   /** Whether the login was tried as the owner, and the owner told the tenant is ready. */
   tested: boolean;
   emailed: boolean;
@@ -230,7 +260,7 @@ const child = (enterpriseId: string, name: string, created: Date): ChildEnterpri
 });
 
 /** The tenants, newest first — each under its customer, a few still being set up, one never linked. */
-export const TENANTS: readonly Tenant[] = [
+export let TENANTS: readonly Tenant[] = [
   t({ enterpriseId: "612240", name: "Saltmarsh Tapes", plan: "2 - Starter", created: day(2026, 10, 14), onTrial: true, whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
   t({ enterpriseId: "612034", customerId: "501", name: "Paperkite Sound", plan: "4 - Enterprise", created: day(2026, 10, 6), storesLive: 0, tested: false, emailed: false }),
   t({ enterpriseId: "611980", customerId: "232", name: "Halcyon Pilot", plan: "4 - Enterprise", environment: "Demo", created: day(2026, 10, 1), tested: false, emailed: false }),
@@ -282,7 +312,7 @@ export const customerOf = (one: Tenant) => (one.customerId ? customerById(one.cu
  */
 export function usersOf(one: Tenant): readonly TenantUser[] {
   const contact = one.customerId ? RECORDS[one.customerId]!.contacts.find((c) => c.roles.includes("Primary")) : undefined;
-  const owner = contact ?? { name: "Wren Okafor", email: "wren@saltmarshtapes.example" };
+  const owner = one.owner ?? contact ?? { name: "Wren Okafor", email: "wren@saltmarshtapes.example" };
   return [{ name: owner.name, email: owner.email }, ...one.team].map((user, at) => ({
     ...user,
     userId: `${one.enterpriseId.slice(0, 4)}c${at}e7-${one.enterpriseId.slice(2)}-4a1f`,
@@ -292,11 +322,15 @@ export function usersOf(one: Tenant): readonly TenantUser[] {
 
 /** The stores the tenant can deliver to — the real ones, or a sandbox's two — the first few switched on. */
 export const storesOf = (one: Tenant): readonly TenantStore[] =>
+  one.stores ??
   (isSandbox(one) ? SANDBOX_STORES : PRODUCTION_STORES).map((name, at) => ({
     name,
     active: at < one.storesLive,
     displayed: at < one.storesLive,
   }));
+
+/** How many of a tenant's stores are on and shown — the ones it can deliver to. */
+export const liveStoresOf = (one: Tenant) => storesOf(one).filter((store) => store.active && store.displayed).length;
 
 /** A payee of the tenant: its own, and one for each client account a parent holds. */
 export interface TenantPayee {
@@ -351,13 +385,13 @@ export function setupOf(one: Tenant): readonly SetupStep[] {
       key: "stores",
       title: "Stores",
       detail: sandbox
-        ? one.storesLive
+        ? liveStoresOf(one)
           ? "The two sandbox stores are on, so a test delivery can be tried. Nothing reaches a real store."
           : "Turn on the two sandbox stores to let the owner try a test delivery."
-        : one.storesLive
-          ? `${one.storesLive} of ${PRODUCTION_STORES.length} stores on and shown`
+        : liveStoresOf(one)
+          ? `${liveStoresOf(one)} of ${PRODUCTION_STORES.length} stores on and shown`
           : "Every store starts off, so the tenant cannot deliver yet.",
-      done: one.storesLive > 0,
+      done: liveStoresOf(one) > 0,
       optional: sandbox,
     },
     one.environment === "API sandbox"
@@ -393,3 +427,87 @@ export function progressOf(one: Tenant) {
   const steps = setupOf(one);
   return { done: steps.filter((step) => step.done).length, of: steps.length };
 }
+
+/*
+ * WHAT THE FORMS WRITE. RCC has no back end: a form adds to the fixtures above, which keep what it
+ * added until the page reloads. Every write swaps the set it changed for a new one and tells the app,
+ * which draws again from the sets as they now are.
+ */
+
+let version = 0;
+const listeners = new Set<() => void>();
+
+const changed = () => {
+  version += 1;
+  listeners.forEach((listener) => listener());
+};
+
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
+
+/** Draws the caller again whenever a form has written to the fixtures. */
+export const useFixtures = () => useSyncExternalStore(subscribe, () => version);
+
+/** The next number after the highest one a set holds — ids are issued in order. */
+const after = (ids: readonly string[], step: number) => String(Math.max(...ids.map(Number)) + step);
+
+/** A customer, with its record, added in front of the set — the newest first. */
+export function addCustomer(customer: Omit<Customer, "id" | "created">, record: CustomerRecord): string {
+  const id = after(CUSTOMERS.map((one) => one.id), 3);
+  CUSTOMERS = [{ ...customer, id, created: TODAY }, ...CUSTOMERS];
+  RECORDS = { ...RECORDS, [id]: record };
+  changed();
+  return id;
+}
+
+/** A customer and its record, changed where the patches say. */
+export function updateCustomer(id: string, customer: Partial<Customer>, record: Partial<CustomerRecord> = {}) {
+  CUSTOMERS = CUSTOMERS.map((one) => (one.id === id ? { ...one, ...customer } : one));
+  RECORDS = { ...RECORDS, [id]: { ...RECORDS[id]!, ...record } };
+  changed();
+}
+
+/** A subscription linked to a customer — and a customer still onboarding stays so until a tenant is live. */
+export function addSubscription(customerId: string, subscription: Subscription) {
+  CUSTOMERS = CUSTOMERS.map((one) =>
+    one.id === customerId ? { ...one, subscriptions: [...one.subscriptions, subscription] } : one,
+  );
+  changed();
+}
+
+/** Someone at the customer added to whom Revelator writes. */
+export function addContact(customerId: string, contact: Contact) {
+  const record = RECORDS[customerId]!;
+  RECORDS = { ...RECORDS, [customerId]: { ...record, contacts: [...record.contacts, contact] } };
+  changed();
+}
+
+/** The enterprise id the next tenant signed up is issued. */
+export const nextEnterpriseId = () =>
+  after([...TENANTS.map((one) => one.enterpriseId), ...TENANTS.flatMap((one) => one.children.map((each) => each.enterpriseId))], 7);
+
+/** A tenant signed up — its enterprise, its payee and its owner — in front of the set. */
+export function addTenant(tenant: Tenant): string {
+  TENANTS = [tenant, ...TENANTS];
+  changed();
+  return tenant.enterpriseId;
+}
+
+/** A tenant changed where the patch says. */
+export function updateTenant(id: string, patch: Partial<Tenant>) {
+  TENANTS = TENANTS.map((one) => (one.enterpriseId === id ? { ...one, ...patch } : one));
+  changed();
+}
+
+/** A tenant's stores switched, the ones named taking the patch. */
+export function switchStores(id: string, names: readonly string[], patch: Partial<TenantStore>) {
+  const tenant = tenantById(id);
+  updateTenant(id, { stores: storesOf(tenant).map((store) => (names.includes(store.name) ? { ...store, ...patch } : store)) });
+}
+
+/** The template a tenant is signed up from — every answer the form does not ask for, settled. */
+export const signedUp = (drafted: Drafted) => t({ whiteLabel: undefined, storesLive: 0, tested: false, emailed: false, ...drafted });

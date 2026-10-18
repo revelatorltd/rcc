@@ -1,6 +1,6 @@
 import { Badge, CollectionPage } from "@revelator/pro-ui";
 
-import { customerHref } from "../route";
+import { customerFormHref, customerHref, newCustomerHref, signUpTenantHref } from "../route";
 import { customerMark } from "./mark";
 import { CUSTOMERS, tenantsOf, type Customer } from "./mock";
 
@@ -20,7 +20,7 @@ export function Customers() {
   return (
     <CollectionPage
       title="Customers"
-      actions={[{ label: "New customer", primary: true, creates: true }]}
+      actions={[{ label: "New customer", primary: true, creates: true, opens: newCustomerHref() }]}
       more={[{ label: "Export" }]}
       index={{
         rows: CUSTOMERS,
@@ -101,8 +101,11 @@ export function Customers() {
         totals: [{ count: true }],
         commands: (one) => [
           { label: "Open", opens: customerHref(one.id) },
-          { label: "Add subscription" },
-          { label: "Sign up new tenant" },
+          { label: "Add subscription", opens: customerFormHref(one.id, "add-subscription") },
+          // No tenant before a subscription: the command says why rather than opening a form that cannot commit.
+          one.subscriptions.length
+            ? { label: "Sign up new tenant", opens: signUpTenantHref(one.id) }
+            : { label: "Sign up new tenant", unavailable: "Add a subscription first." },
         ],
       }}
     />

@@ -1,8 +1,9 @@
 import { Avatar, CollectionPage, Progress } from "@revelator/pro-ui";
 import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
-import { tenantHref } from "../route";
+import { signUpTenantHref, tenantHref } from "../route";
 import { CUSTOMERS, TENANTS, customerOf, progressOf, type Environment, type Tenant } from "./mock";
+import { ResetBalances } from "./tenant-dialogs";
 
 const ENVIRONMENTS: readonly Environment[] = ["Production", "Demo", "API sandbox"];
 const PLANS = ["2 - Starter", "3 - Growth", "4 - Enterprise"] as const;
@@ -32,7 +33,7 @@ export function Tenants() {
   return (
     <CollectionPage
       title="Tenants"
-      actions={[{ label: "Sign up new tenant", primary: true, creates: true }]}
+      actions={[{ label: "Sign up new tenant", primary: true, creates: true, opens: signUpTenantHref() }]}
       more={[{ label: "Export" }]}
       index={{
         rows: TENANTS,
@@ -127,7 +128,7 @@ export function Tenants() {
         commands: (one) => [
           { label: "Open", opens: tenantHref(one.enterpriseId) },
           { label: "Billing" },
-          { label: "Reset balances", destructive: true },
+          { label: "Reset balances", destructive: true, dialog: <ResetBalances tenant={one} /> },
         ],
       }}
     />

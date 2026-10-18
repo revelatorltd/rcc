@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   Alert,
   Avatar,
@@ -25,7 +25,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { TENANT_FACETS, accountsHref, customerHref, tenantHref, type TenantFacet } from "../route";
+import { TENANT_FACETS, accountsHref, customerHref, tenantFormHref, tenantHref, type TenantFacet } from "../route";
 import {
   customerOf,
   isSandbox,
@@ -33,11 +33,15 @@ import {
   progressOf,
   setupOf,
   storesOf,
+  switchStores,
   tenantById,
+  updateTenant,
   usersOf,
   type SetupStep,
   type Tenant,
+  type TenantStore,
 } from "./mock";
+import { AddUser, RemoveAccess, ResetBalances, SetOwner } from "./tenant-dialogs";
 import { tenantMark } from "./tenants";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
@@ -50,18 +54,44 @@ function commandOf(one: Tenant, step: SetupStep): Command {
   const customer = customerOf(one);
   switch (step.key) {
     case "customer":
-      return customer ? { label: "Open customer", opens: customerHref(customer.id) } : { label: "Link customer" };
+      if (!customer) return { label: "Link customer", opens: tenantFormHref(one.enterpriseId, "configure") };
+      // Linked but owed: the customer's subscription is added on the customer.
+      return { label: "Open customer", opens: customerHref(customer.id, step.done ? "Overview" : "Subscriptions") };
     case "white-label":
-      return one.whiteLabel ? { label: "Open white label", opens: tenantHref(one.enterpriseId, "White label") } : { label: "Create white label" };
+      return one.whiteLabel
+        ? { label: "Open white label", opens: tenantHref(one.enterpriseId, "White label") }
+        : { label: "Create white label", opens: tenantFormHref(one.enterpriseId, "new-white-label") };
     case "stores":
       return { label: step.done ? "Open stores" : "Turn on stores", opens: tenantHref(one.enterpriseId, "Stores") };
     case "partner":
-      return { label: one.partnerId ? "Open partner" : "Create API partner" };
+      // Partners are a page RCC has not built: a connected one is read in the Details.
+      return one.partnerId
+        ? { label: "Open details", opens: tenantHref(one.enterpriseId, "Details") }
+        : { label: "Create API partner", opens: tenantFormHref(one.enterpriseId, "new-partner") };
     case "login":
-      return { label: "Impersonate owner" };
+      // Signing in as the owner leaves RCC, which this rebuild does not model: the step is marked
+      // tried, as the prototype marks it.
+      return { label: "Impersonate owner", opens: () => updateTenant(one.enterpriseId, { tested: true }) };
     case "handover":
-      return { label: "Copy handover email" };
+      return {
+        label: "Copy handover email",
+        opens: () => {
+          void navigator.clipboard?.writeText(handoverOf(one)).catch(() => {});
+          updateTenant(one.enterpriseId, { emailed: true });
+        },
+      };
   }
+}
+
+/** What the owner is told once the tenant is ready: where to go, and how to set a password. */
+function handoverOf(one: Tenant) {
+  const owner = usersOf(one)[0]!;
+  const domain = one.whiteLabel?.domain ?? "your domain";
+  return [
+    `Hi ${owner.name.split(" ")[0]},`,
+    `Your Revelator account ${one.name} is ready. Go to ${domain}, choose Forgot password to set yours, and sign in.`,
+    "Always start from your domain: a saved sign-in link can set off repeated password resets.",
+  ].join("\n\n");
 }
 
 /** The step owed next — the first not done that keeps the tenant from its handover. */
@@ -82,21 +112,30 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
     Overview: { body: <TenantOverview tenant={tenant} /> },
     Setup: { header: { name: "Setup" }, body: <TenantSetup tenant={tenant} /> },
     Details: {
-      header: { name: "Details", more: [{ label: "Edit enterprise" }, { label: "Edit tenant configuration" }] },
+      header: {
+        name: "Details",
+        more: [
+          { label: "Edit enterprise", opens: tenantFormHref(tenant.enterpriseId, "edit") },
+          { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
+        ],
+      },
       body: <TenantDetails tenant={tenant} />,
     },
     Users: {
-      header: { name: "Users", actions: [{ label: "Add user", creates: true }] },
+      header: { name: "Users", actions: [{ label: "Add user", creates: true, dialog: <AddUser tenant={tenant} /> }] },
       body: <TenantUsers tenant={tenant} />,
     },
     Payees: { header: { name: "Payees" }, body: <TenantPayees tenant={tenant} /> },
     Stores: { header: { name: "Stores", more: [{ label: "Export" }] }, body: <TenantStores tenant={tenant} /> },
     "White label": {
-      header: { name: "White label", more: tenant.whiteLabel ? [{ label: "Edit white label" }] : [] },
+      header: {
+        name: "White label",
+        more: tenant.whiteLabel ? [{ label: "Edit white label", opens: tenantFormHref(tenant.enterpriseId, "edit-white-label") }] : [],
+      },
       body: <TenantWhiteLabel tenant={tenant} />,
     },
     Children: {
-      header: { name: "Children", actions: [{ label: "Import client accounts" }] },
+      header: { name: "Children", actions: [{ label: "Import client accounts", opens: tenantFormHref(tenant.enterpriseId, "import") }] },
       body: <TenantChildren tenant={tenant} />,
     },
   };
@@ -108,11 +147,11 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
     ? [next.opens ? { label: next.label, opens: next.opens, primary: true } : { label: next.label, primary: true }]
     : [];
   const more: Command[] = [
-    { label: "Edit enterprise" },
-    { label: "Edit tenant configuration" },
-    ...(isSandbox(tenant) ? [{ label: "Convert to production" }] : []),
+    { label: "Edit enterprise", opens: tenantFormHref(tenant.enterpriseId, "edit") },
+    { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
+    ...(isSandbox(tenant) ? [{ label: "Convert to production", opens: tenantFormHref(tenant.enterpriseId, "convert") }] : []),
     { label: "Billing" },
-    { label: "Reset balances", destructive: true },
+    { label: "Reset balances", destructive: true, dialog: <ResetBalances tenant={tenant} /> },
   ];
 
   return (
@@ -186,7 +225,9 @@ function TenantOverview({ tenant }: { tenant: Tenant }) {
           <TitledCard title="White label">
             <Slot layout="empty">
               <EmptyState title="No white label yet" detail="The tenant does not load until it has one.">
-                <Button>Create white label</Button>
+                <Button asChild>
+                  <a href={tenantFormHref(tenant.enterpriseId, "new-white-label")}>Create white label</a>
+                </Button>
               </EmptyState>
             </Slot>
           </TitledCard>
@@ -291,9 +332,21 @@ function TenantDetails({ tenant }: { tenant: Tenant }) {
           { label: "Enterprise ID", value: tenant.enterpriseId, standard: "id" },
           { label: "Payee ID", value: tenant.payeeId, standard: "id" },
           { label: "Partner ID", value: tenant.partnerId, standard: "id" },
+          { label: "Domain", value: tenant.domain ?? tenant.whiteLabel?.domain },
           { label: "Created", as: "date", value: tenant.created },
         ]}
       />
+      {/* ITS OWN RATES where it was signed up here; otherwise the customer's contract applies. */}
+      {tenant.rates ? (
+        <FactCard
+          title="Distribution contract"
+          facts={[
+            { label: "DSP rate", as: "percent", value: tenant.rates.dsp },
+            { label: "UGC rate", as: "percent", value: tenant.rates.ugc },
+            { label: "YouTube channel rate", as: "percent", value: tenant.rates.youtube },
+          ]}
+        />
+      ) : null}
       <FactCard
         title="Account"
         facts={[
@@ -332,9 +385,14 @@ function TenantUsers({ tenant }: { tenant: Tenant }) {
         { name: "User ID", as: "identifier", standard: "id", value: (one) => one.userId },
       ]}
       commands={(one) => [
+        // Signing in as them leaves RCC, which this rebuild does not model.
         { label: "Impersonate" },
-        { label: one.owner ? "Unset as owner" : "Set as owner" },
-        { label: "Remove access", destructive: true },
+        one.owner
+          ? { label: "Set as owner", unavailable: "They are the owner." }
+          : { label: "Set as owner", dialog: <SetOwner tenant={tenant} user={one} /> },
+        one.owner
+          ? { label: "Remove access", destructive: true, unavailable: "Make someone else the owner first." }
+          : { label: "Remove access", destructive: true, dialog: <RemoveAccess tenant={tenant} user={one} /> },
       ]}
       chooser={false}
       empty={{ holder: "this tenant", line: true }}
@@ -369,9 +427,11 @@ function TenantPayees({ tenant }: { tenant: Tenant }) {
  * hidden. Held together, several are switched at once.
  */
 function TenantStores({ tenant }: { tenant: Tenant }) {
+  // The SAME rows until the tenant changes: the index lets go of what is held when its rows do.
+  const stores = useMemo(() => storesOf(tenant), [tenant]);
   return (
     <RecordIndex
-      rows={storesOf(tenant)}
+      rows={stores}
       rowKey={(one) => one.name}
       noun={{ one: "store", many: "stores" }}
       identity={{ title: "Store", name: (one) => one.name }}
@@ -387,7 +447,18 @@ function TenantStores({ tenant }: { tenant: Tenant }) {
           cell: (one) => <Badge status={one.displayed ? "feature:Enabled" : "feature:Disabled"} />,
         },
       ]}
-      selection={[{ label: "Turn on" }, { label: "Turn off" }, { label: "Show" }, { label: "Hide" }]}
+      // What switching does, to the stores held — written to the tenant at once, as the prototype's
+      // batch is; nothing here is lost that a second press does not bring back.
+      selection={(held) => {
+        const names = held.map((one) => one.name);
+        const to = (patch: Partial<TenantStore>) => () => switchStores(tenant.enterpriseId, names, patch);
+        return [
+          { label: "Turn on", opens: to({ active: true, displayed: true }) },
+          { label: "Turn off", opens: to({ active: false, displayed: false }) },
+          { label: "Show", opens: to({ displayed: true }) },
+          { label: "Hide", opens: to({ displayed: false }) },
+        ];
+      }}
       chooser={false}
       empty={{ holder: "this tenant", line: true }}
     />
@@ -405,7 +476,9 @@ function TenantWhiteLabel({ tenant }: { tenant: Tenant }) {
             title="No white label yet"
             detail="Every tenant needs one, white label client or not: without it the tenant does not load."
           >
-            <Button>Create white label</Button>
+            <Button asChild>
+                  <a href={tenantFormHref(tenant.enterpriseId, "new-white-label")}>Create white label</a>
+                </Button>
           </EmptyState>
         </Slot>
       </TitledCard>
@@ -418,7 +491,13 @@ function TenantWhiteLabel({ tenant }: { tenant: Tenant }) {
           { label: "White label ID", value: label.id, standard: "id" },
           { label: "Domain", value: label.domain },
           { label: "Title", value: label.title },
+          { label: "White label enabled", value: yesNo(Boolean(label.enabled)) },
           { label: "Allows sign-up", value: yesNo(label.allowSignup) },
+          { label: "Allows password reset", value: yesNo(label.allowForgotPassword ?? true) },
+          { label: "Shows Revelator's branding", value: yesNo(Boolean(label.showRevelatorBranding)) },
+          { label: "Terms and conditions", value: label.termsUrl },
+          { label: "FAQ", value: label.faqUrl },
+          { label: "Help", value: label.helpUrl },
         ]}
       />
     </Metadata>
