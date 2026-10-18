@@ -23,6 +23,14 @@ import { TenantDetail, tenantPlace } from "./accounts/tenant";
 import { ApiPartner, EditEnterprise, ImportChildren, TenantConfiguration, WhiteLabelForm } from "./accounts/tenant-forms";
 import { Tenants } from "./accounts/tenants";
 import { TODAY, useFixtures } from "./accounts/mock";
+import { AccessGroupDetail, accessGroupPlace } from "./platform/access-group";
+import { AccessGroupWizard, NewOrganization, TenantGroupWizard } from "./platform/forms";
+import { usePlatform } from "./platform/mock";
+import { OrganizationDetail, organizationPlace } from "./platform/organization";
+import { AccessGroups, Organizations, People, TenantGroups } from "./platform/pages";
+import { PersonDetail, personPlace } from "./platform/person";
+import type { PlatformPage, PlatformRoute } from "./platform/route";
+import { TenantGroupDetail, tenantGroupPlace } from "./platform/tenant-group";
 import { accountsHref, useRoute, whiteLabelHref, type AccountsPage, type Route } from "./route";
 import { Frame } from "./shell";
 
@@ -37,8 +45,65 @@ const PAGE_NAMES: Record<AccountsPage, string> = {
   "white-labels": "White labels",
 };
 
+/** Each Platform admin page, by the name its nav entry gives it. */
+const PLATFORM_NAMES: Record<PlatformPage, string> = {
+  organizations: "Organizations",
+  "tenant-groups": "Tenant groups",
+  "access-groups": "Access groups",
+  people: "People",
+};
+
+/** Where Platform admin puts the reader. */
+function platformPlaceOf(route: PlatformRoute): ShellPlace {
+  switch (route.name) {
+    case "organization":
+      return organizationPlace(route);
+    case "tenant-group":
+      return tenantGroupPlace(route);
+    case "access-group":
+      return accessGroupPlace(route);
+    case "person":
+      return personPlace(route);
+    case "index":
+      return { at: "Platform admin", page: PLATFORM_NAMES[route.page] };
+    default:
+      return { at: "Platform admin" };
+  }
+}
+
+/** A Platform admin page, or the form covering the shell. */
+function platformPageOf(route: PlatformRoute): { cover?: ReactNode; page?: ReactNode } {
+  switch (route.name) {
+    case "index":
+      return {
+        page: { organizations: <Organizations />, "tenant-groups": <TenantGroups />, "access-groups": <AccessGroups />, people: <People /> }[route.page],
+      };
+    case "organization":
+      return { page: <OrganizationDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} /> };
+    case "tenant-group":
+      return { page: <TenantGroupDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} /> };
+    case "access-group":
+      return { page: <AccessGroupDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} /> };
+    case "person":
+      return { page: <PersonDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} /> };
+    case "new-organization":
+      return { cover: <NewOrganization key="new" /> };
+    case "new-tenant-group":
+      return { cover: <TenantGroupWizard key={`new-${route.scope}`} scope={route.scope} /> };
+    case "edit-tenant-group":
+      return { cover: <TenantGroupWizard key={route.id} id={route.id} /> };
+    case "new-access-group":
+      return { cover: <AccessGroupWizard key={`new-${route.scope}-${route.target ?? ""}`} scope={route.scope} target={route.target} /> };
+    case "edit-access-group":
+      return { cover: <AccessGroupWizard key={route.id} id={route.id} /> };
+    case "duplicate-access-group":
+      return { cover: <AccessGroupWizard key={`copy-${route.id}`} id={route.id} duplicate /> };
+  }
+}
+
 /** Where the address puts the reader, for the frame the app draws around every page. */
 function placeOf(route: Route): ShellPlace {
+  if (route.name === "platform") return platformPlaceOf(route.route);
   if (route.name === "customer") return customerPlace(route);
   if (route.name === "tenant") return tenantPlace(route);
   if (route.name === "enterprise") return enterprisePlace(route);
@@ -55,6 +120,7 @@ function placeOf(route: Route): ShellPlace {
  * elsewhere are not drawn under it. Keyed by its address, so a second opening begins afresh.
  */
 function coverOf(route: Route): ReactNode {
+  if (route.name === "platform") return platformPageOf(route.route).cover ?? null;
   if (route.name === "new-customer") return <CustomerWizard key="new" />;
   if (route.name === "new-partner") return <NewPartner key="new" />;
   if (route.name === "edit-user") return <EditUser key={route.id} id={route.id} />;
@@ -85,15 +151,17 @@ function coverOf(route: Route): ReactNode {
 }
 
 function pageOf(route: Route) {
-  // KEYED by the record, so a second customer opens fresh rather than inheriting the first's state.
+  if (route.name === "platform") return platformPageOf(route.route).page;
+  // KEYED by the record AND its facet: a second record opens fresh, and so does each facet — an index
+  // keeps the narrowing it began with, and one facet's filters are not the next one's.
   if (route.name === "customer")
-    return <CustomerDetail key={route.id} id={route.id} facet={route.facet} />;
-  if (route.name === "tenant") return <TenantDetail key={route.id} id={route.id} facet={route.facet} />;
-  if (route.name === "enterprise") return <EnterpriseDetail key={route.id} id={route.id} facet={route.facet} />;
-  if (route.name === "partner") return <PartnerDetail key={route.id} id={route.id} facet={route.facet} />;
-  if (route.name === "payee") return <PayeeDetail key={route.id} id={route.id} facet={route.facet} />;
-  if (route.name === "user") return <UserDetail key={route.id} id={route.id} facet={route.facet} />;
-  if (route.name === "white-label") return <WhiteLabelDetail key={route.id} id={route.id} facet={route.facet} />;
+    return <CustomerDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
+  if (route.name === "tenant") return <TenantDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
+  if (route.name === "enterprise") return <EnterpriseDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
+  if (route.name === "partner") return <PartnerDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
+  if (route.name === "payee") return <PayeeDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
+  if (route.name === "user") return <UserDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
+  if (route.name === "white-label") return <WhiteLabelDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "accounts" && route.page === "tenants") return <Tenants />;
   if (route.name === "accounts" && route.page === "enterprises") return <Enterprises />;
   if (route.name === "accounts" && route.page === "partners") return <Partners />;
@@ -107,6 +175,7 @@ function App() {
   const route = useRoute();
   // Whatever a form wrote, every page draws again from the fixtures as they now are.
   useFixtures();
+  usePlatform();
   return coverOf(route) ?? <Frame place={placeOf(route)}>{pageOf(route)}</Frame>;
 }
 

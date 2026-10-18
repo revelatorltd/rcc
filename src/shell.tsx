@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AppShell, type ShellPlace, type ShellProduct } from "@revelator/pro-ui";
 import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
+import { platformHref } from "./platform/route";
 import { accountsHref } from "./route";
 
 /**
@@ -27,6 +28,22 @@ const PRODUCT: ShellProduct = {
             { name: "Payees", opens: accountsHref("payees") },
             { name: "Users", opens: accountsHref("users") },
             { name: "White labels", opens: accountsHref("white-labels") },
+          ],
+        },
+      ],
+    },
+    {
+      // WHO CAN SEE AND DO WHAT, on which tenants, and why — an enterprise's own access, run here.
+      name: "Platform admin",
+      mark: "locker",
+      opens: platformHref("organizations"),
+      pages: [
+        {
+          pages: [
+            { name: "Organizations", opens: platformHref("organizations") },
+            { name: "Tenant groups", opens: platformHref("tenant-groups") },
+            { name: "Access groups", opens: platformHref("access-groups") },
+            { name: "People", opens: platformHref("people") },
           ],
         },
       ],

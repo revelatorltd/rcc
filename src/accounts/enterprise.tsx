@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Alert,
   DetailPage,
@@ -102,8 +102,7 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
       }}
       facet={shown.header}
     >
-      {/* KEYED by the facet, so two facets that are both an index never share one's columns. */}
-      <Fragment key={facet}>{shown.body}</Fragment>
+      {shown.body}
     </DetailPage>
   );
 }

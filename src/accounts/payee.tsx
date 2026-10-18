@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Avatar,
   DetailPage,
@@ -114,7 +114,7 @@ export function PayeeDetail({ id, facet }: { id: string; facet: PayeeFacet }) {
       }}
       facet={shown.header}
     >
-      <Fragment key={facet}>{shown.body}</Fragment>
+      {shown.body}
     </DetailPage>
   );
 }

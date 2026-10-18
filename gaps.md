@@ -116,3 +116,33 @@ asked first, and the tenant it loaded goes back to owing one.
 Decided by RCC rather than asked: the prototype's form held every field of the product's record
 (Intercom, Google Analytics, page texts, BCC emails); RCC asks what a tenant's handover needs — its
 domain, how it signs people in, its title and branding, and where it sends people.
+
+## Platform admin
+
+Reference: `Platform Ops.dc.html` — who can see and do what, on which tenants, and why, for one
+enterprise: its organizations, tenant groups, access groups and people. A second destination on the
+rail; its fixtures (`src/platform/mock.ts`) are an invented enterprise of their own.
+
+| # | Asked for | Prototype | Here, until decided |
+| - | --------- | --------- | ------------------- |
+| 20 | A **picker of many records with a filter beside it**: tenants filtered by territory, moved between Available and Selected | two panels, a territory select, Add all | a searchable multi-record field, and a field to paste tenant IDs into |
+| 21 | **What a change will do, read as it is made**: "N people will get Royalties editor on N tenants; N lose access" | an impact panel beside every editor, recomputed on each answer | not drawn; each dialog's notice says what committing does, in words that do not count |
+| 22 | **A template that sets other answers and locks them** (an access group's permission matrix) | picking a template fills the matrix and disables it | the template and the matrix are both asked; a template picked wins, as its help says (gap 16) |
+| 23 | **One answer per row of a set inside a form**: each member's own end date | an end-date select on every member row | one end date for the members a form adds; each member's own is read on the group's Members |
+
+Decided by the system rather than asked:
+
+- **A list page holds one index and nothing beside it.** The prototype's Enterprise-level groups and
+  Health checks panels under the organizations: enterprise groups are a reading of Access groups;
+  each organization's health is a card on its Overview, and the organizations index filters by it.
+- **A new group is started in a scope**, so New tenant group and New access group offer each
+  organization (and the enterprise level) as the action's choices, and the form opens in it.
+- **Organizations are a list, not cards.** A grid needs a picture per record, and an organization's
+  mark is its initials.
+- **What removes access asks first.** The prototype archived groups, removed members and tenants
+  immediately; here each is a confirmation saying what ends.
+- **An organization's tenants, admins and defaults are facets of their own** (Tenants, Admins,
+  Settings) rather than one long settings page.
+
+Not built: the logo upload (static in the prototype), and the four signals the registry names (access
+requests, SoD conflicts, stale grants, integration health), which the prototype does not draw either.

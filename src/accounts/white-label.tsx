@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   DetailPage,
   FactCard,
@@ -97,7 +97,7 @@ export function WhiteLabelDetail({ id, facet }: { id: string; facet: WhiteLabelF
       }}
       facet={shown.header}
     >
-      <Fragment key={facet}>{shown.body}</Fragment>
+      {shown.body}
     </DetailPage>
   );
 }

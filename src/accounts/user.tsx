@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Alert,
   DetailPage,
@@ -119,7 +119,7 @@ export function UserDetail({ id, facet }: { id: string; facet: UserFacet }) {
       }}
       facet={shown.header}
     >
-      <Fragment key={facet}>{shown.body}</Fragment>
+      {shown.body}
     </DetailPage>
   );
 }

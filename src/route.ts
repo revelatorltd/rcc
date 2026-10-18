@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { readPlatform, type PlatformRoute } from "./platform/route";
+
 /**
  * Where the reader is, read off the address bar — a hash, as the replica reads it, so nothing
  * beside the system has to be explained when the result is read.
@@ -55,7 +57,8 @@ export type Route =
   | { name: "new-partner" }
   | { name: "edit-user"; id: string }
   | { name: "new-white-label" }
-  | { name: "edit-white-label"; id: string };
+  | { name: "edit-white-label"; id: string }
+  | { name: "platform"; route: PlatformRoute };
 
 export const accountsHref = (page: AccountsPage) => `#/accounts/${page}`;
 
@@ -94,7 +97,8 @@ const facetOf = <F extends string>(facets: readonly F[], written?: string): F =>
 
 /** The address read as a route. Anything it does not name lands on the section's first page. */
 function read(hash: string): Route {
-  const [, section, written, id, facet] = hash.replace(/^#/, "").split("/");
+  const [, section, written, id, facet, extra] = hash.replace(/^#/, "").split("/");
+  if (section === "platform") return { name: "platform", route: readPlatform([written, id, facet, extra]) };
   const page = ACCOUNTS_PAGES.find((one) => one === written);
   if (section !== "accounts" || !page) return { name: "accounts", page: "customers" };
   if (!id) return { name: "accounts", page };
