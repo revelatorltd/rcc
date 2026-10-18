@@ -277,9 +277,10 @@ export interface TenantConfig {
   authTenantId: string;
   authClientId: string;
   domain?: string;
-  marketplacePage: boolean;
-  masterChannel: boolean;
-  featureFm: boolean;
+  /** Three switches the table also holds unset — null, neither on nor off. */
+  marketplacePage: boolean | null;
+  masterChannel: boolean | null;
+  featureFm: boolean | null;
   tokenMintingWithoutValidation: boolean;
   minAudioLength: boolean;
   physicalReleases: boolean;
@@ -478,24 +479,24 @@ export const analyticsOf = (one: Tenant): TenantAnalytics => ({
  * A tenant's entry in the supply chain's tenant configuration — none until a customer is linked,
  * which is what writes it.
  */
-export const configOf = (one: Tenant): TenantConfig | undefined =>
-  one.customerId
-    ? {
-        authTenantId: uuidOf(`auth-${one.enterpriseId}`),
-        authClientId: uuidOf(`client-${one.enterpriseId}`),
-        domain: one.domain ?? one.whiteLabel?.domain,
-        marketplacePage: false,
-        masterChannel: false,
-        featureFm: false,
-        tokenMintingWithoutValidation: false,
-        minAudioLength: true,
-        physicalReleases: false,
-        withholdingTax: false,
-        noTransactionalEmails: false,
-        paymentBatcher: "Standard",
-        ...one.config,
-      }
-    : undefined;
+export const configOf = (one: Tenant): TenantConfig | undefined => (one.customerId ? configDefaultsOf(one) : undefined);
+
+/** What a tenant's entry holds, or would hold once written — the defaults, then what was set. */
+export const configDefaultsOf = (one: Tenant): TenantConfig => ({
+  authTenantId: uuidOf(`auth-${one.enterpriseId}`),
+  authClientId: uuidOf(`client-${one.enterpriseId}`),
+  domain: one.domain ?? one.whiteLabel?.domain,
+  marketplacePage: null,
+  masterChannel: null,
+  featureFm: null,
+  tokenMintingWithoutValidation: false,
+  minAudioLength: true,
+  physicalReleases: false,
+  withholdingTax: false,
+  noTransactionalEmails: false,
+  paymentBatcher: "Standard",
+  ...one.config,
+});
 
 /** What the team wrote about a tenant, newest first. */
 export const notesOf = (one: Tenant): readonly TenantNote[] =>

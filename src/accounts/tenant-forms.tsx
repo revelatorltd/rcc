@@ -22,6 +22,7 @@ import {
   CUSTOMERS,
   TODAY,
   addPartner,
+  configDefaultsOf,
   nextEnterpriseId,
   tenantById,
   updateTenant,
@@ -34,6 +35,10 @@ import { WhiteLabelWizard } from "./white-labels";
 const choices = (values: readonly string[]) => values.map((value) => ({ value, title: value }));
 const YES_NO = choices(["Yes", "No"]);
 const yes = (value: boolean | undefined) => (value ? "Yes" : "No");
+/** A switch the table also holds unset. */
+const MAYBE = choices(["Yes", "No", "Not set"]);
+const maybe = (value: boolean | null) => (value === null ? "Not set" : yes(value));
+const unmaybe = (value: string) => (value === "Not set" ? null : value === "Yes");
 
 /** The customer every demo and API sandbox is signed up under. */
 const DEMO_CUSTOMER = "232";
@@ -61,7 +66,10 @@ const back = (tenant: Tenant, facet: TenantFacet) => () => go(tenantHref(tenant.
  */
 export function TenantConfiguration({ id, convert }: { id: string; convert: boolean }) {
   const tenant = tenantById(id);
-  const leave = back(tenant, "Setup");
+  const config = configDefaultsOf(tenant);
+  // LINKING a tenant no customer was tied to is a setup step, and returns to the setup; changing
+  // the entry returns to it.
+  const leave = back(tenant, convert || !tenant.customerId ? "Setup" : "Tenant configuration");
   return (
     <Wizard
       {...(convert ? { verb: "Convert" } : { editing: true as const })}
@@ -72,13 +80,43 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
       draft={{
         customer: owed(convert && tenant.customerId === DEMO_CUSTOMER ? "" : (tenant.customerId ?? "")),
         environment: owed(convert ? "Production" : tenant.environment),
+        authTenantId: owed(config.authTenantId),
+        authClientId: owed(config.authClientId),
+        domain: config.domain ?? unanswered.text,
+        marketplacePage: owed(maybe(config.marketplacePage)),
+        masterChannel: owed(maybe(config.masterChannel)),
+        featureFm: owed(maybe(config.featureFm)),
+        minAudioLength: owed(yes(config.minAudioLength)),
+        tokenMintingWithoutValidation: owed(yes(config.tokenMintingWithoutValidation)),
+        physicalReleases: owed(yes(config.physicalReleases)),
+        withholdingTax: owed(yes(config.withholdingTax)),
+        noTransactionalEmails: owed(yes(config.noTransactionalEmails)),
+        tokenNetwork: config.tokenNetwork ?? unanswered.text,
       }}
       // CONVERTING keeps no tenant under the demo account: the real customer is the point of it.
       ready={(answers) => !convert || answers.customer !== DEMO_CUSTOMER}
       onCommit={(answers) => {
+        const text = (value: unknown) => (typeof value === "string" && value.trim()) || undefined;
+        const domain = text(answers.domain);
         updateTenant(tenant.enterpriseId, {
           customerId: answers.customer,
           environment: answers.environment as Environment,
+          domain,
+          config: {
+            ...tenant.config,
+            authTenantId: answers.authTenantId.trim(),
+            authClientId: answers.authClientId.trim(),
+            domain,
+            marketplacePage: unmaybe(answers.marketplacePage),
+            masterChannel: unmaybe(answers.masterChannel),
+            featureFm: unmaybe(answers.featureFm),
+            minAudioLength: answers.minAudioLength === "Yes",
+            tokenMintingWithoutValidation: answers.tokenMintingWithoutValidation === "Yes",
+            physicalReleases: answers.physicalReleases === "Yes",
+            withholdingTax: answers.withholdingTax === "Yes",
+            noTransactionalEmails: answers.noTransactionalEmails === "Yes",
+            tokenNetwork: text(answers.tokenNetwork),
+          },
           // A tenant moved to production loses its sandbox stores and its API partner's bench.
           ...(convert ? { stores: undefined, storesLive: 0, partnerId: undefined } : {}),
         });
@@ -114,12 +152,76 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
                 <Field as="choice" name="environment" label="Environment" options={choices(["Production", "Demo", "API sandbox"])} />
               </WizardRowBody>
               <WizardRowTips>
-                <WizardRowTip>A demo or a sandbox delivers nowhere. Convert it to production once the customer is ready.</WizardRowTip>
+                <WizardRowTip>Is sandbox tenant: a demo or an API sandbox delivers nowhere. Convert it to production once the customer is ready.</WizardRowTip>
               </WizardRowTips>
             </WizardRow>
           )}
         </WizardSectionBody>
       </WizardSection>
+      {convert ? null : (
+        <>
+          <WizardSection>
+            <WizardSectionHeader title="Sign-in" />
+            <WizardSectionBody>
+              <WizardRow title="Auth">
+                <WizardRowBody>
+                  <Field as="identifier" standard="id" name="authTenantId" label="Auth tenant ID" />
+                  <Field as="identifier" standard="id" name="authClientId" label="Auth client ID" />
+                  <Field as="text" name="domain" label="Domain" />
+                </WizardRowBody>
+                <WizardRowTips>
+                  <WizardRowTip>The tenant and client the auth service knows it by, and the domain it signs in on.</WizardRowTip>
+                </WizardRowTips>
+              </WizardRow>
+            </WizardSectionBody>
+          </WizardSection>
+          <WizardSection>
+            <WizardSectionHeader title="Features" />
+            <WizardSectionBody>
+              <WizardRow title="Pages and channels">
+                <WizardRowBody>
+                  <Field as="choice" name="marketplacePage" label="Marketplace page enabled" options={MAYBE} />
+                  <Field as="choice" name="masterChannel" label="Master channel enabled" options={MAYBE} />
+                  <Field as="choice" name="featureFm" label="Feature.fm enabled" options={MAYBE} />
+                </WizardRowBody>
+                <WizardRowTips>
+                  <WizardRowTip>Not set leaves the switch empty in the table: the product's default applies.</WizardRowTip>
+                </WizardRowTips>
+              </WizardRow>
+              <WizardRow title="Releases">
+                <WizardRowBody>
+                  <Field as="choice" name="minAudioLength" label="Minimum audio length validated" options={YES_NO} />
+                  <Field as="choice" name="physicalReleases" label="Physical releases enabled" options={YES_NO} />
+                </WizardRowBody>
+              </WizardRow>
+              <WizardRow title="Emails">
+                <WizardRowBody>
+                  <Field as="choice" name="noTransactionalEmails" label="All transactional emails turned off" options={YES_NO} />
+                </WizardRowBody>
+                <WizardRowTips>
+                  <WizardRowTip>Nobody at the tenant is emailed — not even a password reset.</WizardRowTip>
+                </WizardRowTips>
+              </WizardRow>
+            </WizardSectionBody>
+          </WizardSection>
+          <WizardSection>
+            <WizardSectionHeader title="Payments and royalty tokens" />
+            <WizardSectionBody>
+              <WizardRow title="Tax">
+                <WizardRowBody>
+                  <Field as="choice" name="withholdingTax" label="Withholding tax active" options={YES_NO} />
+                </WizardRowBody>
+              </WizardRow>
+              <WizardRow title="Royalty tokens">
+                <WizardRowBody>
+                  <Field as="choice" name="tokenMintingWithoutValidation" label="Token minting without distribution validation" options={YES_NO} />
+                  <Field as="text" name="tokenNetwork" label="Default royalty token network" />
+                </WizardRowBody>
+              </WizardRow>
+            </WizardSectionBody>
+          </WizardSection>
+        </>
+      )}
     </Wizard>
   );
 }

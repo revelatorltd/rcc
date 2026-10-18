@@ -38,6 +38,8 @@ import {
 } from "./mock";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
+/** A switch the table also holds unset. */
+const maybe = (value: boolean | null) => (value === null ? "Not set" : yesNo(value));
 const YES_NO = [
   { value: "Yes", title: "Yes" },
   { value: "No", title: "No" },
@@ -227,19 +229,24 @@ export function MigrateToWhiteLabel({ tenant, ...held }: HeldBy & { tenant: Tena
       {...held}
       confirm="Migrate"
       draft={{
-        authBaseUrl: owed(AUTH_BASE_URL),
+        authBaseUrl: owed(tenant.whiteLabel?.authBaseUrl ?? AUTH_BASE_URL),
         domain: domain ? owed(domain) : owed.text,
+        defaultPlanId: owed(tenant.whiteLabel?.defaultPlanId ?? "3"),
         enabled: owed<string>(yesNo(Boolean(tenant.whiteLabel?.enabled))),
       }}
       onCommit={(draft) => {
         const written = draft.domain.trim();
         const label = tenant.whiteLabel ?? { id: nextWhiteLabelId(), title: tenant.name, allowSignup: false, domain: written };
-        saveWhiteLabel({ ...label, domain: written, enabled: draft.enabled === "Yes" }, tenant.enterpriseId);
+        saveWhiteLabel(
+          { ...label, domain: written, authBaseUrl: draft.authBaseUrl.trim(), defaultPlanId: draft.defaultPlanId.trim(), enabled: draft.enabled === "Yes" },
+          tenant.enterpriseId,
+        );
         updateTenant(tenant.enterpriseId, { domain: written });
       }}
     >
       <Field as="url" name="authBaseUrl" label="Auth base URL" help="Always the same: it only handles the login redirect." />
       <Field as="text" name="domain" label="Domain" help="The tenant's full domain." />
+      <Field as="identifier" standard="id" name="defaultPlanId" label="Default plan ID" help="Always 3, unless the client's contract names another plan." />
       <Field
         as="choice"
         name="enabled"
@@ -291,9 +298,9 @@ export function TenantConfigurationFacet({ tenant }: { tenant: Tenant }) {
       <FactCard
         title="Features"
         facts={[
-          { label: "Marketplace page enabled", value: yesNo(config.marketplacePage) },
-          { label: "Master channel enabled", value: yesNo(config.masterChannel) },
-          { label: "Feature.fm enabled", value: yesNo(config.featureFm) },
+          { label: "Marketplace page enabled", value: maybe(config.marketplacePage) },
+          { label: "Master channel enabled", value: maybe(config.masterChannel) },
+          { label: "Feature.fm enabled", value: maybe(config.featureFm) },
           { label: "Physical releases enabled", value: yesNo(config.physicalReleases) },
           { label: "Minimum audio length validated", value: yesNo(config.minAudioLength) },
           { label: "Transactional emails turned off", value: yesNo(config.noTransactionalEmails) },
