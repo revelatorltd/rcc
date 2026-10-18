@@ -1,4 +1,4 @@
-import type { RecordIndexProps } from "@revelator/pro-ui";
+import { Avatar, type RecordIndexProps } from "@revelator/pro-ui";
 
 import {
   AddMembers,
@@ -52,6 +52,16 @@ import {
  * The four sets an enterprise's access is run from, each declared ONCE — the whole set on its page, or one
  * organization's in its record, where the organization column and filter fall away.
  */
+
+/** An organization's mark found by its name — for a row gathered by it; the enterprise level's too. */
+const orgMarkByName = (name: string) => {
+  const logo = logoByName(name);
+  return (
+    <Avatar kind="organization" name={name}>
+      {logo ? <img src={logo} alt="" /> : null}
+    </Avatar>
+  );
+};
 
 /** The scopes a group can belong to, in order: each organization, then the enterprise. */
 export const SCOPES = () => [...ORGANIZATIONS.map((one) => one.id), ENTERPRISE_SCOPE];
@@ -119,6 +129,24 @@ export function organizationIndex(): RecordIndexProps<Organization> {
   };
 }
 
+/**
+ * A row of the tenant groups gathered — an organization's, or a region's — standing for its
+ * members: what they list, who uses them, who reaches them, each counted once.
+ */
+type Gathered = TenantGroup & { members?: readonly TenantGroup[] };
+
+const membersOf = (one: TenantGroup) => (one as Gathered).members;
+const usedBy = (one: TenantGroup) => {
+  const members = membersOf(one);
+  return members ? [...new Set(members.flatMap((each) => accessGroupsUsing(each.id)))] : accessGroupsUsing(one.id);
+};
+const reachedBy = (one: TenantGroup) => {
+  const members = membersOf(one);
+  return members ? new Set(members.flatMap((each) => peopleWithAccess(each.id))).size : peopleWithAccess(one.id).length;
+};
+const scopesOf = (one: TenantGroup) => [...new Set((membersOf(one) ?? [one]).map((each) => scopeName(each.scope)))];
+const regionsOf = (one: TenantGroup) => [...new Set((membersOf(one) ?? [one]).map((each) => each.region))].join(", ");
+
 /** The tenant groups — of one scope, or of every one. */
 export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> {
   const rows = tenantGroups(scope);
@@ -141,7 +169,7 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
             {
               name: "Organization",
               as: "entities" as const,
-              value: (one: TenantGroup) => [scopeName(one.scope)],
+              value: (one: TenantGroup) => scopesOf(one),
               noun: { one: "organization", many: "organizations" },
               entity: "organization" as const,
               picture: logoByName,
@@ -151,14 +179,42 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
       {
         name: "Used by",
         as: "entities",
-        value: (one) => accessGroupsUsing(one.id).map((ag) => ag.name),
+        value: (one) => usedBy(one).map((ag) => ag.name),
         noun: { one: "access group", many: "access groups" },
         entity: "organization",
       },
-      { name: "People with access", as: "count", value: (one) => peopleWithAccess(one.id).length },
-      { name: "Region", value: (one) => one.region, cell: (one) => one.region },
-      { name: "Last changed", value: (one) => one.changed, cell: (one) => one.changed },
+      { name: "People with access", as: "count", value: (one) => reachedBy(one) },
+      { name: "Region", value: (one) => regionsOf(one), cell: (one) => regionsOf(one) },
+      { name: "Last changed", value: (one) => one.changed, cell: (one) => one.changed || undefined },
     ],
+    // GATHERED on the whole set — by the organization that owns each group, or by its region — so a
+    // reader sees an organization's groups together before any one of them. Inside an organization
+    // every group is its own, and the set is read plain.
+    ...(scope
+      ? {}
+      : {
+          gather: {
+            by: [
+              {
+                name: "By organization",
+                identity: "Organization",
+                key: (one: TenantGroup) => scopeName(one.scope),
+                mark: (key: string) => orgMarkByName(key),
+              },
+              { name: "By region", identity: "Region", key: (one: TenantGroup) => one.region },
+            ],
+            row: (members: readonly TenantGroup[], key: string): Gathered => ({
+              id: `gathered:${key}`,
+              scope: members[0]!.scope,
+              name: key,
+              description: "",
+              region: [...new Set(members.map((each) => each.region))].join(", "),
+              tenants: [...new Set(members.flatMap((each) => each.tenants))],
+              changed: "",
+              members,
+            }),
+          },
+        }),
     // WHETHER IT IS USED as readings: a group nobody's access group uses gives nobody anything.
     readings: [
       { name: "All", holds: () => true },
@@ -170,13 +226,17 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
       { kind: "anyOf", key: "region", label: "Region", options: [...new Set(rows.map((one) => one.region))], of: (one) => one.region },
     ],
     totals: [{ count: true }],
-    commands: (one) => [
-      { label: "Open", opens: tenantGroupHref(one.id) },
-      { label: "Edit tenant group", opens: editTenantGroupHref(one.id) },
-      { label: "View access groups", opens: tenantGroupHref(one.id, "Access groups") },
-      { label: "New access group on this group", opens: newAccessGroupHref(one.scope, one.id) },
-      { label: "Archive", destructive: true, dialog: <ArchiveTenantGroups groups={[one]} /> },
-    ],
+    // A gathered row is no tenant group of its own: what is done to one is done to its members.
+    commands: (one) =>
+      membersOf(one)
+        ? []
+        : [
+            { label: "Open", opens: tenantGroupHref(one.id) },
+            { label: "Edit tenant group", opens: editTenantGroupHref(one.id) },
+            { label: "View access groups", opens: tenantGroupHref(one.id, "Access groups") },
+            { label: "New access group on this group", opens: newAccessGroupHref(one.scope, one.id) },
+            { label: "Archive", destructive: true, dialog: <ArchiveTenantGroups groups={[one]} /> },
+          ],
     selection: (held) => [
       { label: "Archive", destructive: true, dialog: <ArchiveTenantGroups groups={held} /> },
       { label: "Export" },

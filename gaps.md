@@ -131,6 +131,7 @@ groups and access groups are named as the prototype names them; its people and t
 | 21 | **What a change will do, read as it is made**: "N people will get Royalties editor on N tenants; N lose access" | an impact panel beside every editor, recomputed on each answer | not drawn; each dialog's notice says what committing does, in words that do not count |
 | 22 | **A template that sets other answers and locks them** (an access group's permission matrix) | picking a template fills the matrix and disables it | the template and the matrix are both asked; a template picked wins, as its help says (gap 16) |
 | 23 | **One answer per row of a set inside a form**: each member's own end date | an end-date select on every member row | one end date for the members a form adds; each member's own is read on the group's Members |
+| 25 | **A way back to the records ungathered** — grouping as a choice the reader can turn off | — | Tenant groups opens gathered By organization, and By region is the other choice; the plain list is read inside an organization, on its Tenant groups |
 | 24 | **The Warner organizations' logos** — ADA, Atlantic, Warner Records, Rhino, 300 Entertainment, 10K Projects, and Warner Music Group's — among the system's organization marks | a logo per organization | copied from the prototype into `src/platform/logos/` until the system ships them; Warner Records' padded to a square. An organization made in RCC keeps its initials |
 
 Decided by the system rather than asked:
