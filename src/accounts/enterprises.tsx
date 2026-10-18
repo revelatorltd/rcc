@@ -1,13 +1,25 @@
 import { Avatar, CollectionPage, Field, FormDialog, owed, type HeldBy } from "@revelator/pro-ui";
 
+import { tenantArt } from "../platform/tenant-art";
 import { enterpriseHref, tenantFormHref, tenantHref } from "../route";
 import { enterprises, renameChild, type Enterprise } from "./mock";
+import { tenantMark } from "./tenants";
 
 const TYPES: readonly Enterprise["type"][] = ["Parent", "Standalone", "Child"];
 const PLANS = ["2 - Starter", "3 - Growth", "4 - Enterprise"] as const;
 
-/** An enterprise, as the mark it is known by — square, a workspace's, its initials. */
-export const enterpriseMark = (one: { name: string }) => <Avatar kind="organization" name={one.name} />;
+/**
+ * An enterprise, as the mark it is known by: a tenant wears its customer's logo (`tenantMark`); a
+ * client account, a label of its own, the logo invented from its name.
+ */
+export const enterpriseMark = (one: Enterprise) =>
+  one.tenant ? (
+    tenantMark(one.tenant)
+  ) : (
+    <Avatar kind="organization" name={one.name}>
+      <img src={tenantArt(one.name)} alt="" />
+    </Avatar>
+  );
 
 /** Where an enterprise opens: a tenant on its own record, a client account on the enterprise's. */
 export const enterpriseOpens = (one: Enterprise) => (one.tenant ? tenantHref(one.enterpriseId) : enterpriseHref(one.enterpriseId));

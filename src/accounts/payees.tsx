@@ -1,13 +1,14 @@
 import { Avatar, Badge, Chip, CollectionPage, Field, FormDialog, owed, type HeldBy } from "@revelator/pro-ui";
 
 import { payeeHref } from "../route";
+import { enterpriseMark } from "./enterprises";
 import { payees, updatePayee, type Payee, type PayeeStatus } from "./mock";
 
 /** Where a payee stands, in the order the system's family runs. */
 export const PAYEE_STATUSES: readonly PayeeStatus[] = ["Not Invited", "Invited", "Active", "Payout Blocked", "Account Locked"];
 
-/** A payee, as the mark it is known by — the enterprise it pays, a company's square. */
-export const payeeMark = (one: { name: string }) => <Avatar kind="organization" name={one.name} />;
+/** A payee, as the mark it is known by — the enterprise it pays, wearing that enterprise's mark. */
+export const payeeMark = (one: Payee) => enterpriseMark(one.enterprise);
 
 /** A country, as the flag it flies and its name — the way a country is drawn wherever it is a value. */
 export const countryChip = (named: string) => (

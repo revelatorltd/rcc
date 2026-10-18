@@ -1,6 +1,7 @@
 import { Avatar, CollectionPage, Progress } from "@revelator/pro-ui";
 import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
+import { tenantArt } from "../platform/tenant-art";
 import { signUpTenantHref, tenantHref } from "../route";
 import { CUSTOMERS, TENANTS, customerOf, progressOf, type Environment, type Tenant } from "./mock";
 import { ResetBalances } from "./tenant-dialogs";
@@ -15,11 +16,20 @@ const markOf = (name: string) => {
 };
 
 /**
- * A tenant, as the mark it is known by — square, because a tenant is a workspace and not a
- * person; its initials, since a tenant has no logo of its own. ONE function, so the row a reader
- * pressed and the band they landed on wear the same mark.
+ * A tenant, as the mark it is known by — square, because a tenant is a workspace and not a person;
+ * its CUSTOMER'S logo, the one the customer wears on Customers, so a tenant reads as its customer's
+ * wherever it stands. One with no customer, or a customer with no logo of its own, wears the logo
+ * invented from its name. ONE function, so the row a reader pressed and the band they landed on
+ * wear the same mark.
  */
-export const tenantMark = (one: Tenant) => <Avatar kind="organization" name={one.name} />;
+export const tenantMark = (one: Tenant) => {
+  const organization = customerOf(one)?.organization;
+  return (
+    <Avatar kind="organization" name={one.name}>
+      <img src={organization ? ORGANIZATIONS[organization].art : tenantArt(one.name)} alt="" />
+    </Avatar>
+  );
+};
 
 /**
  * The tenants — every enterprise signed up under a customer that holds a catalogue of its own: the

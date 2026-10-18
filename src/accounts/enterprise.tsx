@@ -77,7 +77,7 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
           rows={payees().filter((one) => one.enterprise.enterpriseId === enterprise.enterpriseId)}
           rowKey={(one) => one.payeeId}
           noun={{ one: "payee", many: "payees" }}
-          identity={{ title: "Name", name: (one) => one.name, mark: (one) => enterpriseMark(one), opens: (one) => payeeHref(one.payeeId) }}
+          identity={{ title: "Name", name: (one) => one.name, mark: (one) => enterpriseMark(one.enterprise), opens: (one) => payeeHref(one.payeeId) }}
           columns={[
             { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
             { name: "Paid by", as: "identifier", standard: "id", value: (one) => one.payorId },
