@@ -17,7 +17,8 @@ import {
   RemoveTenants,
   accessGroupLogo,
   countryFlag,
-  groupMark,
+  tenantGroupLogo,
+  tenantMark,
   personMark,
   regionMark,
   scopedMark,
@@ -70,7 +71,7 @@ export function TenantGroupDetail({ id, facet }: { id: string; facet: TenantGrou
           rows={tenants}
           rowKey={(one) => one.id}
           noun={{ one: "tenant", many: "tenants" }}
-          identity={{ title: "Tenant", name: (one) => one.name, mark: (one) => groupMark(one), sortable: true }}
+          identity={{ title: "Tenant", name: (one) => one.name, mark: (one) => tenantMark(one), sortable: true }}
           sort={{ column: "Tenant", direction: "ascending" }}
           searchBy={["Tenant", "Tenant ID"]}
           note={
@@ -97,6 +98,7 @@ export function TenantGroupDetail({ id, facet }: { id: string; facet: TenantGrou
               value: (one) => tenantGroupsOf(one.id).filter((tg) => tg.id !== group.id && tg.scope === group.scope).map((tg) => tg.name),
               noun: { one: "tenant group", many: "tenant groups" },
               entity: "organization",
+              picture: tenantGroupLogo,
             },
           ]}
           selection={(held) => [

@@ -18,7 +18,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { AddOrgAdmin, AddPeople, EditDefaults, MoveTenant, RemoveOrgAdmin, countryFlag, groupMark, orgMark, personMark, scopedMark } from "./dialogs";
+import { AddOrgAdmin, AddPeople, EditDefaults, MoveTenant, RemoveOrgAdmin, countryFlag, tenantGroupLogo, tenantMark, orgMark, personMark, scopedMark } from "./dialogs";
 import { accessGroupIndex, peopleIndex, tenantGroupIndex } from "./indexes";
 import {
   ENTERPRISE,
@@ -139,7 +139,7 @@ export function OrganizationDetail({ id, facet }: { id: string; facet: Organizat
           rows={tenants}
           rowKey={(one) => one.id}
           noun={{ one: "tenant", many: "tenants" }}
-          identity={{ title: "Tenant", name: (one) => one.name, mark: (one) => groupMark(one), sortable: true }}
+          identity={{ title: "Tenant", name: (one) => one.name, mark: (one) => tenantMark(one), sortable: true }}
           note={<Alert intent="info">Every tenant belongs to exactly one organization. Moving one changes who sees it, never what it holds.</Alert>}
           searchBy={["Tenant", "Tenant ID"]}
           columns={[
@@ -159,6 +159,7 @@ export function OrganizationDetail({ id, facet }: { id: string; facet: Organizat
               value: (one) => tenantGroupsOf(one.id).filter((tg) => tg.scope === org.id).map((tg) => tg.name),
               noun: { one: "tenant group", many: "tenant groups" },
               entity: "organization",
+              picture: tenantGroupLogo,
             },
           ]}
           commands={(one) => [{ label: "Move", dialog: <MoveTenant tenant={one} /> }]}

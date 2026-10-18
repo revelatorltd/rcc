@@ -39,6 +39,7 @@ import {
   type Permissions,
 } from "./mock";
 import { accessGroupHref, go, organizationHref, platformHref, tenantGroupHref } from "./route";
+import { tenantArt } from "./tenant-art";
 
 const YES_NO = [
   { value: "Yes", title: "Yes" },
@@ -51,6 +52,7 @@ const tenantOption = (one: { id: string; name: string; orgId?: string }) => ({
   value: one.id,
   title: one.name,
   code: one.orgId ? `${one.id} · ${orgById(one.orgId)?.code ?? ""}` : `${one.id} · Unassigned`,
+  art: tenantArt(one.name),
 });
 
 /**

@@ -9,7 +9,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { AddPeople, AddToGroup, RemoveFromAll, RemoveMember, groupMark, personMark, scopedMark, tenantGroupLogo } from "./dialogs";
+import { AddPeople, AddToGroup, RemoveFromAll, RemoveMember, personMark, scopedMark, tenantGroupLogo, tenantMark } from "./dialogs";
 import {
   GUARDS,
   LEVELS,
@@ -89,7 +89,7 @@ export function PersonDetail({ id, facet }: { id: string; facet: PersonFacet }) 
           rows={reach}
           rowKey={(one) => one.tenant.id}
           noun={{ one: "tenant", many: "tenants" }}
-          identity={{ title: "Tenant", name: (one) => one.tenant.name, mark: (one) => groupMark(one.tenant), sortable: true }}
+          identity={{ title: "Tenant", name: (one) => one.tenant.name, mark: (one) => tenantMark(one.tenant), sortable: true }}
           note={
             groups.length > 1 ? (
               <Alert intent="info" title="No mixing across tenants">

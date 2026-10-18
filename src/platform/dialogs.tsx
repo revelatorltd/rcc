@@ -34,11 +34,9 @@ import {
   type TenantGroup,
 } from "./mock";
 import { logoOf } from "./logos";
+import { tenantArt } from "./tenant-art";
 
 /* ---------- The marks ---------- */
-
-/** A group, a tenant — a square, its initials. */
-export const groupMark = (one: { name: string }) => <Avatar kind="organization" name={one.name} />;
 
 /**
  * An organization — its own logo filling the square, or its initials where it has none. ONE
@@ -93,6 +91,13 @@ export const regionFlag = (name: string) => {
 
 /** The regions, as a field offers them — each a place, led by its flag where it has one. */
 export const regionOptions = REGIONS.map((one) => ({ value: one.name, title: one.name, art: regionFlag(one.name) }));
+
+/** A tenant — a label, wearing the logo it is known by (invented, see tenant-art.ts). */
+export const tenantMark = (one: { name: string }) => (
+  <Avatar kind="organization" name={one.name}>
+    <img src={tenantArt(one.name)} alt="" />
+  </Avatar>
+);
 
 /** A person — round, their initials. */
 export const personMark = (one: { name: string }) => <Avatar kind="person" name={one.name} />;
@@ -301,7 +306,9 @@ export function AddTenants({ group, pool, ...held }: HeldBy & { group: TenantGro
         several
         standard="id"
         noun={{ one: "tenant", many: "tenants" }}
-        options={pool.filter((one) => !group.tenants.includes(one.id)).map((one) => ({ value: one.id, title: one.name, code: one.id }))}
+        options={pool
+          .filter((one) => !group.tenants.includes(one.id))
+          .map((one) => ({ value: one.id, title: one.name, code: one.id, art: tenantArt(one.name) }))}
         notice="Whoever reaches this group through an access group can reach them too."
       />
     </FormDialog>
