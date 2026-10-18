@@ -5,7 +5,6 @@ import {
   FactCard,
   Link,
   Metadata,
-  RecordIndex,
   type DetailFacet,
   type RecordNavProps,
   type ShellPlace,
@@ -16,12 +15,12 @@ import {
   accountsHref,
   customerHref,
   enterpriseHref,
-  payeeHref,
   tenantHref,
   type EnterpriseFacet,
 } from "../route";
+import { EnterprisePayees, EnterpriseUsers } from "./account-tables";
 import { editCommand, enterpriseMark } from "./enterprises";
-import { customerOf, enterpriseById, payees, type Enterprise } from "./mock";
+import { customerOf, enterpriseById, payees, usersOf, type Enterprise } from "./mock";
 
 /** The enterprise the address names — a client account; anything else lands on the first one. */
 const childOf = (id: string): Enterprise => {
@@ -70,22 +69,14 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
         </Metadata>
       ),
     },
+    Users: {
+      header: { name: "Users", more: [{ label: "Download as CSV" }] },
+      // Kept on its parent, which its portals let them into.
+      body: <EnterpriseUsers tenant={parent} users={usersOf(parent).filter((one) => one.enterpriseId === enterprise.enterpriseId)} ownable={false} />,
+    },
     Payees: {
-      header: { name: "Payees" },
-      body: (
-        <RecordIndex
-          rows={payees().filter((one) => one.enterprise.enterpriseId === enterprise.enterpriseId)}
-          rowKey={(one) => one.payeeId}
-          noun={{ one: "payee", many: "payees" }}
-          identity={{ title: "Name", name: (one) => one.name, mark: (one) => enterpriseMark(one.enterprise), opens: (one) => payeeHref(one.payeeId) }}
-          columns={[
-            { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
-            { name: "Paid by", as: "identifier", standard: "id", value: (one) => one.payorId },
-          ]}
-          chooser={false}
-          empty={{ holder: "this enterprise", line: true }}
-        />
-      ),
+      header: { name: "Payees", more: [{ label: "Download" }] },
+      body: <EnterprisePayees rows={payees().filter((one) => one.enterprise.enterpriseId === enterprise.enterpriseId)} />,
     },
   };
   const shown = FACETS[facet];

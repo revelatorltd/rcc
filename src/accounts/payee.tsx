@@ -1,19 +1,17 @@
 import type { ReactNode } from "react";
 import {
-  Avatar,
   DetailPage,
   FactCard,
   Link,
   Metadata,
-  RecordIndex,
   type DetailFacet,
   type RecordNavProps,
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { PAYEE_FACETS, accountsHref, enterpriseHref, payeeHref, tenantHref, userHref, type PayeeFacet } from "../route";
+import { PAYEE_FACETS, accountsHref, enterpriseHref, payeeHref, tenantHref, type PayeeFacet } from "../route";
 import { payeeById, payees, usersOf } from "./mock";
-import { RemoveAccess, SetOwner } from "./tenant-dialogs";
+import { EnterpriseUsers } from "./account-tables";
 import { EditSettingsChanges, EditTaxCountry, countryChip, payeeMark } from "./payees";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
@@ -29,9 +27,11 @@ export function PayeeDetail({ id, facet }: { id: string; facet: PayeeFacet }) {
   const payee = payeeOf(id);
   const enterprise = payee.enterprise;
   const enterpriseOpens = enterprise.tenant ? tenantHref(enterprise.enterpriseId) : enterpriseHref(enterprise.enterpriseId);
-  // The people with access are the tenant's own, its owner first; a client account's payee has none.
+  // The people with access are the tenant's own, its owner first; a client account's are the ones
+  // its parent's portals let in through it.
   const tenant = enterprise.tenant;
-  const users = tenant ? usersOf(tenant) : [];
+  const keeper = tenant ?? enterprise.parent!;
+  const users = tenant ? usersOf(tenant) : usersOf(keeper).filter((one) => one.enterpriseId === enterprise.enterpriseId);
 
   const FACETS: Record<PayeeFacet, { header?: DetailFacet; body: ReactNode }> = {
     Details: {
@@ -95,35 +95,7 @@ export function PayeeDetail({ id, facet }: { id: string; facet: PayeeFacet }) {
     Users: {
       header: { name: "Users", more: [{ label: "Download as CSV" }] },
       body: (
-        <RecordIndex
-          rows={users}
-          rowKey={(one) => one.userId}
-          noun={{ one: "user", many: "users" }}
-          identity={{
-            title: "Name",
-            name: (one) => one.name,
-            mark: (one) => <Avatar kind="person" name={one.name} />,
-            opens: (one) => userHref(one.userId),
-          }}
-          columns={[
-            { name: "Username", value: (one) => one.email, cell: (one) => one.email },
-            { name: "User ID", as: "identifier", standard: "id", value: (one) => one.userId },
-            { name: "Role", value: (one) => (one.owner ? "Owner" : "Team member"), cell: (one) => (one.owner ? "Owner" : "Team member") },
-          ]}
-          commands={(one) => [
-            // Signing in as them leaves RCC, which this rebuild does not model.
-            { label: "Impersonate in V2" },
-            { label: "Impersonate in API" },
-            !tenant || one.owner
-              ? { label: "Change ownership", unavailable: "They are the owner." }
-              : { label: "Change ownership", dialog: <SetOwner tenant={tenant} user={one} /> },
-            !tenant || one.owner
-              ? { label: "Remove access", destructive: true, unavailable: "Make someone else the owner first." }
-              : { label: "Remove access", destructive: true, dialog: <RemoveAccess tenant={tenant} user={one} /> },
-          ]}
-          chooser={false}
-          empty={{ holder: "this payee", line: true }}
-        />
+        <EnterpriseUsers tenant={keeper} users={users} ownable={Boolean(tenant)} />
       ),
     },
   };

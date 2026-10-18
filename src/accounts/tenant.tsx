@@ -34,10 +34,8 @@ import {
   editEnterpriseHref,
   enterpriseHref,
   partnerHref,
-  payeeHref,
   tenantFormHref,
   tenantHref,
-  userHref,
   type TenantFacet,
 } from "../route";
 import {
@@ -53,12 +51,10 @@ import {
   updateTenant,
   usersOf,
   type SetupStep,
-  USER_ACCESS,
   type Tenant,
   type TenantStore,
-  type TenantUser,
 } from "./mock";
-import { AddUser, InviteUser, ManageAccess, RemoveAccess, ResetBalances, SetOwner } from "./tenant-dialogs";
+import { AddUser, InviteUser, ResetBalances } from "./tenant-dialogs";
 import {
   AddNote,
   ConnectProvider,
@@ -70,8 +66,7 @@ import {
   TenantNotes,
   TenantTransactions,
 } from "./tenant-facets";
-import { enterprisePicture } from "./enterprises";
-import { payeeMark } from "./payees";
+import { EnterprisePayees, EnterpriseUsers } from "./account-tables";
 import { tenantMark } from "./tenants";
 import { WhiteLabelFacts } from "./white-labels";
 
@@ -465,115 +460,19 @@ function TenantDetails({ tenant }: { tenant: Tenant }) {
   );
 }
 
-/**
- * Who signs in to the tenant, its owner first — its team, and the people its portals let in. How
- * each reaches it is the readings; what is done to one is its row's menu.
- */
+/** Who signs in to the tenant, its owner first — its team, and the people its portals let in. */
 function TenantUsers({ tenant }: { tenant: Tenant }) {
-  const rows = useMemo(() => usersOf(tenant), [tenant]);
-  return (
-    <RecordIndex
-      rows={rows}
-      rowKey={(one) => one.userId}
-      noun={{ one: "user", many: "users" }}
-      identity={{
-        title: "Name",
-        name: (one) => one.name,
-        mark: (one) => <Avatar kind="person" name={one.name} />,
-        opens: (one) => userHref(one.userId),
-      }}
-      searchBy={["Name", "Username", "User ID", "Tenant ID"]}
-      columns={[
-        { name: "Username", value: (one) => one.email, cell: (one) => one.email },
-        { name: "User ID", as: "identifier", standard: "id", value: (one) => one.userId },
-        { name: "Tenant ID", as: "identifier", standard: "id", value: (one) => one.tenantId },
-        { name: "Access", value: (one) => USER_ACCESS.indexOf(one.access), cell: (one) => one.access, readings: ["All"] },
-        { name: "Role", value: (one) => (one.owner ? "Owner" : "Member"), cell: (one) => (one.owner ? "Owner" : "Member") },
-      ]}
-      readings={[
-        { name: "All", holds: () => true },
-        ...USER_ACCESS.map((access) => ({ name: access, holds: (one: TenantUser) => one.access === access })),
-      ]}
-      filters={[
-        {
-          kind: "switches",
-          key: "user",
-          label: "User",
-          switches: [{ key: "tenant-id", label: "Only users with a tenant ID", holds: (one) => one.tenantId !== undefined }],
-        },
-      ]}
-      commands={(one) => [
-        // Signing in as them leaves RCC, which this rebuild does not model.
-        { label: "Impersonate in V2" },
-        { label: "Impersonate in API" },
-        one.owner
-          ? { label: "Manage access", unavailable: "The owner is always one of the team." }
-          : { label: "Manage access", dialog: <ManageAccess tenant={tenant} user={one} /> },
-        one.owner
-          ? { label: "Change ownership", unavailable: "They are the owner." }
-          : { label: "Change ownership", dialog: <SetOwner tenant={tenant} user={one} /> },
-        one.owner
-          ? { label: "Remove access", destructive: true, unavailable: "Make someone else the owner first." }
-          : { label: "Remove access", destructive: true, dialog: <RemoveAccess tenant={tenant} user={one} /> },
-      ]}
-      chooser={false}
-      empty={{ holder: "this tenant", line: true }}
-    />
-  );
+  const users = useMemo(() => usersOf(tenant), [tenant]);
+  return <EnterpriseUsers tenant={tenant} users={users} />;
 }
 
-/**
- * Who the tenant pays — its own payee, and one for each client account a parent holds — with what
- * RCC shows of each: its enterprise and parent, where it stands, who pays it and its contact.
- */
+/** Who the tenant pays — its own payee, and one for each client account a parent holds. */
 function TenantPayees({ tenant }: { tenant: Tenant }) {
   const rows = useMemo(() => {
     const held = new Set(payeesOf(tenant).map((one) => one.payeeId));
     return payees().filter((one) => held.has(one.payeeId));
   }, [tenant]);
-  const pictures = new Map(rows.map((one) => [one.enterprise.name, enterprisePicture(one.enterprise)]));
-  return (
-    <RecordIndex
-      rows={rows}
-      rowKey={(one) => one.payeeId}
-      noun={{ one: "payee", many: "payees" }}
-      identity={{
-        title: "Payee",
-        name: (one) => one.name,
-        mark: (one) => payeeMark(one),
-        opens: (one) => payeeHref(one.payeeId),
-      }}
-      searchBy={["Payee", "Payee ID", "Enterprise ID", "Enterprise", "Contact ID", "Contact", "Email"]}
-      columns={[
-        { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
-        { name: "Enterprise ID", as: "identifier", standard: "id", value: (one) => one.enterprise.enterpriseId },
-        {
-          name: "Enterprise",
-          as: "entities",
-          value: (one) => [one.enterprise.name],
-          noun: { one: "enterprise", many: "enterprises" },
-          entity: "organization",
-          picture: (named) => pictures.get(named),
-        },
-        { name: "On trial", value: (one) => (one.onTrial ? 1 : 0), cell: (one) => yesNo(one.onTrial) },
-        { name: "Locked out", value: (one) => (one.lockedOut ? 1 : 0), cell: (one) => yesNo(one.lockedOut) },
-        { name: "Payor", as: "identifier", standard: "id", value: (one) => one.payorId },
-        {
-          name: "Parent enterprise",
-          as: "entities",
-          value: (one) => (one.enterprise.parent ? [one.enterprise.parent.name] : []),
-          noun: { one: "parent enterprise", many: "parent enterprises" },
-          entity: "organization",
-          picture: (named) => pictures.get(named),
-        },
-        { name: "Contact ID", as: "identifier", standard: "id", value: (one) => one.contactId },
-        { name: "Contact", value: (one) => one.contact ?? "", cell: (one) => one.contact },
-        { name: "Email", value: (one) => one.email ?? "", cell: (one) => one.email },
-        { name: "Payment blocked", value: (one) => (one.paymentBlocked ? 1 : 0), cell: (one) => yesNo(one.paymentBlocked) },
-      ]}
-      empty={{ holder: "this tenant", line: true }}
-    />
-  );
+  return <EnterprisePayees rows={rows} />;
 }
 
 /**

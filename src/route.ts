@@ -35,7 +35,7 @@ export const TENANT_FACETS = [
 export type TenantFacet = (typeof TENANT_FACETS)[number];
 
 /** The facets of the records the other Accounts pages open, each in the order its nav lists them. */
-export const ENTERPRISE_FACETS = ["Details", "Payees"] as const;
+export const ENTERPRISE_FACETS = ["Details", "Users", "Payees"] as const;
 export const PARTNER_FACETS = ["Details", "Tenants", "Users"] as const;
 export const PAYEE_FACETS = ["Details", "Users"] as const;
 export const USER_FACETS = ["Details", "Enterprises"] as const;
