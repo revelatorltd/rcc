@@ -25,6 +25,7 @@ import {
   type RecordNavProps,
   type ShellPlace,
 } from "@revelator/pro-ui";
+import { dspFor } from "@revelator/pro-ui/assets";
 
 import {
   TENANT_FACETS,
@@ -474,6 +475,15 @@ function TenantPayees({ tenant }: { tenant: Tenant }) {
 }
 
 /**
+ * A DSP, as the mark the system publishes for it. A sandbox store wears the service it delivers
+ * over (FTP Sandbox → FTP); a name the system has no mark for keeps the avatar's initial.
+ */
+const dspMark = (name: string) => {
+  const mark = dspFor(name) ?? dspFor(name.replace(/ Sandbox$/, ""));
+  return <Avatar kind="brand" name={name}>{mark ? <img src={mark.art} alt="" /> : null}</Avatar>;
+};
+
+/**
  * The stores the tenant can deliver to — each switched on or off for it, and shown to its users or
  * hidden. Held together, several are switched at once.
  */
@@ -485,7 +495,7 @@ function TenantStores({ tenant }: { tenant: Tenant }) {
       rows={stores}
       rowKey={(one) => one.name}
       noun={{ one: "DSP", many: "DSPs" }}
-      identity={{ title: "DSP", name: (one) => one.name }}
+      identity={{ title: "DSP", name: (one) => one.name, mark: (one) => dspMark(one.name) }}
       columns={[
         {
           name: "Active",
