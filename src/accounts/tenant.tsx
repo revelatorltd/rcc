@@ -16,6 +16,7 @@ import {
   RecordIndex,
   Slot,
   SlotItem,
+  StatusMark,
   Text,
   TitledCard,
   WayOut,
@@ -278,31 +279,69 @@ function TenantOverview({ tenant }: { tenant: Tenant }) {
 }
 
 /**
- * The steps between signing the tenant up and handing it over, in the order they are done — each
- * done or still owed, with the command that does it. How far it has come stands over the set.
+ * The steps between signing the tenant up and handing it over, in the order they are done — a card
+ * the reader works down: how far it has come, then each step done or owed, with the command that
+ * does it. Composed of the system's own parts (a titled card, a progress, a list of slot items with
+ * a status mark and a trailing button) until it declares a checklist of its own (gaps.md).
  */
 function TenantSetup({ tenant }: { tenant: Tenant }) {
   const steps = setupOf(tenant);
   const { done, of } = progressOf(tenant);
+  const owed = owedOf(tenant);
   return (
-    <RecordIndex
-      rows={steps}
-      rowKey={(one) => one.key}
-      noun={{ one: "step", many: "steps" }}
-      identity={{ title: "Step", name: (one) => one.title }}
-      note={<Progress label="Setup" value={done} max={of} reading={`${done} of ${of} done`} />}
-      columns={[
-        {
-          name: "State",
-          value: (one) => (one.done ? "Done" : one.optional ? "Optional" : "To do"),
-          cell: (one) => (one.done ? "Done" : one.optional ? "Optional" : "To do"),
-        },
-        { name: "Detail", value: (one) => one.detail, cell: (one) => one.detail },
-      ]}
-      commands={(one) => [commandOf(tenant, one)]}
-      chooser={false}
-      empty={{ holder: "this tenant", line: true }}
-    />
+    <Metadata>
+      {/* ONE CARD, the list a reader works down: how far it has come over the steps, each done or
+          owed, its command at its end — the owed one standing out, the rest quiet. */}
+      <TitledCard title={done === of ? "Ready to hand over" : "Get this tenant live"} count={of - done}>
+        <Slot layout="one">
+          <Progress label="Signing up is only the first step" value={done} max={of} reading={`${done} of ${of} done`} />
+        </Slot>
+        <Slot layout="list">
+          {steps.map((step) => {
+            const command = commandOf(tenant, step);
+            const primary = step.key === owed?.key;
+            return (
+              <SlotItem
+                key={step.key}
+                trail={
+                  typeof command.opens === "string" ? (
+                    <Button size="sm" variant={primary ? "primary" : "secondary"} asChild>
+                      <a href={command.opens}>{command.label}</a>
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant={primary ? "primary" : "secondary"}
+                      onClick={typeof command.opens === "function" ? command.opens : undefined}
+                      disabled={!command.opens}
+                    >
+                      {command.label}
+                    </Button>
+                  )
+                }
+              >
+                <StatusMark
+                  intent={step.done ? "success" : step.optional ? "info" : "warn"}
+                  emphasis={step.done ? "solid" : "soft"}
+                  label={step.done ? "Done" : step.optional ? "Optional" : "To do"}
+                />
+                <SlotItem direction="col" gap="together">
+                  <Text kind="title">{step.title}</Text>
+                  <Text kind="body" ink="secondary">
+                    {step.detail}
+                  </Text>
+                </SlotItem>
+              </SlotItem>
+            );
+          })}
+        </Slot>
+      </TitledCard>
+      {isSandbox(tenant) ? (
+        <Alert intent="info" title={tenant.environment === "Demo" ? "Demo tenant" : "API sandbox"}>
+          Nothing it releases reaches a store. Convert it to production once the customer is ready.
+        </Alert>
+      ) : null}
+    </Metadata>
   );
 }
 

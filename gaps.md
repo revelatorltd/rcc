@@ -44,7 +44,7 @@ share read down the column with its figure.
 
 | # | Asked for | Prototype | Here, until decided |
 | - | --------- | --------- | ------------------- |
-| 13 | A **setup checklist** on a record: ordered steps, each done or owed, each with the command that does it, and how far the whole has come | the Setup tab: numbered steps with a button each, under a progress bar | a `RecordIndex` of the steps with a `Progress` as its note: it offers sorting and a search a list of six never needs, and cuts each step's detail |
+| 13 | A **setup checklist** on a record, DECLARED: ordered steps, each done or owed, each with the command that does it, and how far the whole has come | the Setup tab: numbered steps with a button each, under a progress bar | composed of the system's parts: a `TitledCard` holding a `Progress` and a list of `SlotItem`s, each led by a `StatusMark` (done, owed, optional) and trailed by its step's `Button`, the owed one primary. No step numbers: a status mark carries no count |
 | 14 | A **second identifier on the band** that says whose it is (Enterprise ID beside Payee ID) | two labelled chips | the enterprise ID alone on the band; the payee ID in Details |
 | 15 | A **long value in a facet tile** (a white label's domain) | — | runs over its label; the tile shows the white label's title instead |
 
