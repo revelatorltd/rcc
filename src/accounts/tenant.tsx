@@ -51,10 +51,12 @@ import {
   updateTenant,
   usersOf,
   type SetupStep,
+  USER_ACCESS,
   type Tenant,
   type TenantStore,
+  type TenantUser,
 } from "./mock";
-import { AddUser, RemoveAccess, ResetBalances, SetOwner } from "./tenant-dialogs";
+import { AddUser, InviteUser, ManageAccess, RemoveAccess, ResetBalances, SetOwner } from "./tenant-dialogs";
 import {
   AddNote,
   ConnectProvider,
@@ -146,7 +148,11 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
       body: <TenantDetails tenant={tenant} />,
     },
     Users: {
-      header: { name: "Users", actions: [{ label: "Add user", creates: true, dialog: <AddUser tenant={tenant} /> }] },
+      header: {
+        name: "Users",
+        actions: [{ label: "Add user", creates: true, dialog: <AddUser tenant={tenant} /> }],
+        more: [{ label: "Invite new user", dialog: <InviteUser tenant={tenant} /> }, { label: "Download as CSV" }],
+      },
       body: <TenantUsers tenant={tenant} />,
     },
     Payees: { header: { name: "Payees" }, body: <TenantPayees tenant={tenant} /> },
@@ -455,11 +461,15 @@ function TenantDetails({ tenant }: { tenant: Tenant }) {
   );
 }
 
-/** Who signs in to the tenant, its owner first. */
+/**
+ * Who signs in to the tenant, its owner first — its team, and the people its portals let in. How
+ * each reaches it is the readings; what is done to one is its row's menu.
+ */
 function TenantUsers({ tenant }: { tenant: Tenant }) {
+  const rows = useMemo(() => usersOf(tenant), [tenant]);
   return (
     <RecordIndex
-      rows={usersOf(tenant)}
+      rows={rows}
       rowKey={(one) => one.userId}
       noun={{ one: "user", many: "users" }}
       identity={{
@@ -468,17 +478,36 @@ function TenantUsers({ tenant }: { tenant: Tenant }) {
         mark: (one) => <Avatar kind="person" name={one.name} />,
         opens: (one) => userHref(one.userId),
       }}
+      searchBy={["Name", "Username", "User ID", "Tenant ID"]}
       columns={[
-        { name: "Email", value: (one) => one.email, cell: (one) => one.email },
-        { name: "Role", value: (one) => (one.owner ? "Owner" : "Team member"), cell: (one) => (one.owner ? "Owner" : "Team member") },
+        { name: "Username", value: (one) => one.email, cell: (one) => one.email },
         { name: "User ID", as: "identifier", standard: "id", value: (one) => one.userId },
+        { name: "Tenant ID", as: "identifier", standard: "id", value: (one) => one.tenantId },
+        { name: "Access", value: (one) => USER_ACCESS.indexOf(one.access), cell: (one) => one.access, readings: ["All"] },
+        { name: "Role", value: (one) => (one.owner ? "Owner" : "Member"), cell: (one) => (one.owner ? "Owner" : "Member") },
+      ]}
+      readings={[
+        { name: "All", holds: () => true },
+        ...USER_ACCESS.map((access) => ({ name: access, holds: (one: TenantUser) => one.access === access })),
+      ]}
+      filters={[
+        {
+          kind: "switches",
+          key: "user",
+          label: "User",
+          switches: [{ key: "tenant-id", label: "Only users with a tenant ID", holds: (one) => one.tenantId !== undefined }],
+        },
       ]}
       commands={(one) => [
         // Signing in as them leaves RCC, which this rebuild does not model.
-        { label: "Impersonate" },
+        { label: "Impersonate in V2" },
+        { label: "Impersonate in API" },
         one.owner
-          ? { label: "Set as owner", unavailable: "They are the owner." }
-          : { label: "Set as owner", dialog: <SetOwner tenant={tenant} user={one} /> },
+          ? { label: "Manage access", unavailable: "The owner is always one of the team." }
+          : { label: "Manage access", dialog: <ManageAccess tenant={tenant} user={one} /> },
+        one.owner
+          ? { label: "Change ownership", unavailable: "They are the owner." }
+          : { label: "Change ownership", dialog: <SetOwner tenant={tenant} user={one} /> },
         one.owner
           ? { label: "Remove access", destructive: true, unavailable: "Make someone else the owner first." }
           : { label: "Remove access", destructive: true, dialog: <RemoveAccess tenant={tenant} user={one} /> },

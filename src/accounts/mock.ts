@@ -157,6 +157,23 @@ export interface TenantUser {
   email: string;
   /** The account the tenant was signed up with — the one its handover email goes to. */
   owner: boolean;
+  /** How they reach the tenant — its team, or one of its portals. */
+  access: UserAccess;
+  /** The auth tenant they sign in through — none for an account made before the tenant had one. */
+  tenantId?: string;
+}
+
+/** How a user reaches a tenant: as one of its team, or through a portal it gives a payee, a label or an artist. */
+export type UserAccess = "Team Members" | "Payee Portal" | "Label Portal" | "Artist Portal";
+export const USER_ACCESS: readonly UserAccess[] = ["Team Members", "Payee Portal", "Label Portal", "Artist Portal"];
+
+/** Someone besides the owner, as the tenant keeps them. */
+export interface TeamMember {
+  name: string;
+  email: string;
+  access?: UserAccess;
+  /** An account made before the tenant had an auth tenant, and never moved onto it. */
+  legacy?: boolean;
 }
 
 /** A store a tenant can deliver to: switched on for it, and shown to its users. */
@@ -245,7 +262,7 @@ export interface Tenant {
   tested: boolean;
   emailed: boolean;
   /** Who besides the owner signs in. */
-  team: readonly Omit<TenantUser, "owner" | "userId">[];
+  team: readonly TeamMember[];
   children: readonly ChildEnterprise[];
   /** The payment providers its payees are paid through, where any is connected. */
   integrations?: readonly Integration[];
@@ -373,7 +390,7 @@ export let TENANTS: readonly Tenant[] = [
   t({ enterpriseId: "606404", customerId: "469", name: "Opaline Sandbox", plan: "4 - Enterprise", environment: "API sandbox", partnerId: "231", created: day(2026, 8, 3), currency: "EUR" }),
   t({ enterpriseId: "606403", customerId: "469", name: "Opaline Classics", plan: "3 - Growth", created: day(2026, 7, 20), currency: "EUR" }),
   t({ enterpriseId: "607113", customerId: "476", name: "Marlow Tide Entertainment", plan: "2 - Starter", created: day(2026, 7, 12), paymentBlocked: true }),
-  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "4 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", whiteLabel: whiteLabelFor("606402", "Opaline", { domain: "app.opaline.example", domainV2: "app.opaline.example", authBaseUrl: "https://auth.opaline.example/", title: "Opaline | Distribution musicale", enabled: true, defaultPlanId: "7", loginHeader: "Bienvenue", loginSubheader: "Connectez-vous pour gérer vos sorties, votre catalogue et vos résultats.", signupHeader: "Inscrivez-vous pour distribuer votre musique et suivre son évolution.", signupSubheader: "Créez votre compte Opaline", faqUrl: "https://opaline.example/faq", helpUrl: "https://opaline.example/aide", distributionAgreementUrl: "https://opaline.example/contrat", googleAnalyticsSiteId: "G-OP4L1N3X", bccEmails: "ops@opaline.example" }), fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], analytics: { revenueDays: 1095 }, config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
+  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "4 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", whiteLabel: whiteLabelFor("606402", "Opaline", { domain: "app.opaline.example", domainV2: "app.opaline.example", authBaseUrl: "https://auth.opaline.example/", title: "Opaline | Distribution musicale", enabled: true, defaultPlanId: "7", loginHeader: "Bienvenue", loginSubheader: "Connectez-vous pour gérer vos sorties, votre catalogue et vos résultats.", signupHeader: "Inscrivez-vous pour distribuer votre musique et suivre son évolution.", signupSubheader: "Créez votre compte Opaline", faqUrl: "https://opaline.example/faq", helpUrl: "https://opaline.example/aide", distributionAgreementUrl: "https://opaline.example/contrat", googleAnalyticsSiteId: "G-OP4L1N3X", bccEmails: "ops@opaline.example" }), fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }, { name: "Lucie Garnier", email: "lucie@maisonbrune.example", access: "Label Portal" }, { name: "Malo Fournier", email: "malo.fournier@opalinejeunesse.example", access: "Payee Portal", legacy: true }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], analytics: { revenueDays: 1095 }, config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
   t({ enterpriseId: "604380", customerId: "455", name: "Eastgate Test", plan: "4 - Enterprise", environment: "Demo", created: day(2026, 6, 10), currency: "EUR" }),
   t({ enterpriseId: "604379", customerId: "455", name: "Eastgate Kids", plan: "3 - Growth", created: day(2026, 6, 9), currency: "EUR" }),
   t({ enterpriseId: "605118", customerId: "462", name: "Brackenridge Audio", plan: "2 - Starter", created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true, analytics: { enabled: false }, config: { noTransactionalEmails: true }, notes: [{ id: "n-5", created: day(2026, 9, 30), author: "Ines Calder", content: "Locked out and payment blocked over the unpaid June invoice. Unlock only once Finance confirms." }] }),
@@ -386,7 +403,7 @@ export let TENANTS: readonly Tenant[] = [
   t({ enterpriseId: "598218", customerId: "427", name: "Bluefen Jazz", plan: "3 - Growth", created: day(2026, 1, 12), currency: "SEK" }),
   t({ enterpriseId: "598217", customerId: "427", name: "Bluefen Baltic", plan: "3 - Growth", created: day(2025, 11, 30), currency: "EUR" }),
   t({ enterpriseId: "598216", customerId: "427", name: "Bluefen Nordic", plan: "4 - Enterprise", created: day(2025, 11, 2), currency: "SEK" }),
-  t({ enterpriseId: "598215", customerId: "427", name: "Bluefen Distribution", plan: "4 - Enterprise", type: "Parent", created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, integrations: [{ providerId: "TIP-0038816", provider: "Tipalti", connected: true }], config: { tokenNetwork: "Base", tokenMintingWithoutValidation: true }, notes: [{ id: "n-4", created: day(2026, 4, 2), author: "Dario Mendel", content: "Payouts to Gotland Folk held in March while the payee re-verified its bank. Released 1 April." }], team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
+  t({ enterpriseId: "598215", customerId: "427", name: "Bluefen Distribution", plan: "4 - Enterprise", type: "Parent", created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, integrations: [{ providerId: "TIP-0038816", provider: "Tipalti", connected: true }], config: { tokenNetwork: "Base", tokenMintingWithoutValidation: true }, notes: [{ id: "n-4", created: day(2026, 4, 2), author: "Dario Mendel", content: "Payouts to Gotland Folk held in March while the payee re-verified its bank. Released 1 April." }], team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }, { name: "Astrid Holm", email: "astrid.holm@gotlandfolk.example", access: "Artist Portal" }, { name: "Oskar Vik", email: "oskar@fjallsound.example", access: "Payee Portal" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
   t({ enterpriseId: "600874", customerId: "434", name: "Kestrel Point Recordings", plan: "3 - Growth", created: day(2025, 12, 10), lockedOut: true }),
   t({ enterpriseId: "595661", customerId: "420", name: "Harrow Street Live", plan: "3 - Growth", created: day(2025, 9, 1), currency: "GBP" }),
   t({ enterpriseId: "595660", customerId: "420", name: "Harrow Street Sound", plan: "4 - Enterprise", created: day(2025, 7, 9), currency: "GBP" }),
@@ -414,8 +431,11 @@ export const customerOf = (one: Tenant) => (one.customerId ? customerById(one.cu
 export function usersOf(one: Tenant): readonly TenantUser[] {
   const contact = one.customerId ? RECORDS[one.customerId]!.contacts.find((c) => c.roles.includes("Primary")) : undefined;
   const owner = one.owner ?? contact ?? { name: "Wren Okafor", email: "wren@saltmarshtapes.example" };
-  return [{ name: owner.name, email: owner.email }, ...one.team].map((user, at) => ({
+  const tenantId = configDefaultsOf(one).authTenantId;
+  return [{ name: owner.name, email: owner.email } as TeamMember, ...one.team].map(({ legacy, access, ...user }, at) => ({
     ...user,
+    access: access ?? "Team Members",
+    tenantId: legacy ? undefined : tenantId,
     // A name changed on the user is theirs wherever they sign in.
     name: USER_EDITS[user.email]?.name ?? user.name,
     // ONE id for one address, the same on every tenant they sign in to.
