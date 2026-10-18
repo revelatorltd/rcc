@@ -30,11 +30,25 @@ import {
   type Tenant,
   type TenantGroup,
 } from "./mock";
+import { logoOf } from "./logos";
 
 /* ---------- The marks ---------- */
 
-/** An organization, a group — a square, its initials. */
+/** A group, a tenant — a square, its initials. */
 export const groupMark = (one: { name: string }) => <Avatar kind="organization" name={one.name} />;
+
+/**
+ * An organization — its own logo filling the square, or its initials where it has none. ONE
+ * function, so its row, its card and its band wear the same mark.
+ */
+export const orgMark = (one: { id: string; name: string }) => {
+  const logo = logoOf(one.id);
+  return (
+    <Avatar kind="organization" name={one.name}>
+      {logo ? <img src={logo} alt="" /> : null}
+    </Avatar>
+  );
+};
 /** A person — round, their initials. */
 export const personMark = (one: { name: string }) => <Avatar kind="person" name={one.name} />;
 
@@ -43,7 +57,8 @@ export const personMark = (one: { name: string }) => <Avatar kind="person" name=
 export const personOptions = (people: readonly Person[]) =>
   people.filter((one) => !one.invited).map((one) => ({ value: one.id, title: one.name, code: one.email }));
 export const groupOptions = (groups: readonly { id: string; name: string }[]) => groups.map((one) => ({ value: one.id, title: one.name }));
-export const orgOptions = (orgs: readonly Organization[] = ORGANIZATIONS) => orgs.map((one) => ({ value: one.id, title: one.name, code: one.code }));
+export const orgOptions = (orgs: readonly Organization[] = ORGANIZATIONS) =>
+  orgs.map((one) => ({ value: one.id, title: one.name, code: one.code, art: logoOf(one.id) }));
 export const endOptions = ENDS.map((one) => ({ value: one.value || "none", title: one.label }));
 /** An end date as the draft holds it — "none" for none, since a choice cannot be blank. */
 export const endValue = (answer: string) => (answer === "none" ? "" : answer);

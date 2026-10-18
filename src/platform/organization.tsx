@@ -18,7 +18,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { AddOrgAdmin, AddPeople, EditDefaults, MoveTenant, RemoveOrgAdmin, groupMark, personMark } from "./dialogs";
+import { AddOrgAdmin, AddPeople, EditDefaults, MoveTenant, RemoveOrgAdmin, groupMark, orgMark, personMark } from "./dialogs";
 import { accessGroupIndex, peopleIndex, tenantGroupIndex } from "./indexes";
 import {
   ENTERPRISE,
@@ -57,7 +57,6 @@ export function OrganizationDetail({ id, facet }: { id: string; facet: Organizat
   const groups = accessGroups(org.id);
   const unused = tenantGroups(org.id).filter((one) => accessGroupsUsing(one.id).length === 0);
   const ungranted = members.filter((one) => !accessGroupsOf(one.id).some((ag) => ag.scope === org.id));
-  const ending = groups.reduce((sum, one) => sum + one.members.filter((member) => member.ends).length, 0);
 
   const FACETS: Record<OrganizationFacet, { header?: DetailFacet; body: ReactNode }> = {
     Overview: {
@@ -115,7 +114,6 @@ export function OrganizationDetail({ id, facet }: { id: string; facet: Organizat
                   value: ungranted.length,
                   marks: ungranted.length ? [{ intent: "warn", label: "They see none of its data" }] : [],
                 },
-                { label: "Memberships with an end date", as: "count", value: ending },
               ]}
             />
           </DetailOverviewGrid>
@@ -215,7 +213,7 @@ export function OrganizationDetail({ id, facet }: { id: string; facet: Organizat
   return (
     <DetailPage
       record={{
-        mark: groupMark(org),
+        mark: orgMark(org),
         name: org.name,
         kind: "Organization",
         facts: [

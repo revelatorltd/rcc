@@ -9,8 +9,10 @@ import {
   ArchiveTenantGroups,
   RemoveFromAll,
   groupMark,
+  orgMark,
   personMark,
 } from "./dialogs";
+import { logoByName, logoOf } from "./logos";
 import {
   ENTERPRISE_SCOPE,
   GUARDS,
@@ -65,9 +67,15 @@ export function organizationIndex(): RecordIndexProps<Organization> {
     identity: {
       title: "Organization",
       name: (one) => one.name,
-      mark: (one) => groupMark(one),
+      mark: (one) => orgMark(one),
       sortable: true,
       opens: (one) => organizationHref(one.id),
+    },
+    // AS CARDS too, as the prototype lays them out: an organization is recognised by its logo first.
+    grid: {
+      aspect: "square",
+      picture: (one) => logoOf(one.id) ?? null,
+      meta: (one) => [one.code, `${tenantsOfOrg(one.id).length} tenants`, one.admins.length ? `${one.admins.length} admin${one.admins.length === 1 ? "" : "s"}` : "No admin yet"],
     },
     searchBy: ["Organization", "Code"],
     columns: [
@@ -129,7 +137,16 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
     columns: [
       ...(scope
         ? []
-        : [{ name: "Organization", value: (one: TenantGroup) => scopeName(one.scope), cell: (one: TenantGroup) => scopeName(one.scope) }]),
+        : [
+            {
+              name: "Organization",
+              as: "entities" as const,
+              value: (one: TenantGroup) => [scopeName(one.scope)],
+              noun: { one: "organization", many: "organizations" },
+              entity: "organization" as const,
+              picture: logoByName,
+            },
+          ]),
       { name: "Tenants", as: "count", value: (one) => one.tenants.length },
       {
         name: "Used by",
@@ -185,7 +202,16 @@ export function accessGroupIndex({ scope, tgId }: { scope?: string; tgId?: strin
     searchBy: ["Access group"],
     columns: [
       ...(showScope
-        ? [{ name: "Organization", value: (one: AccessGroup) => scopeName(one.scope), cell: (one: AccessGroup) => scopeName(one.scope) }]
+        ? [
+            {
+              name: "Organization",
+              as: "entities" as const,
+              value: (one: AccessGroup) => [scopeName(one.scope)],
+              noun: { one: "organization", many: "organizations" },
+              entity: "organization" as const,
+              picture: logoByName,
+            },
+          ]
         : []),
       { name: "Permissions", value: (one) => Object.values(one.perms).filter(Boolean).length, cell: (one) => permissionsSaid(one.perms) },
       {
@@ -268,6 +294,7 @@ export function peopleIndex(orgId?: string): RecordIndexProps<Person> {
               value: (one: Person) => one.orgs.map((id) => orgById(id)?.name ?? id),
               noun: { one: "organization", many: "organizations" },
               entity: "organization" as const,
+              picture: logoByName,
             },
           ]),
       {
