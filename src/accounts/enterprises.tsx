@@ -72,9 +72,11 @@ export function Enterprises() {
             noun: { one: "parent enterprise", many: "parent enterprises" },
             entity: "organization",
           },
-          { name: "Plan", value: (one) => one.plan, cell: (one) => one.plan },
-          { name: "Payee ID", as: "identifier", standard: "id", hidden: true, value: (one) => one.payeeId },
+          { name: "Subscription plan", value: (one) => one.plan, cell: (one) => one.plan },
+          { name: "Is parent", value: (one) => (one.type === "Parent" ? 1 : 0), cell: (one) => (one.type === "Parent" ? "Yes" : "No") },
+          { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
           { name: "Partner ID", as: "identifier", standard: "id", hidden: true, value: (one) => one.partnerId },
+          { name: "Locked out", value: (one) => (one.lockedOut ? 1 : 0), cell: (one) => (one.lockedOut ? "Yes" : "No") },
           { name: "Created", as: "date", value: (one) => one.created },
         ],
         readings: [
@@ -84,7 +86,7 @@ export function Enterprises() {
           { name: "Client accounts", holds: (one) => one.type === "Child" },
         ],
         filters: [
-          { kind: "anyOf", key: "plan", label: "Plan", options: PLANS, of: (one) => one.plan },
+          { kind: "anyOf", key: "plan", label: "Subscription plan", options: PLANS, of: (one) => one.plan },
           {
             kind: "switches",
             key: "account",
