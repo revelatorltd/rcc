@@ -3,7 +3,10 @@ import {
   Badge,
   CollectionPage,
   ConfirmationDialog,
+  FactCard,
   Field,
+  Link,
+  Metadata,
   Wizard,
   WizardRow,
   WizardRowBody,
@@ -17,15 +20,19 @@ import {
   type HeldBy,
 } from "@revelator/pro-ui";
 
-import { editWhiteLabelHref, go, newWhiteLabelHref, whiteLabelHref } from "../route";
+import { editWhiteLabelHref, go, newWhiteLabelHref, partnerHref, tenantHref, whiteLabelHref } from "../route";
 import {
+  PARTNERS,
+  REVELATOR_AUTH,
   TENANTS,
   deleteWhiteLabel,
   nextWhiteLabelId,
+  partnerById,
   saveWhiteLabel,
   tenantById,
   whiteLabelById,
   whiteLabels,
+  type WhiteLabel,
   type WhiteLabelRecord,
 } from "./mock";
 
@@ -40,6 +47,76 @@ export const whiteLabelMark = (one: { title: string }) => <Avatar kind="organiza
 
 /** Whether a white label is switched on, in the system's family for a setting. */
 export const enabledBadge = (on: boolean | undefined) => <Badge status={on ? "feature:Enabled" : "feature:Disabled"} />;
+
+/**
+ * Everything a white label holds, in the order its form asks it: where it loads and who it is for,
+ * what its sign-in pages say, what it shows, where it sends people, and the services it runs.
+ * Read the same on the white label's page and on the tenant it loads.
+ */
+export function WhiteLabelFacts({ label, tenant }: { label: WhiteLabel; tenant?: { enterpriseId: string; name: string } }) {
+  const partner = label.partnerId ? partnerById(label.partnerId) : undefined;
+  return (
+    <Metadata>
+      <FactCard
+        title="Domain and sign-in"
+        facts={[
+          { label: "White label ID", value: label.id, standard: "id" },
+          { label: "Domain", value: label.domain },
+          { label: "Domain V2", value: label.domainV2 },
+          { label: "Auth base URL", value: label.authBaseUrl },
+          {
+            label: "Tenant",
+            value: tenant ? <Link opens={tenantHref(tenant.enterpriseId)}>{tenant.name}</Link> : "Revelator's own",
+          },
+          { label: "Partner", value: partner ? <Link opens={partnerHref(partner.id)}>{partner.name}</Link> : undefined },
+          { label: "White label enabled", value: enabledBadge(label.enabled) },
+          { label: "Is default", value: yes(label.isDefault) },
+          { label: "Allows sign-up", value: yes(label.allowSignup) },
+          { label: "Allows password reset", value: yes(label.allowForgotPassword ?? true) },
+        ]}
+      />
+      <FactCard
+        title="Sign-in pages"
+        facts={[
+          { label: "Login page header", value: label.loginHeader },
+          { label: "Login page subheader", value: label.loginSubheader },
+          { label: "Sign-up page header", value: label.signupHeader },
+          { label: "Sign-up page subheader", value: label.signupSubheader },
+        ]}
+      />
+      <FactCard
+        title="Branding"
+        facts={[
+          { label: "Title", value: label.title },
+          { label: "Shows Revelator's branding", value: yes(label.showRevelatorBranding) },
+          { label: "Shows ads", value: yes(label.showAds) },
+          { label: "Default plan ID", value: label.defaultPlanId, standard: "id" },
+        ]}
+      />
+      <FactCard
+        title="Links"
+        facts={[
+          { label: "Terms and conditions file", value: label.termsUrl },
+          { label: "Distribution agreement", value: label.distributionAgreementUrl },
+          { label: "FAQ", value: label.faqUrl },
+          { label: "Help", value: label.helpUrl },
+          { label: "Custom logout URL", value: label.customLogoutUrl },
+          { label: "Custom dashboard link URL", value: label.customDashboardLinkUrl },
+          { label: "Custom dashboard link text", value: label.customDashboardLinkText },
+        ]}
+      />
+      <FactCard
+        title="Services"
+        facts={[
+          { label: "Intercom enabled", value: yes(label.enableIntercom) },
+          { label: "Intercom app ID", value: label.intercomAppId },
+          { label: "Google Analytics site ID", value: label.googleAnalyticsSiteId },
+          { label: "BCC emails", value: label.bccEmails },
+        ]}
+      />
+    </Metadata>
+  );
+}
 
 /**
  * A white label deleted — asked first: the tenant it loads, if it loads one, no longer does.
@@ -92,29 +169,65 @@ export function WhiteLabelWizard({ id, tenantId, back }: { id?: string; tenantId
       subject={(answers) => ({ kind: "organization", name: answers.domain ?? "", meta: [answers.title ?? ""] })}
       draft={{
         domain: owed(label?.domain ?? fixedTenant?.domain ?? ""),
+        domainV2: label?.domainV2 ?? fixedTenant?.domain ?? unanswered.text,
+        authBaseUrl: owed(label?.authBaseUrl ?? REVELATOR_AUTH),
         tenant: fixedTenant ? fixedTenant.enterpriseId : (label?.tenant?.enterpriseId ?? unanswered.record),
+        partner: label?.partnerId ?? fixedTenant?.partnerId ?? unanswered.record,
         enabled: owed(yes(label?.enabled)),
+        isDefault: owed(yes(label?.isDefault)),
         allowSignup: owed(yes(label?.allowSignup)),
         allowForgotPassword: owed(yes(label?.allowForgotPassword ?? true)),
+        loginHeader: label?.loginHeader ?? unanswered.text,
+        loginSubheader: label?.loginSubheader ?? unanswered.text,
+        signupHeader: label?.signupHeader ?? unanswered.text,
+        signupSubheader: label?.signupSubheader ?? unanswered.text,
         title: owed(label?.title ?? fixedTenant?.name ?? ""),
         showRevelatorBranding: owed(yes(label?.showRevelatorBranding)),
+        showAds: owed(yes(label?.showAds)),
+        defaultPlanId: owed(label?.defaultPlanId ?? "3"),
         termsUrl: label?.termsUrl ?? unanswered.url,
+        distributionAgreementUrl: label?.distributionAgreementUrl ?? unanswered.url,
         faqUrl: label?.faqUrl ?? unanswered.url,
         helpUrl: label?.helpUrl ?? unanswered.url,
+        customLogoutUrl: label?.customLogoutUrl ?? unanswered.url,
+        customDashboardLinkUrl: label?.customDashboardLinkUrl ?? unanswered.url,
+        customDashboardLinkText: label?.customDashboardLinkText ?? unanswered.text,
+        enableIntercom: owed(yes(label?.enableIntercom)),
+        intercomAppId: label?.intercomAppId ?? unanswered.text,
+        googleAnalyticsSiteId: label?.googleAnalyticsSiteId ?? unanswered.text,
+        bccEmails: label?.bccEmails ?? unanswered.text,
       }}
       onCommit={(answers) => {
         const text = (value: unknown) => (typeof value === "string" && value.trim()) || undefined;
-        const saved = {
+        const saved: WhiteLabel = {
           id: label?.id ?? nextWhiteLabelId(),
           domain: answers.domain.trim(),
+          domainV2: text(answers.domainV2),
+          authBaseUrl: answers.authBaseUrl.trim(),
           title: answers.title.trim(),
+          partnerId: text(answers.partner),
           enabled: answers.enabled === "Yes",
+          isDefault: answers.isDefault === "Yes",
           allowSignup: answers.allowSignup === "Yes",
           allowForgotPassword: answers.allowForgotPassword === "Yes",
+          loginHeader: text(answers.loginHeader),
+          loginSubheader: text(answers.loginSubheader),
+          signupHeader: text(answers.signupHeader),
+          signupSubheader: text(answers.signupSubheader),
           showRevelatorBranding: answers.showRevelatorBranding === "Yes",
+          showAds: answers.showAds === "Yes",
+          defaultPlanId: answers.defaultPlanId.trim(),
           termsUrl: text(answers.termsUrl),
+          distributionAgreementUrl: text(answers.distributionAgreementUrl),
           faqUrl: text(answers.faqUrl),
           helpUrl: text(answers.helpUrl),
+          customLogoutUrl: text(answers.customLogoutUrl),
+          customDashboardLinkUrl: text(answers.customDashboardLinkUrl),
+          customDashboardLinkText: text(answers.customDashboardLinkText),
+          enableIntercom: answers.enableIntercom === "Yes",
+          intercomAppId: text(answers.intercomAppId),
+          googleAnalyticsSiteId: text(answers.googleAnalyticsSiteId),
+          bccEmails: text(answers.bccEmails),
         };
         saveWhiteLabel(saved, text(answers.tenant));
         go(fixedTenant ? back : whiteLabelHref(saved.id));
@@ -126,14 +239,18 @@ export function WhiteLabelWizard({ id, tenantId, back }: { id?: string; tenantId
           <WizardRow title="Domain">
             <WizardRowBody>
               <Field as="text" name="domain" label="Domain" />
+              <Field as="text" name="domainV2" label="Domain V2" />
+              <Field as="url" name="authBaseUrl" label="Auth base URL" />
             </WizardRowBody>
             <WizardRowTips>
-              <WizardRowTip>The tenant's full domain, as its configuration names it. Sign-in goes through auth.revelator.pro.</WizardRowTip>
+              <WizardRowTip>The tenant's full domain, copied from its configuration. It is the old field, but the form does not save without it.</WizardRowTip>
+              <WizardRowTip>Domain V2: paste the same domain.</WizardRowTip>
+              <WizardRowTip>Auth base URL: Revelator's own unless the client runs its own sign-in. It only handles the login redirect.</WizardRowTip>
             </WizardRowTips>
           </WizardRow>
-          {fixedTenant ? null : (
-            <WizardRow title="Tenant">
-              <WizardRowBody>
+          <WizardRow title="Whose it is">
+            <WizardRowBody>
+              {fixedTenant ? null : (
                 <Field
                   as="record"
                   name="tenant"
@@ -144,15 +261,33 @@ export function WhiteLabelWizard({ id, tenantId, back }: { id?: string; tenantId
                   options={offered.map((one) => ({ value: one.enterpriseId, title: one.name, code: one.enterpriseId }))}
                   help="Only a tenant without a white label is offered. Left blank, it is one of Revelator's own."
                 />
-              </WizardRowBody>
-            </WizardRow>
-          )}
+              )}
+              <Field
+                as="record"
+                name="partner"
+                label="Partner"
+                entity="organization"
+                noun={{ one: "partner", many: "partners" }}
+                standard="id"
+                options={PARTNERS.map((one) => ({ value: one.id, title: one.name, code: one.id }))}
+                help="The API partner it is tied to, where it is one's."
+              />
+            </WizardRowBody>
+          </WizardRow>
           <WizardRow title="White label enabled">
             <WizardRowBody>
               <Field as="choice" name="enabled" label="White label enabled" options={YES_NO} />
             </WizardRowBody>
             <WizardRowTips>
               <WizardRowTip>Only if the client bought white label: it unlocks their own domain and the sign-in designer.</WizardRowTip>
+            </WizardRowTips>
+          </WizardRow>
+          <WizardRow title="Default white label">
+            <WizardRowBody>
+              <Field as="choice" name="isDefault" label="Is default" options={YES_NO} />
+            </WizardRowBody>
+            <WizardRowTips>
+              <WizardRowTip>A domain no white label names falls back to the default. Only Revelator's own is.</WizardRowTip>
             </WizardRowTips>
           </WizardRow>
           <WizardRow title="Allows sign-up">
@@ -171,24 +306,89 @@ export function WhiteLabelWizard({ id, tenantId, back }: { id?: string; tenantId
         </WizardSectionBody>
       </WizardSection>
       <WizardSection>
+        <WizardSectionHeader title="Sign-in pages" />
+        <WizardSectionBody>
+          <WizardRow title="Login page">
+            <WizardRowBody>
+              <Field as="text" name="loginHeader" label="Login page header text" />
+              <Field as="text" name="loginSubheader" label="Login page subheader text" />
+            </WizardRowBody>
+          </WizardRow>
+          <WizardRow title="Sign-up page">
+            <WizardRowBody>
+              <Field as="text" name="signupHeader" label="Sign-up page header text" />
+              <Field as="text" name="signupSubheader" label="Sign-up page subheader text" />
+            </WizardRowBody>
+            <WizardRowTips>
+              <WizardRowTip>Written in the language the client's users read.</WizardRowTip>
+            </WizardRowTips>
+          </WizardRow>
+        </WizardSectionBody>
+      </WizardSection>
+      <WizardSection>
         <WizardSectionHeader title="Branding" />
         <WizardSectionBody>
           <WizardRow title="What it shows">
             <WizardRowBody>
               <Field as="text" name="title" label="Title" />
               <Field as="choice" name="showRevelatorBranding" label="Shows Revelator's branding" options={YES_NO} />
+              <Field as="choice" name="showAds" label="Shows ads" options={YES_NO} />
             </WizardRowBody>
+          </WizardRow>
+          <WizardRow title="Default plan">
+            <WizardRowBody>
+              <Field as="identifier" standard="id" name="defaultPlanId" label="Default plan ID" />
+            </WizardRowBody>
+            <WizardRowTips>
+              <WizardRowTip>Always 3, unless the client's contract names another plan.</WizardRowTip>
+            </WizardRowTips>
           </WizardRow>
         </WizardSectionBody>
       </WizardSection>
       <WizardSection>
         <WizardSectionHeader title="Links" />
         <WizardSectionBody>
-          <WizardRow title="Where it sends people">
+          <WizardRow title="Agreements">
             <WizardRowBody>
-              <Field as="url" name="termsUrl" label="Terms and conditions" />
-              <Field as="url" name="faqUrl" label="FAQ" />
-              <Field as="url" name="helpUrl" label="Help" />
+              <Field as="url" name="termsUrl" label="Terms and conditions file" />
+              <Field as="url" name="distributionAgreementUrl" label="Distribution agreement URL" />
+            </WizardRowBody>
+          </WizardRow>
+          <WizardRow title="Support">
+            <WizardRowBody>
+              <Field as="url" name="faqUrl" label="FAQ URL" />
+              <Field as="url" name="helpUrl" label="Help URL" />
+            </WizardRowBody>
+          </WizardRow>
+          <WizardRow title="Custom links">
+            <WizardRowBody>
+              <Field as="url" name="customLogoutUrl" label="Custom logout URL" />
+              <Field as="url" name="customDashboardLinkUrl" label="Custom dashboard link URL" />
+              <Field as="text" name="customDashboardLinkText" label="Custom dashboard link text" />
+            </WizardRowBody>
+            <WizardRowTips>
+              <WizardRowTip>Where a user lands on signing out, and a link of the client's own on the dashboard.</WizardRowTip>
+            </WizardRowTips>
+          </WizardRow>
+        </WizardSectionBody>
+      </WizardSection>
+      <WizardSection>
+        <WizardSectionHeader title="Services" />
+        <WizardSectionBody>
+          <WizardRow title="Intercom">
+            <WizardRowBody>
+              <Field as="choice" name="enableIntercom" label="Intercom enabled" options={YES_NO} />
+              <Field as="text" name="intercomAppId" label="Intercom app ID" />
+            </WizardRowBody>
+          </WizardRow>
+          <WizardRow title="Google Analytics">
+            <WizardRowBody>
+              <Field as="text" name="googleAnalyticsSiteId" label="Google Analytics site ID" />
+            </WizardRowBody>
+          </WizardRow>
+          <WizardRow title="Emails">
+            <WizardRowBody>
+              <Field as="text" name="bccEmails" label="BCC emails" help="Copied on every email it sends. Separate several with commas." />
             </WizardRowBody>
           </WizardRow>
         </WizardSectionBody>

@@ -67,6 +67,7 @@ import {
   TenantTransactions,
 } from "./tenant-facets";
 import { tenantMark } from "./tenants";
+import { WhiteLabelFacts } from "./white-labels";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
 
@@ -581,25 +582,7 @@ function TenantWhiteLabel({ tenant }: { tenant: Tenant }) {
         </Slot>
       </TitledCard>
     );
-  return (
-    <Metadata>
-      <FactCard
-        title="White label"
-        facts={[
-          { label: "White label ID", value: label.id, standard: "id" },
-          { label: "Domain", value: label.domain },
-          { label: "Title", value: label.title },
-          { label: "White label enabled", value: yesNo(Boolean(label.enabled)) },
-          { label: "Allows sign-up", value: yesNo(label.allowSignup) },
-          { label: "Allows password reset", value: yesNo(label.allowForgotPassword ?? true) },
-          { label: "Shows Revelator's branding", value: yesNo(Boolean(label.showRevelatorBranding)) },
-          { label: "Terms and conditions", value: label.termsUrl },
-          { label: "FAQ", value: label.faqUrl },
-          { label: "Help", value: label.helpUrl },
-        ]}
-      />
-    </Metadata>
-  );
+  return <WhiteLabelFacts label={label} tenant={tenant} />;
 }
 
 /** The client accounts a parent tenant holds, newest first. */

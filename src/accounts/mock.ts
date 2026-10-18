@@ -170,16 +170,44 @@ export interface TenantStore {
 export interface WhiteLabel {
   id: string;
   domain: string;
+  /** The same domain again, in the field the product's second version reads. */
+  domainV2?: string;
+  /** Where sign-in is redirected — Revelator's own auth unless the client runs its own. */
+  authBaseUrl?: string;
   title: string;
   allowSignup: boolean;
   /** Whether the client bought white label — its own domain and sign-in page, unlocked. */
   enabled?: boolean;
   allowForgotPassword?: boolean;
+  /** The white label a domain no other names falls back to. */
+  isDefault?: boolean;
   showRevelatorBranding?: boolean;
+  showAds?: boolean;
+  /** The API partner it is tied to, where it is one's. */
+  partnerId?: string;
+  /** The plan a user signing up through it starts on. */
+  defaultPlanId?: string;
   termsUrl?: string;
+  distributionAgreementUrl?: string;
   faqUrl?: string;
   helpUrl?: string;
+  customLogoutUrl?: string;
+  customDashboardLinkUrl?: string;
+  customDashboardLinkText?: string;
+  /** What the sign-in and sign-up pages say, over their forms. */
+  loginHeader?: string;
+  loginSubheader?: string;
+  signupHeader?: string;
+  signupSubheader?: string;
+  enableIntercom?: boolean;
+  intercomAppId?: string;
+  googleAnalyticsSiteId?: string;
+  /** Who is copied on every email it sends, comma-separated. */
+  bccEmails?: string;
 }
+
+/** Revelator's own auth, which every white label signs in through unless the client runs its own. */
+export const REVELATOR_AUTH = "https://auth.revelator.pro/";
 
 /** A tenant — an enterprise signed up under a customer, the workspace its catalogue lives in. */
 export interface Tenant {
@@ -286,6 +314,24 @@ const SANDBOX_STORES = ["FTP Sandbox", "AWS Sandbox"];
 
 type Drafted = Pick<Tenant, "enterpriseId" | "name" | "plan" | "created"> & Partial<Tenant>;
 
+/** A tenant's white label as it is first written: its domain twice, Revelator's auth, plan 3. */
+const whiteLabelFor = (enterpriseId: string, name: string, patch: Partial<WhiteLabel> = {}): WhiteLabel => {
+  const domain = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.revelator.example`;
+  return {
+    id: String(Number(enterpriseId) % 900 + 100),
+    domain,
+    domainV2: domain,
+    authBaseUrl: REVELATOR_AUTH,
+    title: name,
+    allowSignup: false,
+    allowForgotPassword: true,
+    defaultPlanId: "3",
+    loginHeader: "Welcome back",
+    signupHeader: "Create your account",
+    ...patch,
+  };
+};
+
 /** A tenant as written below: what sets it apart, the rest a live, finished standalone. */
 const t = (drafted: Drafted): Tenant => ({
   type: "Standalone",
@@ -297,12 +343,7 @@ const t = (drafted: Drafted): Tenant => ({
   fusionAuth: false,
   currency: "USD",
   minimumPayment: 50,
-  whiteLabel: {
-    id: String(Number(drafted.enterpriseId) % 900 + 100),
-    domain: `${drafted.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.revelator.example`,
-    title: drafted.name,
-    allowSignup: false,
-  },
+  whiteLabel: whiteLabelFor(drafted.enterpriseId, drafted.name),
   storesLive: drafted.environment && drafted.environment !== "Production" ? 2 : 7,
   tested: true,
   emailed: true,
@@ -326,12 +367,12 @@ export let TENANTS: readonly Tenant[] = [
   t({ enterpriseId: "611207", customerId: "497", name: "Ninefold Records", plan: "4 - Enterprise", created: day(2026, 9, 29), currency: "EUR", whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
   t({ enterpriseId: "611150", customerId: "232", name: "Riverstone API Trial", plan: "4 - Enterprise", environment: "API sandbox", created: day(2026, 9, 26), storesLive: 0, tested: false, emailed: false }),
   t({ enterpriseId: "609882", customerId: "490", name: "Corvid Lane Publishing", plan: "3 - Growth", created: day(2026, 9, 15), emailed: false }),
-  t({ enterpriseId: "609881", customerId: "490", name: "Corvid Lane", plan: "3 - Growth", created: day(2026, 9, 8), fusionAuth: true, team: [{ name: "Rui Tanaka", email: "rui@corvidlane.com" }], integrations: [{ providerId: "PP-77310428", provider: "PayPal", connected: true }], notes: [{ id: "n-3", created: day(2026, 9, 22), author: "Ines Calder", content: "Asked for a second admin for their publishing arm. Pointed them to Corvid Lane Publishing instead." }] }),
+  t({ enterpriseId: "609881", customerId: "490", name: "Corvid Lane", plan: "3 - Growth", created: day(2026, 9, 8), whiteLabel: whiteLabelFor("609881", "Corvid Lane", { enableIntercom: true, intercomAppId: "cv7k2lq9", showRevelatorBranding: true, customDashboardLinkUrl: "https://corvidlane.example/artists", customDashboardLinkText: "Artist portal", customLogoutUrl: "https://corvidlane.example" }), fusionAuth: true, team: [{ name: "Rui Tanaka", email: "rui@corvidlane.com" }], integrations: [{ providerId: "PP-77310428", provider: "PayPal", connected: true }], notes: [{ id: "n-3", created: day(2026, 9, 22), author: "Ines Calder", content: "Asked for a second admin for their publishing arm. Pointed them to Corvid Lane Publishing instead." }] }),
   t({ enterpriseId: "608540", customerId: "483", name: "Silverbirch Publishing House", plan: "3 - Growth", created: day(2026, 8, 25), currency: "GBP" }),
   t({ enterpriseId: "606404", customerId: "469", name: "Opaline Sandbox", plan: "4 - Enterprise", environment: "API sandbox", partnerId: "231", created: day(2026, 8, 3), currency: "EUR" }),
   t({ enterpriseId: "606403", customerId: "469", name: "Opaline Classics", plan: "3 - Growth", created: day(2026, 7, 20), currency: "EUR" }),
   t({ enterpriseId: "607113", customerId: "476", name: "Marlow Tide Entertainment", plan: "2 - Starter", created: day(2026, 7, 12), paymentBlocked: true }),
-  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "4 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], analytics: { revenueDays: 1095 }, config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
+  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "4 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", whiteLabel: whiteLabelFor("606402", "Opaline", { domain: "app.opaline.example", domainV2: "app.opaline.example", authBaseUrl: "https://auth.opaline.example/", title: "Opaline | Distribution musicale", enabled: true, defaultPlanId: "7", loginHeader: "Bienvenue", loginSubheader: "Connectez-vous pour gérer vos sorties, votre catalogue et vos résultats.", signupHeader: "Inscrivez-vous pour distribuer votre musique et suivre son évolution.", signupSubheader: "Créez votre compte Opaline", faqUrl: "https://opaline.example/faq", helpUrl: "https://opaline.example/aide", distributionAgreementUrl: "https://opaline.example/contrat", googleAnalyticsSiteId: "G-OP4L1N3X", bccEmails: "ops@opaline.example" }), fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], analytics: { revenueDays: 1095 }, config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
   t({ enterpriseId: "604380", customerId: "455", name: "Eastgate Test", plan: "4 - Enterprise", environment: "Demo", created: day(2026, 6, 10), currency: "EUR" }),
   t({ enterpriseId: "604379", customerId: "455", name: "Eastgate Kids", plan: "3 - Growth", created: day(2026, 6, 9), currency: "EUR" }),
   t({ enterpriseId: "605118", customerId: "462", name: "Brackenridge Audio", plan: "2 - Starter", created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true, analytics: { enabled: false }, config: { noTransactionalEmails: true }, notes: [{ id: "n-5", created: day(2026, 9, 30), author: "Ines Calder", content: "Locked out and payment blocked over the unpaid June invoice. Unlock only once Finance confirms." }] }),
@@ -948,10 +989,10 @@ export interface WhiteLabelRecord extends WhiteLabel {
 
 /** The white labels no tenant holds: Revelator's own product, and the hosts it is tried on. */
 let LOOSE_WHITE_LABELS: readonly WhiteLabelRecord[] = [
-  { id: "1", domain: "app.revelator.example", title: "Revelator", allowSignup: true, enabled: false, allowForgotPassword: true, showRevelatorBranding: true },
+  { id: "1", domain: "app.revelator.example", domainV2: "app.revelator.example", authBaseUrl: REVELATOR_AUTH, title: "Revelator", allowSignup: true, enabled: false, allowForgotPassword: true, isDefault: true, showRevelatorBranding: true, showAds: true, defaultPlanId: "3", enableIntercom: true, intercomAppId: "rv0pro1x", loginHeader: "Welcome back", signupHeader: "Create your account" },
   { id: "5", domain: "staging.revelator.example", title: "Revelator Staging", allowSignup: true, enabled: false, allowForgotPassword: true, showRevelatorBranding: true },
   { id: "30", domain: "localhost", title: "Local", allowSignup: true, enabled: false, allowForgotPassword: true },
-  { id: "88", domain: "glasswing.revelator.example", title: "Glasswing", allowSignup: false, enabled: true, allowForgotPassword: true, partnerId: "214" },
+  { id: "88", domain: "glasswing.revelator.example", domainV2: "glasswing.revelator.example", authBaseUrl: REVELATOR_AUTH, title: "Glasswing", allowSignup: false, enabled: true, allowForgotPassword: true, partnerId: "214", defaultPlanId: "3" },
 ];
 
 /** Every white label, by id. */
@@ -959,7 +1000,7 @@ export function whiteLabels(): readonly WhiteLabelRecord[] {
   const held = TENANTS.filter((one) => one.whiteLabel).map((tenant) => ({
     ...tenant.whiteLabel!,
     tenant,
-    partnerId: tenant.partnerId,
+    partnerId: tenant.whiteLabel!.partnerId ?? tenant.partnerId,
   }));
   return [...held, ...LOOSE_WHITE_LABELS].sort((a, b) => Number(a.id) - Number(b.id));
 }

@@ -1,9 +1,6 @@
 import type { ReactNode } from "react";
 import {
   DetailPage,
-  FactCard,
-  Link,
-  Metadata,
   type Command,
   type DetailFacet,
   type RecordNavProps,
@@ -15,18 +12,15 @@ import {
   accountsHref,
   editWhiteLabelHref,
   go,
-  partnerHref,
   tenantHref,
   whiteLabelHref,
   type WhiteLabelFacet,
 } from "../route";
-import { partnerById, whiteLabelById, whiteLabels } from "./mock";
-import { DeleteWhiteLabel, enabledBadge, whiteLabelMark } from "./white-labels";
+import { whiteLabelById, whiteLabels } from "./mock";
+import { DeleteWhiteLabel, WhiteLabelFacts, whiteLabelMark } from "./white-labels";
 
 /** The white label the address names, or the first. */
 const labelOf = (id: string) => whiteLabelById(id) ?? whiteLabels()[0]!;
-
-const yesNo = (value: boolean | undefined) => (value ? "Yes" : "No");
 
 /**
  * One white label, as a record: where it loads, how it signs people in, what it shows and where it
@@ -34,44 +28,10 @@ const yesNo = (value: boolean | undefined) => (value ? "Yes" : "No");
  */
 export function WhiteLabelDetail({ id, facet }: { id: string; facet: WhiteLabelFacet }) {
   const label = labelOf(id);
-  const partner = label.partnerId ? partnerById(label.partnerId) : undefined;
 
   const FACETS: Record<WhiteLabelFacet, { header?: DetailFacet; body: ReactNode }> = {
     Details: {
-      body: (
-        <Metadata>
-          <FactCard
-            title="White label"
-            facts={[
-              { label: "White label ID", value: label.id, standard: "id" },
-              { label: "Domain", value: label.domain },
-              { label: "Title", value: label.title },
-              {
-                label: "Tenant",
-                value: label.tenant ? <Link opens={tenantHref(label.tenant.enterpriseId)}>{label.tenant.name}</Link> : "Revelator's own",
-              },
-              { label: "Partner", value: partner ? <Link opens={partnerHref(partner.id)}>{partner.name}</Link> : undefined },
-            ]}
-          />
-          <FactCard
-            title="Sign-in"
-            facts={[
-              { label: "White label enabled", value: enabledBadge(label.enabled) },
-              { label: "Allows sign-up", value: yesNo(label.allowSignup) },
-              { label: "Allows password reset", value: yesNo(label.allowForgotPassword ?? true) },
-              { label: "Shows Revelator's branding", value: yesNo(label.showRevelatorBranding) },
-            ]}
-          />
-          <FactCard
-            title="Links"
-            facts={[
-              { label: "Terms and conditions", value: label.termsUrl },
-              { label: "FAQ", value: label.faqUrl },
-              { label: "Help", value: label.helpUrl },
-            ]}
-          />
-        </Metadata>
-      ),
+      body: <WhiteLabelFacts label={label} tenant={label.tenant} />,
     },
   };
   const shown = FACETS[facet];
