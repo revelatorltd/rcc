@@ -315,7 +315,10 @@ export function usersOf(one: Tenant): readonly TenantUser[] {
   const owner = one.owner ?? contact ?? { name: "Wren Okafor", email: "wren@saltmarshtapes.example" };
   return [{ name: owner.name, email: owner.email }, ...one.team].map((user, at) => ({
     ...user,
-    userId: `${one.enterpriseId.slice(0, 4)}c${at}e7-${one.enterpriseId.slice(2)}-4a1f`,
+    // A name changed on the user is theirs wherever they sign in.
+    name: USER_EDITS[user.email]?.name ?? user.name,
+    // ONE id for one address, the same on every tenant they sign in to.
+    userId: userIdOf(user.email),
     owner: at === 0,
   }));
 }
@@ -724,10 +727,13 @@ let USER_EDITS: Readonly<Record<string, AccountEdit>> = {
 
 /** A user id, as the product issues one, kept the same for the same address. */
 const userIdOf = (email: string) => {
-  let hash = 0;
-  for (const char of email) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  const hex = hash.toString(16).padStart(8, "0");
-  return `${hex}-${hex.slice(0, 4)}-4${hex.slice(5, 8)}-a${hex.slice(1, 4)}`;
+  const hashOf = (seed: number) => {
+    let hash = seed;
+    for (const char of email) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0;
+    return hash.toString(16).padStart(8, "0");
+  };
+  const [a, b, c] = [hashOf(7), hashOf(131), hashOf(977)];
+  return `${a}-${b.slice(0, 4)}-4${b.slice(5, 8)}-a${c.slice(0, 3)}-${c.slice(3, 8)}${a.slice(0, 7)}`;
 };
 
 /** Every user, read off the tenants that gave them access — one account for one address. */

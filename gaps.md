@@ -96,6 +96,17 @@ Decided by the system rather than asked: the prototype's Trial, Locked out and P
 are the payee's status, a reading and a badge. Its tax domicile and whether it may change its own
 settings are dialogs, as in the prototype.
 
+## Accounts → Users
+
+Reference: `ixUsers()`, `vUser()`, `vUserEdit()`. Everyone who signs in, one account for one address,
+across every tenant that gave them access. Edit user is a wizard (name, partner, partner user id); a
+missing partner user id is warned on the record and issued from its overflow. Access is managed from
+the user's Enterprises as it is on the tenant: set as owner, remove access.
+
+Decided by RCC rather than asked: the prototype's Membership tab (the product's sign-in table — failed
+attempts, password format) and its edit form's profile, notification and locale settings are the
+product's, and are not shown. The auth tenant hover is not drawn: RCC holds no auth tenants.
+
 ## Not built yet
 
-- **Users, White labels** — in the nav, inert.
+- **White labels** — in the nav, inert.

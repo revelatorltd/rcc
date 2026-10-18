@@ -14,6 +14,8 @@ import { PartnerDetail, partnerPlace } from "./accounts/partner";
 import { NewPartner, Partners } from "./accounts/partners";
 import { PayeeDetail, payeePlace } from "./accounts/payee";
 import { Payees } from "./accounts/payees";
+import { UserDetail, userPlace } from "./accounts/user";
+import { EditUser, Users } from "./accounts/users";
 import { SignUpTenant } from "./accounts/sign-up-tenant";
 import { TenantDetail, tenantPlace } from "./accounts/tenant";
 import { ApiPartner, EditEnterprise, ImportChildren, TenantConfiguration, WhiteLabelForm } from "./accounts/tenant-forms";
@@ -40,6 +42,7 @@ function placeOf(route: Route): ShellPlace {
   if (route.name === "enterprise") return enterprisePlace(route);
   if (route.name === "partner") return partnerPlace(route);
   if (route.name === "payee") return payeePlace(route);
+  if (route.name === "user") return userPlace(route);
   if (route.name === "accounts") return { at: "Accounts", page: PAGE_NAMES[route.page] };
   return { at: "Accounts", page: "Customers" };
 }
@@ -51,6 +54,7 @@ function placeOf(route: Route): ShellPlace {
 function coverOf(route: Route): ReactNode {
   if (route.name === "new-customer") return <CustomerWizard key="new" />;
   if (route.name === "new-partner") return <NewPartner key="new" />;
+  if (route.name === "edit-user") return <EditUser key={route.id} id={route.id} />;
   if (route.name === "customer-form" && route.form === "edit") return <CustomerWizard key={route.id} customerId={route.id} />;
   if (route.name === "customer-form") return <AddSubscription key={route.id} customerId={route.id} />;
   if (route.name === "sign-up-tenant") return <SignUpTenant key={route.customerId ?? "any"} customerId={route.customerId} />;
@@ -82,10 +86,12 @@ function pageOf(route: Route) {
   if (route.name === "enterprise") return <EnterpriseDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "partner") return <PartnerDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "payee") return <PayeeDetail key={route.id} id={route.id} facet={route.facet} />;
+  if (route.name === "user") return <UserDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "accounts" && route.page === "tenants") return <Tenants />;
   if (route.name === "accounts" && route.page === "enterprises") return <Enterprises />;
   if (route.name === "accounts" && route.page === "partners") return <Partners />;
   if (route.name === "accounts" && route.page === "payees") return <Payees />;
+  if (route.name === "accounts" && route.page === "users") return <Users />;
   return <Customers />;
 }
 

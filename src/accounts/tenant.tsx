@@ -34,6 +34,7 @@ import {
   payeeHref,
   tenantFormHref,
   tenantHref,
+  userHref,
   type TenantFacet,
 } from "../route";
 import {
@@ -387,6 +388,7 @@ function TenantUsers({ tenant }: { tenant: Tenant }) {
         title: "Name",
         name: (one) => one.name,
         mark: (one) => <Avatar kind="person" name={one.name} />,
+        opens: (one) => userHref(one.userId),
       }}
       columns={[
         { name: "Email", value: (one) => one.email, cell: (one) => one.email },
