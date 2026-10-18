@@ -55,6 +55,17 @@ import {
   type TenantStore,
 } from "./mock";
 import { AddUser, RemoveAccess, ResetBalances, SetOwner } from "./tenant-dialogs";
+import {
+  AddNote,
+  ConnectProvider,
+  EditAnalytics,
+  MigrateToWhiteLabel,
+  TenantAnalytics,
+  TenantConfigurationFacet,
+  TenantIntegrations,
+  TenantNotes,
+  TenantTransactions,
+} from "./tenant-facets";
 import { tenantMark } from "./tenants";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
@@ -138,7 +149,33 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
       body: <TenantUsers tenant={tenant} />,
     },
     Payees: { header: { name: "Payees" }, body: <TenantPayees tenant={tenant} /> },
+    Integrations: {
+      header: { name: "Integrations", actions: [{ label: "Connect provider", creates: true, dialog: <ConnectProvider tenant={tenant} /> }] },
+      body: <TenantIntegrations tenant={tenant} />,
+    },
+    "Transactions by payor": {
+      header: { name: "Transactions by payor", more: [{ label: "Export" }] },
+      body: <TenantTransactions tenant={tenant} />,
+    },
     DSPs: { header: { name: "DSPs", more: [{ label: "Export" }] }, body: <TenantStores tenant={tenant} /> },
+    Analytics: {
+      header: { name: "Analytics", more: [{ label: "Edit analytics", dialog: <EditAnalytics tenant={tenant} /> }] },
+      body: <TenantAnalytics tenant={tenant} />,
+    },
+    "Tenant configuration": {
+      header: {
+        name: "Tenant configuration",
+        more: [
+          { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
+          { label: "Migrate to white label", dialog: <MigrateToWhiteLabel tenant={tenant} /> },
+        ],
+      },
+      body: <TenantConfigurationFacet tenant={tenant} />,
+    },
+    Notes: {
+      header: { name: "Notes", actions: [{ label: "Add note", creates: true, dialog: <AddNote tenant={tenant} /> }] },
+      body: <TenantNotes tenant={tenant} />,
+    },
     "White label": {
       header: {
         name: "White label",

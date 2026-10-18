@@ -219,6 +219,65 @@ export interface Tenant {
   /** Who besides the owner signs in. */
   team: readonly Omit<TenantUser, "owner" | "userId">[];
   children: readonly ChildEnterprise[];
+  /** The payment providers its payees are paid through, where any is connected. */
+  integrations?: readonly Integration[];
+  /** How long its analytics are kept, where it was set apart from the default. */
+  analytics?: Partial<TenantAnalytics>;
+  /** Its entry in the supply chain's tenant configuration, where it differs from the default. */
+  config?: Partial<TenantConfig>;
+  /** What the team has written down about it, newest first. */
+  notes?: readonly TenantNote[];
+}
+
+/** A payment provider the tenant's payees are paid through. */
+export interface Integration {
+  providerId: string;
+  provider: string;
+  connected: boolean;
+}
+
+/** How long the tenant's analytics are kept, in days, and whether it has them at all. */
+export interface TenantAnalytics {
+  enabled: boolean;
+  trendsDays: number;
+  revenueDays: number;
+  v3TrendsDays: number;
+}
+
+/** The tenant's entry in the supply chain's tenant configuration — what it may do, switched. */
+export interface TenantConfig {
+  authTenantId: string;
+  authClientId: string;
+  domain?: string;
+  marketplacePage: boolean;
+  masterChannel: boolean;
+  featureFm: boolean;
+  tokenMintingWithoutValidation: boolean;
+  minAudioLength: boolean;
+  physicalReleases: boolean;
+  withholdingTax: boolean;
+  noTransactionalEmails: boolean;
+  tokenNetwork?: string;
+  paymentBatcher: string;
+}
+
+/** Something the team wrote down about a tenant. */
+export interface TenantNote {
+  id: string;
+  created: Date;
+  author: string;
+  content: string;
+}
+
+/** A payout the tenant made, as the payor, to one of its payees. */
+export interface PayorTransaction {
+  id: string;
+  date: Date;
+  payee: string;
+  payeeId: string;
+  amount: number;
+  currency: string;
+  status: "Paid" | "Pending" | "Processing" | "Failed";
 }
 
 /** The stores a production tenant delivers to, and the two a sandbox tries a delivery on. */
@@ -267,17 +326,17 @@ export let TENANTS: readonly Tenant[] = [
   t({ enterpriseId: "611207", customerId: "497", name: "Ninefold Records", plan: "4 - Enterprise", created: day(2026, 9, 29), currency: "EUR", whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
   t({ enterpriseId: "611150", customerId: "232", name: "Riverstone API Trial", plan: "4 - Enterprise", environment: "API sandbox", created: day(2026, 9, 26), storesLive: 0, tested: false, emailed: false }),
   t({ enterpriseId: "609882", customerId: "490", name: "Corvid Lane Publishing", plan: "3 - Growth", created: day(2026, 9, 15), emailed: false }),
-  t({ enterpriseId: "609881", customerId: "490", name: "Corvid Lane", plan: "3 - Growth", created: day(2026, 9, 8), fusionAuth: true, team: [{ name: "Rui Tanaka", email: "rui@corvidlane.com" }] }),
+  t({ enterpriseId: "609881", customerId: "490", name: "Corvid Lane", plan: "3 - Growth", created: day(2026, 9, 8), fusionAuth: true, team: [{ name: "Rui Tanaka", email: "rui@corvidlane.com" }], integrations: [{ providerId: "PP-77310428", provider: "PayPal", connected: true }], notes: [{ id: "n-3", created: day(2026, 9, 22), author: "Ines Calder", content: "Asked for a second admin for their publishing arm. Pointed them to Corvid Lane Publishing instead." }] }),
   t({ enterpriseId: "608540", customerId: "483", name: "Silverbirch Publishing House", plan: "3 - Growth", created: day(2026, 8, 25), currency: "GBP" }),
   t({ enterpriseId: "606404", customerId: "469", name: "Opaline Sandbox", plan: "4 - Enterprise", environment: "API sandbox", partnerId: "231", created: day(2026, 8, 3), currency: "EUR" }),
   t({ enterpriseId: "606403", customerId: "469", name: "Opaline Classics", plan: "3 - Growth", created: day(2026, 7, 20), currency: "EUR" }),
   t({ enterpriseId: "607113", customerId: "476", name: "Marlow Tide Entertainment", plan: "2 - Starter", created: day(2026, 7, 12), paymentBlocked: true }),
-  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "4 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
+  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "4 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], analytics: { revenueDays: 1095 }, config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
   t({ enterpriseId: "604380", customerId: "455", name: "Eastgate Test", plan: "4 - Enterprise", environment: "Demo", created: day(2026, 6, 10), currency: "EUR" }),
   t({ enterpriseId: "604379", customerId: "455", name: "Eastgate Kids", plan: "3 - Growth", created: day(2026, 6, 9), currency: "EUR" }),
-  t({ enterpriseId: "605118", customerId: "462", name: "Brackenridge Audio", plan: "2 - Starter", created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true }),
+  t({ enterpriseId: "605118", customerId: "462", name: "Brackenridge Audio", plan: "2 - Starter", created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true, analytics: { enabled: false }, config: { noTransactionalEmails: true }, notes: [{ id: "n-5", created: day(2026, 9, 30), author: "Ines Calder", content: "Locked out and payment blocked over the unpaid June invoice. Unlock only once Finance confirms." }] }),
   t({ enterpriseId: "604378", customerId: "455", name: "Eastgate Classics", plan: "3 - Growth", created: day(2026, 5, 18), currency: "EUR" }),
-  t({ enterpriseId: "604377", customerId: "455", name: "Eastgate Music", plan: "4 - Enterprise", type: "Parent", created: day(2026, 5, 4), currency: "EUR", fusionAuth: true, children: [child("604601", "Nordhafen Beats", day(2026, 5, 28)), child("604602", "Elbe Strings", day(2026, 6, 20)), child("604603", "Kiezklang", day(2026, 8, 2))] }),
+  t({ enterpriseId: "604377", customerId: "455", name: "Eastgate Music", plan: "4 - Enterprise", type: "Parent", created: day(2026, 5, 4), currency: "EUR", fusionAuth: true, integrations: [{ providerId: "PP-61200937", provider: "PayPal", connected: true }, { providerId: "acct_1Q8eastgate", provider: "Stripe", connected: false }], config: { masterChannel: true, featureFm: true, physicalReleases: true }, children: [child("604601", "Nordhafen Beats", day(2026, 5, 28)), child("604602", "Elbe Strings", day(2026, 6, 20)), child("604603", "Kiezklang", day(2026, 8, 2))] }),
   t({ enterpriseId: "603011", customerId: "448", name: "Thistle & Thorn", plan: "3 - Growth", created: day(2026, 3, 19), currency: "EUR" }),
   t({ enterpriseId: "602290", customerId: "441", name: "Grainfield Collective", plan: "2 - Starter", created: day(2026, 2, 27), onTrial: true, storesLive: 3, emailed: false }),
   t({ enterpriseId: "598220", customerId: "427", name: "Bluefen API Sandbox", plan: "4 - Enterprise", environment: "API sandbox", partnerId: "198", created: day(2026, 2, 4), currency: "SEK" }),
@@ -285,7 +344,7 @@ export let TENANTS: readonly Tenant[] = [
   t({ enterpriseId: "598218", customerId: "427", name: "Bluefen Jazz", plan: "3 - Growth", created: day(2026, 1, 12), currency: "SEK" }),
   t({ enterpriseId: "598217", customerId: "427", name: "Bluefen Baltic", plan: "3 - Growth", created: day(2025, 11, 30), currency: "EUR" }),
   t({ enterpriseId: "598216", customerId: "427", name: "Bluefen Nordic", plan: "4 - Enterprise", created: day(2025, 11, 2), currency: "SEK" }),
-  t({ enterpriseId: "598215", customerId: "427", name: "Bluefen Distribution", plan: "4 - Enterprise", type: "Parent", created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
+  t({ enterpriseId: "598215", customerId: "427", name: "Bluefen Distribution", plan: "4 - Enterprise", type: "Parent", created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, integrations: [{ providerId: "TIP-0038816", provider: "Tipalti", connected: true }], config: { tokenNetwork: "Base", tokenMintingWithoutValidation: true }, notes: [{ id: "n-4", created: day(2026, 4, 2), author: "Dario Mendel", content: "Payouts to Gotland Folk held in March while the payee re-verified its bank. Released 1 April." }], team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
   t({ enterpriseId: "600874", customerId: "434", name: "Kestrel Point Recordings", plan: "3 - Growth", created: day(2025, 12, 10), lockedOut: true }),
   t({ enterpriseId: "595661", customerId: "420", name: "Harrow Street Live", plan: "3 - Growth", created: day(2025, 9, 1), currency: "GBP" }),
   t({ enterpriseId: "595660", customerId: "420", name: "Harrow Street Sound", plan: "4 - Enterprise", created: day(2025, 7, 9), currency: "GBP" }),
@@ -346,6 +405,88 @@ export const payeesOf = (one: Tenant): readonly TenantPayee[] => [
   { payeeId: one.payeeId, name: one.name, enterpriseId: one.enterpriseId },
   ...one.children.map((each) => ({ payeeId: each.payeeId, name: each.name, enterpriseId: each.enterpriseId })),
 ];
+
+/** A seed's hex, the same every time — what an invented auth ID is made of. */
+const hexOf = (seed: string, length: number) => {
+  let hash = 2166136261;
+  let out = "";
+  while (out.length < length) {
+    for (const char of seed + out.length) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) >>> 0;
+    out += hash.toString(16).padStart(8, "0");
+  }
+  return out.slice(0, length);
+};
+const uuidOf = (seed: string) => {
+  const hex = hexOf(seed, 32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20)}`;
+};
+
+/** The payment providers a tenant is connected to. */
+export const integrationsOf = (one: Tenant): readonly Integration[] => one.integrations ?? [];
+
+/** How long a tenant's analytics are kept — the defaults, where it was not set apart. */
+export const analyticsOf = (one: Tenant): TenantAnalytics => ({
+  enabled: true,
+  trendsDays: 90,
+  revenueDays: 730,
+  v3TrendsDays: 365,
+  ...one.analytics,
+});
+
+/**
+ * A tenant's entry in the supply chain's tenant configuration — none until a customer is linked,
+ * which is what writes it.
+ */
+export const configOf = (one: Tenant): TenantConfig | undefined =>
+  one.customerId
+    ? {
+        authTenantId: uuidOf(`auth-${one.enterpriseId}`),
+        authClientId: uuidOf(`client-${one.enterpriseId}`),
+        domain: one.domain ?? one.whiteLabel?.domain,
+        marketplacePage: false,
+        masterChannel: false,
+        featureFm: false,
+        tokenMintingWithoutValidation: false,
+        minAudioLength: true,
+        physicalReleases: false,
+        withholdingTax: false,
+        noTransactionalEmails: false,
+        paymentBatcher: "Standard",
+        ...one.config,
+      }
+    : undefined;
+
+/** What the team wrote about a tenant, newest first. */
+export const notesOf = (one: Tenant): readonly TenantNote[] =>
+  [...(one.notes ?? [])].sort((a, b) => b.created.getTime() - a.created.getTime());
+
+/**
+ * What a tenant paid out as the payor — a monthly payout to each of its payees, over the months it
+ * has delivered. A tenant not yet delivering, or a sandbox, has paid nothing.
+ */
+export const transactionsOf = (one: Tenant): readonly PayorTransaction[] => {
+  if (isSandbox(one) || liveStoresOf(one) === 0) return [];
+  const months = Math.min(4, Math.max(0, (TODAY.getFullYear() - one.created.getFullYear()) * 12 + TODAY.getMonth() - one.created.getMonth()));
+  const since = (enterpriseId: string) => one.children.find((each) => each.enterpriseId === enterpriseId)?.created ?? one.created;
+  return payeesOf(one).flatMap((payee, at) =>
+    Array.from({ length: months }, (_, back) => {
+      const seed = parseInt(hexOf(`${payee.payeeId}-${back}`, 6), 16);
+      const date = new Date(TODAY.getFullYear(), TODAY.getMonth() - back, 5);
+      const status: PayorTransaction["status"] =
+        back === 0 ? (one.paymentBlocked ? "Pending" : "Processing") : seed % 23 === 0 ? "Failed" : "Paid";
+      return {
+        id: String(8_400_000 + Number(payee.payeeId.slice(-4)) * 10 + back + at),
+        date,
+        payee: payee.name,
+        payeeId: payee.payeeId,
+        amount: Math.round((seed % 480_000) + 1_500) / 100,
+        currency: one.currency,
+        status,
+        since: since(payee.enterpriseId),
+      };
+    }).filter((paid) => paid.date >= paid.since).map(({ since: _, ...paid }) => paid),
+  );
+};
 
 /** One step of getting a tenant live — done or still owed, and the command that does it. */
 export interface SetupStep {
@@ -510,6 +651,29 @@ export function updateTenant(id: string, patch: Partial<Tenant>) {
 export function switchStores(id: string, names: readonly string[], patch: Partial<TenantStore>) {
   const tenant = tenantById(id);
   updateTenant(id, { stores: storesOf(tenant).map((store) => (names.includes(store.name) ? { ...store, ...patch } : store)) });
+}
+
+/** A payment provider connected to a tenant, or a connection switched. */
+export function saveIntegration(id: string, integration: Integration) {
+  const tenant = tenantById(id);
+  const kept = integrationsOf(tenant).filter((one) => one.providerId !== integration.providerId);
+  updateTenant(id, { integrations: [...kept, integration] });
+}
+
+/** Who is signed in to RCC — the author of what is written here. */
+export const OPERATOR = "Ines Calder";
+
+/** A note written about a tenant, as today's, by whoever is signed in. */
+export function addNote(id: string, content: string, author = OPERATOR) {
+  const tenant = tenantById(id);
+  const note = { id: `n-${Date.now()}`, created: TODAY, author, content };
+  updateTenant(id, { notes: [note, ...(tenant.notes ?? [])] });
+}
+
+/** A note taken away. */
+export function deleteNote(id: string, noteId: string) {
+  const tenant = tenantById(id);
+  updateTenant(id, { notes: (tenant.notes ?? []).filter((one) => one.id !== noteId) });
 }
 
 /** The template a tenant is signed up from — every answer the form does not ask for, settled. */

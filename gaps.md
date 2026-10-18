@@ -47,6 +47,8 @@ share read down the column with its figure.
 | 13 | A **setup checklist** on a record, DECLARED: ordered steps, each done or owed, each with the command that does it, and how far the whole has come | the Setup tab: numbered steps with a button each, under a progress bar | composed of the system's parts: a `TitledCard` holding a `Progress` and a list of `SlotItem`s, each led by a `StatusMark` (done, owed, optional) and trailed by its step's `Button`, the owed one primary. No step numbers: a status mark carries no count |
 | 14 | A **second identifier on the band** that says whose it is (Enterprise ID beside Payee ID) | two labelled chips | the enterprise ID alone on the band; the payee ID in Details |
 | 15 | A **long value in a facet tile** (a white label's domain) | — | runs over its label; the tile shows the white label's title instead |
+| 29 | A **status family for a connection** (a payment provider tied to a tenant): connected is *settled*, disconnected is *waiting* | Is Connected: a tick | the Integrations table writes Yes or No in words; no badge borrows another family's meaning |
+| 30 | A **field for a count** (a retention in days) — the field genres hold money, percent and minutes-and-seconds, none a whole number of something | Trends / Revenue / V3 Trends Retention Days: free number inputs | Edit analytics offers each retention as a choice of standard spans (90, 365, 730 days…); a span off that list cannot be entered |
 
 ## Forms (customers and tenants)
 
