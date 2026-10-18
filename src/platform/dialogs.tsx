@@ -53,6 +53,20 @@ export const orgMark = (one: { id: string; name: string }) => {
   );
 };
 /**
+ * A tenant group — its organization's logo, so a group reads as its organization's wherever it
+ * stands, whatever its region; the enterprise level's for an enterprise group, its initials where
+ * its organization has no logo.
+ */
+export const tenantGroupMark = (one: { scope: string; name: string }) => {
+  const logo = logoOf(one.scope);
+  return (
+    <Avatar kind="organization" name={one.name}>
+      {logo ? <img src={logo} alt="" /> : null}
+    </Avatar>
+  );
+};
+
+/**
  * A region — its country's flag, where it is one country; the place's own mark where it is a run of
  * them, since the system draws no flag for one and invents none.
  */

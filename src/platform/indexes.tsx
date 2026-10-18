@@ -13,6 +13,7 @@ import {
   personMark,
   regionFlag,
   regionMark,
+  tenantGroupMark,
 } from "./dialogs";
 import { logoByName, logoOf } from "./logos";
 import {
@@ -159,7 +160,7 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
     identity: {
       title: "Tenant group",
       name: (one) => one.name,
-      mark: (one) => groupMark(one),
+      mark: (one) => tenantGroupMark(one),
       sortable: true,
       opens: (one) => tenantGroupHref(one.id),
     },
