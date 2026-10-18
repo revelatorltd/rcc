@@ -69,6 +69,15 @@ Decided by RCC rather than asked:
 - What leaves RCC stays without an address: Impersonate, Open in Stripe, Billing, Export, and
   Download template. Impersonating the owner from the setup marks the step tried, as the prototype does.
 
+## Accounts → Enterprises
+
+Reference: `ixEnterprises()`. Every tenant and every client account a parent holds; a tenant opens on
+its own record, a client account on one of its own (its parent, its plan, its payee).
+
+Decided by the system rather than asked: what an enterprise IS — a parent, a standalone, a client
+account — is the index's readings. Its parent is a value cell naming the record with its mark. Whether
+it is locked out waits on the tenant's standing (gap 12): a switch in the filters, an alert on the record.
+
 ## Not built yet
 
-- **Enterprises, Partners, Payees, Users, White labels** — in the nav, inert.
+- **Partners, Payees, Users, White labels** — in the nav, inert.

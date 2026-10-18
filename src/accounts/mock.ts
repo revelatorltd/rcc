@@ -511,3 +511,310 @@ export function switchStores(id: string, names: readonly string[], patch: Partia
 
 /** The template a tenant is signed up from — every answer the form does not ask for, settled. */
 export const signedUp = (drafted: Drafted) => t({ whiteLabel: undefined, storesLive: 0, tested: false, emailed: false, ...drafted });
+
+/*
+ * THE REST OF ACCOUNTS — the enterprises, partners, payees, users and white labels. Most are READ
+ * OFF the tenants above, as the product reads them off its enterprises: a tenant is an enterprise,
+ * each child it holds is one more, each has its payee, and the people who sign in to them are its
+ * users. What is kept apart is what no tenant holds — the API partners, and the white labels that
+ * belong to Revelator itself — and what a form changed on a payee or a user.
+ */
+
+/** Any enterprise: a tenant — a parent or a standalone — or a client account a parent holds. */
+export interface Enterprise {
+  enterpriseId: string;
+  name: string;
+  type: TenantType | "Child";
+  payeeId: string;
+  plan: string;
+  /** The tenant itself, where the enterprise is one. */
+  tenant?: Tenant;
+  /** The parent a child enterprise belongs to. */
+  parent?: Tenant;
+  partnerId?: string;
+  onTrial: boolean;
+  lockedOut: boolean;
+  paymentBlocked: boolean;
+  created: Date;
+}
+
+/** Every enterprise — each tenant, then the client accounts of each parent — newest first. */
+export function enterprises(): readonly Enterprise[] {
+  const all: Enterprise[] = [];
+  for (const tenant of TENANTS) {
+    all.push({
+      enterpriseId: tenant.enterpriseId,
+      name: tenant.name,
+      type: tenant.type,
+      payeeId: tenant.payeeId,
+      plan: tenant.plan,
+      tenant,
+      partnerId: tenant.partnerId,
+      onTrial: tenant.onTrial,
+      lockedOut: tenant.lockedOut,
+      paymentBlocked: tenant.paymentBlocked,
+      created: tenant.created,
+    });
+    for (const each of tenant.children)
+      all.push({
+        enterpriseId: each.enterpriseId,
+        name: each.name,
+        type: "Child",
+        payeeId: each.payeeId,
+        // A client account is on its parent's plan, and held back where its parent is.
+        plan: tenant.plan,
+        parent: tenant,
+        onTrial: tenant.onTrial,
+        lockedOut: tenant.lockedOut,
+        paymentBlocked: tenant.paymentBlocked,
+        created: each.created,
+      });
+  }
+  return all.sort((a, b) => b.created.getTime() - a.created.getTime());
+}
+
+export const enterpriseById = (id: string) => enterprises().find((one) => one.enterpriseId === id);
+
+/** A child enterprise renamed — the one change RCC makes to a client account. */
+export function renameChild(id: string, name: string) {
+  const parent = TENANTS.find((one) => one.children.some((each) => each.enterpriseId === id));
+  if (!parent) return;
+  updateTenant(parent.enterpriseId, {
+    children: parent.children.map((each) => (each.enterpriseId === id ? { ...each, name } : each)),
+  });
+}
+
+/* ---------- Partners ---------- */
+
+/** An API partner — a company building on Revelator's API, its sandboxes and its users connected to it. */
+export interface Partner {
+  id: string;
+  name: string;
+  /** The smallest payout the partner's payees are paid, in dollars. */
+  minimumPayment: number;
+  /** Every account created through the partner starts on trial. */
+  allOnTrial: boolean;
+  created: Date;
+}
+
+export let PARTNERS: readonly Partner[] = [
+  { id: "246", name: "Larchmont Apps", minimumPayment: 0, allOnTrial: true, created: day(2026, 9, 27) },
+  { id: "231", name: "Opaline Developer Sandbox", minimumPayment: 0, allOnTrial: false, created: day(2026, 8, 3) },
+  { id: "214", name: "Glasswing Sync", minimumPayment: 15, allOnTrial: false, created: day(2026, 4, 22) },
+  { id: "198", name: "Bluefen Labs", minimumPayment: 0, allOnTrial: false, created: day(2026, 2, 4) },
+  { id: "174", name: "Northbeam Analytics", minimumPayment: 100, allOnTrial: false, created: day(2025, 9, 12) },
+  { id: "156", name: "Cartwheel Media", minimumPayment: 50, allOnTrial: true, created: day(2025, 5, 30) },
+  { id: "112", name: "Hollowpine Distribution API", minimumPayment: 25, allOnTrial: false, created: day(2024, 11, 8) },
+];
+
+export const partnerById = (id: string) => PARTNERS.find((one) => one.id === id);
+
+/** The tenants connected to a partner — its sandboxes. */
+export const tenantsOfPartner = (id: string) => TENANTS.filter((one) => one.partnerId === id);
+
+/** A partner created, in front of the set; its id issued after the highest. */
+export function addPartner(partner: Omit<Partner, "id" | "created">): string {
+  const id = after(PARTNERS.map((one) => one.id), 1);
+  PARTNERS = [{ ...partner, id, created: TODAY }, ...PARTNERS];
+  changed();
+  return id;
+}
+
+export function updatePartner(id: string, patch: Partial<Partner>) {
+  PARTNERS = PARTNERS.map((one) => (one.id === id ? { ...one, ...patch } : one));
+  changed();
+}
+
+/* ---------- Payees ---------- */
+
+/** Where a payee stands, as the system's own family says it. */
+export type PayeeStatus = "Not Invited" | "Invited" | "Active" | "Payout Blocked" | "Account Locked";
+
+/** Someone an enterprise pays — the enterprise's own payee, which its statements and payouts go to. */
+export interface Payee {
+  payeeId: string;
+  name: string;
+  enterprise: Enterprise;
+  /** The payee that pays it — a client account's is its parent's; a tenant's, its own. */
+  payorId: string;
+  status: PayeeStatus;
+  contact?: string;
+  email?: string;
+  currency: string;
+  minimumPayment: number;
+  taxCountry?: string;
+  /** Whether the payee may change its own payment settings. */
+  settingsAllowed: boolean;
+  autoSendStatements: boolean;
+}
+
+/** What a form changed on a payee, by its id. */
+let PAYEE_EDITS: Readonly<Record<string, Partial<Pick<Payee, "taxCountry" | "settingsAllowed">>>> = {};
+
+/** A client account's payee is asked to set up payment once its parent has gone live. */
+const childStatus = (at: number): PayeeStatus => (at % 3 === 2 ? "Not Invited" : at % 3 === 1 ? "Invited" : "Active");
+
+/** Every payee, read off the enterprises — a tenant's own, then each client account's. */
+export function payees(): readonly Payee[] {
+  return enterprises().map((enterprise, at) => {
+    const tenant = enterprise.tenant ?? enterprise.parent!;
+    const owner = usersOf(tenant)[0]!;
+    const own = enterprise.tenant !== undefined;
+    const record = tenant.customerId ? RECORDS[tenant.customerId] : undefined;
+    const status: PayeeStatus = enterprise.lockedOut
+      ? "Account Locked"
+      : enterprise.paymentBlocked
+        ? "Payout Blocked"
+        : own
+          ? "Active"
+          : childStatus(at);
+    return {
+      payeeId: enterprise.payeeId,
+      name: enterprise.name,
+      enterprise,
+      payorId: tenant.payeeId,
+      status,
+      contact: own ? owner.name : undefined,
+      email: own ? owner.email : undefined,
+      currency: tenant.currency,
+      minimumPayment: tenant.minimumPayment,
+      taxCountry: own ? record?.country : undefined,
+      settingsAllowed: own,
+      autoSendStatements: own,
+      ...PAYEE_EDITS[enterprise.payeeId],
+    };
+  });
+}
+
+export const payeeById = (id: string) => payees().find((one) => one.payeeId === id);
+
+export function updatePayee(id: string, patch: Partial<Pick<Payee, "taxCountry" | "settingsAllowed">>) {
+  PAYEE_EDITS = { ...PAYEE_EDITS, [id]: { ...PAYEE_EDITS[id], ...patch } };
+  changed();
+}
+
+/* ---------- Users ---------- */
+
+/** Where someone has access, and as whom. */
+export interface Membership {
+  tenant: Tenant;
+  owner: boolean;
+}
+
+/** Someone who signs in — to every tenant that gave them access, under one account. */
+export interface Account {
+  userId: string;
+  email: string;
+  name: string;
+  memberships: readonly Membership[];
+  partnerId?: string;
+  /** The id an API partner knows the user by — what makes the partner's API key work for them. */
+  partnerUserId?: string;
+  lastLogin?: Date;
+  created: Date;
+}
+
+type AccountEdit = Partial<Pick<Account, "name" | "partnerId" | "partnerUserId">>;
+
+/** What a form changed on a user, by email — and the partner users the fixtures begin with. */
+let USER_EDITS: Readonly<Record<string, AccountEdit>> = {
+  "api@bluefen.dist": { partnerId: "198", partnerUserId: "5e1c0a7d-2b9f-41c3" },
+  "dev@opaline.audio": { partnerId: "231" },
+};
+
+/** A user id, as the product issues one, kept the same for the same address. */
+const userIdOf = (email: string) => {
+  let hash = 0;
+  for (const char of email) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  const hex = hash.toString(16).padStart(8, "0");
+  return `${hex}-${hex.slice(0, 4)}-4${hex.slice(5, 8)}-a${hex.slice(1, 4)}`;
+};
+
+/** Every user, read off the tenants that gave them access — one account for one address. */
+export function accounts(): readonly Account[] {
+  const byEmail = new Map<string, Account>();
+  for (const tenant of TENANTS)
+    for (const user of usersOf(tenant)) {
+      const known = byEmail.get(user.email);
+      const membership = { tenant, owner: user.owner };
+      if (known) {
+        byEmail.set(user.email, {
+          ...known,
+          memberships: [...known.memberships, membership],
+          created: tenant.created < known.created ? tenant.created : known.created,
+        });
+        continue;
+      }
+      const seed = userIdOf(user.email);
+      byEmail.set(user.email, {
+        userId: seed,
+        email: user.email,
+        name: user.name,
+        memberships: [membership],
+        created: tenant.created,
+        // A user who has signed in, a few days back by what their address keys; one whose tenant
+        // was never handed over has not yet.
+        lastLogin: tenant.emailed ? new Date(TODAY.getTime() - (parseInt(seed.slice(0, 2), 16) % 20) * 86_400_000) : undefined,
+      });
+    }
+  return [...byEmail.values()].map((one) => ({ ...one, ...USER_EDITS[one.email] }));
+}
+
+export const accountById = (id: string) => accounts().find((one) => one.userId === id);
+
+export function updateAccount(email: string, patch: AccountEdit) {
+  USER_EDITS = { ...USER_EDITS, [email]: { ...USER_EDITS[email], ...patch } };
+  changed();
+}
+
+/* ---------- White labels ---------- */
+
+/** A white label, wherever it is kept — on its tenant, or Revelator's own. */
+export interface WhiteLabelRecord extends WhiteLabel {
+  /** The tenant it loads, where it loads one. */
+  tenant?: Tenant;
+  partnerId?: string;
+}
+
+/** The white labels no tenant holds: Revelator's own product, and the hosts it is tried on. */
+let LOOSE_WHITE_LABELS: readonly WhiteLabelRecord[] = [
+  { id: "1", domain: "app.revelator.example", title: "Revelator", allowSignup: true, enabled: false, allowForgotPassword: true, showRevelatorBranding: true },
+  { id: "5", domain: "staging.revelator.example", title: "Revelator Staging", allowSignup: true, enabled: false, allowForgotPassword: true, showRevelatorBranding: true },
+  { id: "30", domain: "localhost", title: "Local", allowSignup: true, enabled: false, allowForgotPassword: true },
+  { id: "88", domain: "glasswing.revelator.example", title: "Glasswing", allowSignup: false, enabled: true, allowForgotPassword: true, partnerId: "214" },
+];
+
+/** Every white label, by id. */
+export function whiteLabels(): readonly WhiteLabelRecord[] {
+  const held = TENANTS.filter((one) => one.whiteLabel).map((tenant) => ({
+    ...tenant.whiteLabel!,
+    tenant,
+    partnerId: tenant.partnerId,
+  }));
+  return [...held, ...LOOSE_WHITE_LABELS].sort((a, b) => Number(a.id) - Number(b.id));
+}
+
+export const whiteLabelById = (id: string) => whiteLabels().find((one) => one.id === id);
+
+/** The next white label id — issued in order across every one there is. */
+export const nextWhiteLabelId = () => String(Math.max(...whiteLabels().map((one) => Number(one.id))) + 1);
+
+/** A white label saved where it is kept: on the tenant it now loads, or among Revelator's own. */
+export function saveWhiteLabel(label: WhiteLabel, tenantId?: string) {
+  LOOSE_WHITE_LABELS = LOOSE_WHITE_LABELS.filter((one) => one.id !== label.id);
+  TENANTS = TENANTS.map((one) =>
+    one.whiteLabel?.id === label.id && one.enterpriseId !== tenantId ? { ...one, whiteLabel: undefined } : one,
+  );
+  if (tenantId) updateTenant(tenantId, { whiteLabel: label });
+  else {
+    LOOSE_WHITE_LABELS = [...LOOSE_WHITE_LABELS, label];
+    changed();
+  }
+}
+
+/** A white label deleted — its tenant, if it had one, no longer loads. */
+export function deleteWhiteLabel(id: string) {
+  LOOSE_WHITE_LABELS = LOOSE_WHITE_LABELS.filter((one) => one.id !== id);
+  TENANTS = TENANTS.map((one) => (one.whiteLabel?.id === id ? { ...one, whiteLabel: undefined } : one));
+  changed();
+}

@@ -25,7 +25,17 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { TENANT_FACETS, accountsHref, customerHref, tenantFormHref, tenantHref, type TenantFacet } from "../route";
+import {
+  TENANT_FACETS,
+  accountsHref,
+  customerHref,
+  enterpriseHref,
+  partnerHref,
+  payeeHref,
+  tenantFormHref,
+  tenantHref,
+  type TenantFacet,
+} from "../route";
 import {
   customerOf,
   isSandbox,
@@ -64,9 +74,8 @@ function commandOf(one: Tenant, step: SetupStep): Command {
     case "stores":
       return { label: step.done ? "Open stores" : "Turn on stores", opens: tenantHref(one.enterpriseId, "Stores") };
     case "partner":
-      // Partners are a page RCC has not built: a connected one is read in the Details.
       return one.partnerId
-        ? { label: "Open details", opens: tenantHref(one.enterpriseId, "Details") }
+        ? { label: "Open partner", opens: partnerHref(one.partnerId) }
         : { label: "Create API partner", opens: tenantFormHref(one.enterpriseId, "new-partner") };
     case "login":
       // Signing in as the owner leaves RCC, which this rebuild does not model: the step is marked
@@ -411,6 +420,7 @@ function TenantPayees({ tenant }: { tenant: Tenant }) {
         title: "Name",
         name: (one) => one.name,
         mark: (one) => <Avatar kind="organization" name={one.name} />,
+        opens: (one) => payeeHref(one.payeeId),
       }}
       columns={[
         { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
@@ -515,6 +525,7 @@ function TenantChildren({ tenant }: { tenant: Tenant }) {
         title: "Name",
         name: (one) => one.name,
         mark: (one) => <Avatar kind="organization" name={one.name} />,
+        opens: (one) => enterpriseHref(one.enterpriseId),
       }}
       sort={{ column: "Created", direction: "descending" }}
       columns={[

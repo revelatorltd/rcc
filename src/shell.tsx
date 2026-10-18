@@ -22,7 +22,7 @@ const PRODUCT: ShellProduct = {
           pages: [
             { name: "Customers", opens: accountsHref("customers") },
             { name: "Tenants", opens: accountsHref("tenants") },
-            { name: "Enterprises" },
+            { name: "Enterprises", opens: accountsHref("enterprises") },
             { name: "Partners" },
             { name: "Payees" },
             { name: "Users" },

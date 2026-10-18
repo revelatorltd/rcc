@@ -8,19 +8,33 @@ import { CustomerDetail, customerPlace } from "./accounts/customer";
 import { AddSubscription } from "./accounts/add-subscription";
 import { CustomerWizard } from "./accounts/customer-form";
 import { Customers } from "./accounts/customers";
+import { EnterpriseDetail, enterprisePlace } from "./accounts/enterprise";
+import { Enterprises } from "./accounts/enterprises";
 import { SignUpTenant } from "./accounts/sign-up-tenant";
 import { TenantDetail, tenantPlace } from "./accounts/tenant";
 import { ApiPartner, EditEnterprise, ImportChildren, TenantConfiguration, WhiteLabelForm } from "./accounts/tenant-forms";
 import { Tenants } from "./accounts/tenants";
 import { TODAY, useFixtures } from "./accounts/mock";
-import { useRoute, type Route } from "./route";
+import { useRoute, type AccountsPage, type Route } from "./route";
 import { Frame } from "./shell";
+
+/** Each Accounts page, by the name its nav entry gives it. */
+const PAGE_NAMES: Record<AccountsPage, string> = {
+  customers: "Customers",
+  tenants: "Tenants",
+  enterprises: "Enterprises",
+  partners: "Partners",
+  payees: "Payees",
+  users: "Users",
+  "white-labels": "White labels",
+};
 
 /** Where the address puts the reader, for the frame the app draws around every page. */
 function placeOf(route: Route): ShellPlace {
   if (route.name === "customer") return customerPlace(route);
   if (route.name === "tenant") return tenantPlace(route);
-  if (route.name === "accounts" && route.page === "tenants") return { at: "Accounts", page: "Tenants" };
+  if (route.name === "enterprise") return enterprisePlace(route);
+  if (route.name === "accounts") return { at: "Accounts", page: PAGE_NAMES[route.page] };
   return { at: "Accounts", page: "Customers" };
 }
 
@@ -58,7 +72,9 @@ function pageOf(route: Route) {
   if (route.name === "customer")
     return <CustomerDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "tenant") return <TenantDetail key={route.id} id={route.id} facet={route.facet} />;
+  if (route.name === "enterprise") return <EnterpriseDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "accounts" && route.page === "tenants") return <Tenants />;
+  if (route.name === "accounts" && route.page === "enterprises") return <Enterprises />;
   return <Customers />;
 }
 

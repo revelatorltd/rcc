@@ -20,8 +20,9 @@ import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 import { go, tenantHref, type TenantFacet } from "../route";
 import {
   CUSTOMERS,
-  TENANTS,
   TODAY,
+  addPartner,
+  nextWhiteLabelId,
   nextEnterpriseId,
   tenantById,
   updateTenant,
@@ -221,10 +222,6 @@ export function EditEnterprise({ id }: { id: string }) {
   );
 }
 
-/** The next white label id — issued in order across every tenant. */
-const nextWhiteLabelId = () =>
-  String(Math.max(...TENANTS.map((one) => Number(one.whiteLabel?.id ?? 0))) + 1);
-
 /**
  * The white label a tenant loads under — created, or changed. Every tenant needs one, white label
  * client or not: without it the tenant does not load. Its domain begins as the tenant's own.
@@ -332,9 +329,6 @@ export function WhiteLabelForm({ id }: { id: string }) {
   );
 }
 
-/** The next partner id — issued in order across every tenant connected to one. */
-const nextPartnerId = () => String(Math.max(240, ...TENANTS.map((one) => Number(one.partnerId ?? 0))) + 1);
-
 /**
  * An API partner created for a sandbox, and connected to it — its API key issued with it. The
  * owner still needs a partner user id before the key works, which the product gives by hand.
@@ -352,8 +346,9 @@ export function ApiPartner({ id }: { id: string }) {
         name: owed(`${tenant.name.replace(/\s*(demo|sandbox|api trial)$/i, "")} Sandbox`),
         minimum: owed(0),
       }}
-      onCommit={() => {
-        updateTenant(tenant.enterpriseId, { partnerId: nextPartnerId() });
+      onCommit={(answers) => {
+        const partnerId = addPartner({ name: answers.name.trim(), minimumPayment: answers.minimum, allOnTrial: true });
+        updateTenant(tenant.enterpriseId, { partnerId });
         leave();
       }}
     >
