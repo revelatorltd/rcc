@@ -22,7 +22,6 @@ import {
   CUSTOMERS,
   TODAY,
   addPartner,
-  nextWhiteLabelId,
   nextEnterpriseId,
   tenantById,
   updateTenant,
@@ -30,6 +29,7 @@ import {
   type Environment,
   type Tenant,
 } from "./mock";
+import { WhiteLabelWizard } from "./white-labels";
 
 const choices = (values: readonly string[]) => values.map((value) => ({ value, title: value }));
 const YES_NO = choices(["Yes", "No"]);
@@ -223,109 +223,18 @@ export function EditEnterprise({ id }: { id: string }) {
 }
 
 /**
- * The white label a tenant loads under — created, or changed. Every tenant needs one, white label
- * client or not: without it the tenant does not load. Its domain begins as the tenant's own.
+ * The white label a tenant loads under — created, or changed — on the White labels' own form, given
+ * the tenant, and returning to it.
  */
 export function WhiteLabelForm({ id }: { id: string }) {
   const tenant = tenantById(id);
   const label = tenant.whiteLabel;
-  const editing = label !== undefined;
-  const leave = back(tenant, editing ? "White label" : "Setup");
   return (
-    <Wizard
-      {...(editing ? { editing: true as const } : {})}
-      noun={{ one: "white label", many: "white labels" }}
-      note={editing ? `White label ${label.id} · ${tenant.name}` : `For ${tenant.name}. Its domain begins as the tenant's own.`}
-      onExit={leave}
-      subject={(answers) => ({ kind: "organization", name: answers.domain ?? "", meta: [tenant.name] })}
-      draft={{
-        domain: owed(label?.domain ?? tenant.domain ?? ""),
-        enabled: owed(yes(label?.enabled)),
-        allowSignup: owed(yes(label?.allowSignup)),
-        allowForgotPassword: owed(yes(label?.allowForgotPassword ?? true)),
-        title: owed(label?.title ?? tenant.name),
-        showRevelatorBranding: owed(yes(label?.showRevelatorBranding)),
-        termsUrl: label?.termsUrl ?? unanswered.url,
-        faqUrl: label?.faqUrl ?? unanswered.url,
-        helpUrl: label?.helpUrl ?? unanswered.url,
-      }}
-      onCommit={(answers) => {
-        const url = (value: unknown) => (typeof value === "string" && value) || undefined;
-        updateTenant(tenant.enterpriseId, {
-          whiteLabel: {
-            id: label?.id ?? nextWhiteLabelId(),
-            domain: answers.domain.trim(),
-            title: answers.title.trim(),
-            enabled: answers.enabled === "Yes",
-            allowSignup: answers.allowSignup === "Yes",
-            allowForgotPassword: answers.allowForgotPassword === "Yes",
-            showRevelatorBranding: answers.showRevelatorBranding === "Yes",
-            termsUrl: url(answers.termsUrl),
-            faqUrl: url(answers.faqUrl),
-            helpUrl: url(answers.helpUrl),
-          },
-        });
-        leave();
-      }}
-    >
-      <WizardSection>
-        <WizardSectionHeader title="Domain and sign-in" />
-        <WizardSectionBody>
-          <WizardRow title="Domain">
-            <WizardRowBody>
-              <Field as="text" name="domain" label="Domain" />
-            </WizardRowBody>
-            <WizardRowTips>
-              <WizardRowTip>The tenant's full domain, as its configuration names it. Sign-in goes through auth.revelator.pro.</WizardRowTip>
-            </WizardRowTips>
-          </WizardRow>
-          <WizardRow title="White label enabled">
-            <WizardRowBody>
-              <Field as="choice" name="enabled" label="White label enabled" options={YES_NO} />
-            </WizardRowBody>
-            <WizardRowTips>
-              <WizardRowTip>Only if the client bought white label: it unlocks their own domain and the sign-in designer.</WizardRowTip>
-            </WizardRowTips>
-          </WizardRow>
-          <WizardRow title="Allows sign-up">
-            <WizardRowBody>
-              <Field as="choice" name="allowSignup" label="Allows sign-up" options={YES_NO} />
-            </WizardRowBody>
-          </WizardRow>
-          <WizardRow title="Allows password reset">
-            <WizardRowBody>
-              <Field as="choice" name="allowForgotPassword" label="Allows password reset" options={YES_NO} />
-            </WizardRowBody>
-            <WizardRowTips>
-              <WizardRowTip>The owner sets their first password this way: leave it on.</WizardRowTip>
-            </WizardRowTips>
-          </WizardRow>
-        </WizardSectionBody>
-      </WizardSection>
-      <WizardSection>
-        <WizardSectionHeader title="Branding" />
-        <WizardSectionBody>
-          <WizardRow title="What it shows">
-            <WizardRowBody>
-              <Field as="text" name="title" label="Title" />
-              <Field as="choice" name="showRevelatorBranding" label="Shows Revelator's branding" options={YES_NO} />
-            </WizardRowBody>
-          </WizardRow>
-        </WizardSectionBody>
-      </WizardSection>
-      <WizardSection>
-        <WizardSectionHeader title="Links" />
-        <WizardSectionBody>
-          <WizardRow title="Where it sends people">
-            <WizardRowBody>
-              <Field as="url" name="termsUrl" label="Terms and conditions" />
-              <Field as="url" name="faqUrl" label="FAQ" />
-              <Field as="url" name="helpUrl" label="Help" />
-            </WizardRowBody>
-          </WizardRow>
-        </WizardSectionBody>
-      </WizardSection>
-    </Wizard>
+    <WhiteLabelWizard
+      id={label?.id}
+      tenantId={tenant.enterpriseId}
+      back={tenantHref(tenant.enterpriseId, label ? "White label" : "Setup")}
+    />
   );
 }
 

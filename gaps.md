@@ -107,6 +107,12 @@ Decided by RCC rather than asked: the prototype's Membership tab (the product's 
 attempts, password format) and its edit form's profile, notification and locale settings are the
 product's, and are not shown. The auth tenant hover is not drawn: RCC holds no auth tenants.
 
-## Not built yet
+## Accounts → White labels
 
-- **White labels** — in the nav, inert.
+Reference: `ixWhiteLabels()`, `vWl()`, `vWlForm()`. The record every tenant loads under, and the few that
+are Revelator's own. One form creates and edits a white label, from here or from its tenant; Delete is
+asked first, and the tenant it loaded goes back to owing one.
+
+Decided by RCC rather than asked: the prototype's form held every field of the product's record
+(Intercom, Google Analytics, page texts, BCC emails); RCC asks what a tenant's handover needs — its
+domain, how it signs people in, its title and branding, and where it sends people.

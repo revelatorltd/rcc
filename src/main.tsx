@@ -16,12 +16,14 @@ import { PayeeDetail, payeePlace } from "./accounts/payee";
 import { Payees } from "./accounts/payees";
 import { UserDetail, userPlace } from "./accounts/user";
 import { EditUser, Users } from "./accounts/users";
+import { WhiteLabelDetail, whiteLabelPlace } from "./accounts/white-label";
+import { WhiteLabelWizard, WhiteLabels } from "./accounts/white-labels";
 import { SignUpTenant } from "./accounts/sign-up-tenant";
 import { TenantDetail, tenantPlace } from "./accounts/tenant";
 import { ApiPartner, EditEnterprise, ImportChildren, TenantConfiguration, WhiteLabelForm } from "./accounts/tenant-forms";
 import { Tenants } from "./accounts/tenants";
 import { TODAY, useFixtures } from "./accounts/mock";
-import { useRoute, type AccountsPage, type Route } from "./route";
+import { accountsHref, useRoute, whiteLabelHref, type AccountsPage, type Route } from "./route";
 import { Frame } from "./shell";
 
 /** Each Accounts page, by the name its nav entry gives it. */
@@ -43,6 +45,7 @@ function placeOf(route: Route): ShellPlace {
   if (route.name === "partner") return partnerPlace(route);
   if (route.name === "payee") return payeePlace(route);
   if (route.name === "user") return userPlace(route);
+  if (route.name === "white-label") return whiteLabelPlace(route);
   if (route.name === "accounts") return { at: "Accounts", page: PAGE_NAMES[route.page] };
   return { at: "Accounts", page: "Customers" };
 }
@@ -55,6 +58,9 @@ function coverOf(route: Route): ReactNode {
   if (route.name === "new-customer") return <CustomerWizard key="new" />;
   if (route.name === "new-partner") return <NewPartner key="new" />;
   if (route.name === "edit-user") return <EditUser key={route.id} id={route.id} />;
+  if (route.name === "new-white-label") return <WhiteLabelWizard key="new" back={accountsHref("white-labels")} />;
+  if (route.name === "edit-white-label")
+    return <WhiteLabelWizard key={route.id} id={route.id} back={whiteLabelHref(route.id)} />;
   if (route.name === "customer-form" && route.form === "edit") return <CustomerWizard key={route.id} customerId={route.id} />;
   if (route.name === "customer-form") return <AddSubscription key={route.id} customerId={route.id} />;
   if (route.name === "sign-up-tenant") return <SignUpTenant key={route.customerId ?? "any"} customerId={route.customerId} />;
@@ -87,11 +93,13 @@ function pageOf(route: Route) {
   if (route.name === "partner") return <PartnerDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "payee") return <PayeeDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "user") return <UserDetail key={route.id} id={route.id} facet={route.facet} />;
+  if (route.name === "white-label") return <WhiteLabelDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "accounts" && route.page === "tenants") return <Tenants />;
   if (route.name === "accounts" && route.page === "enterprises") return <Enterprises />;
   if (route.name === "accounts" && route.page === "partners") return <Partners />;
   if (route.name === "accounts" && route.page === "payees") return <Payees />;
   if (route.name === "accounts" && route.page === "users") return <Users />;
+  if (route.name === "accounts" && route.page === "white-labels") return <WhiteLabels />;
   return <Customers />;
 }
 
