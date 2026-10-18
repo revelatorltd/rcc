@@ -12,6 +12,8 @@ import { EnterpriseDetail, enterprisePlace } from "./accounts/enterprise";
 import { Enterprises } from "./accounts/enterprises";
 import { PartnerDetail, partnerPlace } from "./accounts/partner";
 import { NewPartner, Partners } from "./accounts/partners";
+import { PayeeDetail, payeePlace } from "./accounts/payee";
+import { Payees } from "./accounts/payees";
 import { SignUpTenant } from "./accounts/sign-up-tenant";
 import { TenantDetail, tenantPlace } from "./accounts/tenant";
 import { ApiPartner, EditEnterprise, ImportChildren, TenantConfiguration, WhiteLabelForm } from "./accounts/tenant-forms";
@@ -37,6 +39,7 @@ function placeOf(route: Route): ShellPlace {
   if (route.name === "tenant") return tenantPlace(route);
   if (route.name === "enterprise") return enterprisePlace(route);
   if (route.name === "partner") return partnerPlace(route);
+  if (route.name === "payee") return payeePlace(route);
   if (route.name === "accounts") return { at: "Accounts", page: PAGE_NAMES[route.page] };
   return { at: "Accounts", page: "Customers" };
 }
@@ -78,9 +81,11 @@ function pageOf(route: Route) {
   if (route.name === "tenant") return <TenantDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "enterprise") return <EnterpriseDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "partner") return <PartnerDetail key={route.id} id={route.id} facet={route.facet} />;
+  if (route.name === "payee") return <PayeeDetail key={route.id} id={route.id} facet={route.facet} />;
   if (route.name === "accounts" && route.page === "tenants") return <Tenants />;
   if (route.name === "accounts" && route.page === "enterprises") return <Enterprises />;
   if (route.name === "accounts" && route.page === "partners") return <Partners />;
+  if (route.name === "accounts" && route.page === "payees") return <Payees />;
   return <Customers />;
 }
 

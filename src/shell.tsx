@@ -24,7 +24,7 @@ const PRODUCT: ShellProduct = {
             { name: "Tenants", opens: accountsHref("tenants") },
             { name: "Enterprises", opens: accountsHref("enterprises") },
             { name: "Partners", opens: accountsHref("partners") },
-            { name: "Payees" },
+            { name: "Payees", opens: accountsHref("payees") },
             { name: "Users" },
             { name: "White labels" },
           ],

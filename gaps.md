@@ -86,6 +86,16 @@ connected to it and the users it knows by a partner user id. New API partner is 
 Decided by RCC rather than asked: a partner's API key is never shown — its Details say one was issued.
 The prototype's edit form asked for a key and saved nothing.
 
+## Accounts → Payees
+
+Reference: `ixPayees()`, `vPayee()`. Every tenant's payee and every client account's, divided by where
+it stands in the system's own `payee` family: Not Invited, Invited, Active, Payout Blocked, Account
+Locked. A tenant locked out or blocked from payment carries its payees there with it.
+
+Decided by the system rather than asked: the prototype's Trial, Locked out and Payment blocked columns
+are the payee's status, a reading and a badge. Its tax domicile and whether it may change its own
+settings are dialogs, as in the prototype.
+
 ## Not built yet
 
-- **Payees, Users, White labels** — in the nav, inert.
+- **Users, White labels** — in the nav, inert.
