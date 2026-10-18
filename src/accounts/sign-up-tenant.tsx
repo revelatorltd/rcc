@@ -14,10 +14,9 @@ import {
 import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
 import { accountsHref, customerHref, go, tenantHref } from "../route";
-import { addTenant, CUSTOMERS, customerById, nextEnterpriseId, RECORDS, signedUp, TODAY, type Environment } from "./mock";
+import { PLANS, addTenant, CUSTOMERS, customerById, nextEnterpriseId, RECORDS, signedUp, TODAY, type Environment } from "./mock";
 
 const ENVIRONMENTS: readonly Environment[] = ["Production", "Demo", "API sandbox"];
-const PLANS = ["2 - Starter", "3 - Growth", "4 - Enterprise"];
 /** The customer every demo and API sandbox is signed up under. */
 const DEMO_CUSTOMER = "232";
 
@@ -56,7 +55,7 @@ export function SignUpTenant({ customerId }: { customerId?: string }) {
         ownerName: owed.text,
         ownerEmail: owed.email,
         org: owed(given && given.id !== DEMO_CUSTOMER ? given.name : ""),
-        plan: owed("4 - Enterprise"),
+        plan: owed("5 - Enterprise"),
         country: unanswered.country,
         subdomain: unanswered.text,
         dsp: given ? owed(given.dspRate) : unanswered.percent,

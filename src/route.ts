@@ -70,6 +70,7 @@ export type Route =
   | { name: "tenant-form"; id: string; form: TenantForm }
   | { name: "new-partner" }
   | { name: "edit-user"; id: string }
+  | { name: "edit-enterprise"; id: string }
   | { name: "new-white-label" }
   | { name: "edit-white-label"; id: string }
   | { name: "platform"; route: PlatformRoute };
@@ -97,6 +98,7 @@ export const customerFormHref = (id: string, form: CustomerForm) => `#/accounts/
 export const tenantFormHref = (id: string, form: TenantForm) => `#/accounts/tenants/${id}/${form}`;
 export const newPartnerHref = () => "#/accounts/partners/new";
 export const editUserHref = (id: string) => `#/accounts/users/${id}/edit`;
+export const editEnterpriseHref = (id: string) => `#/accounts/enterprises/${id}/edit`;
 export const newWhiteLabelHref = () => "#/accounts/white-labels/new";
 export const editWhiteLabelHref = (id: string) => `#/accounts/white-labels/${id}/edit`;
 
@@ -125,6 +127,7 @@ function read(hash: string): Route {
   if (page === "partners" && id === "new") return { name: "new-partner" };
   if (page === "white-labels" && id === "new") return { name: "new-white-label" };
   if (page === "users" && facet === "edit") return { name: "edit-user", id };
+  if (page === "enterprises" && facet === "edit") return { name: "edit-enterprise", id };
   if (page === "white-labels" && facet === "edit") return { name: "edit-white-label", id };
   const customerForm = CUSTOMER_FORMS.find((one) => one === facet);
   if (page === "customers" && customerForm) return { name: "customer-form", id, form: customerForm };

@@ -1,12 +1,11 @@
-import { Avatar, CollectionPage, Field, FormDialog, owed, type HeldBy } from "@revelator/pro-ui";
+import { Avatar, CollectionPage } from "@revelator/pro-ui";
 
 import { tenantArt } from "../platform/tenant-art";
-import { enterpriseHref, tenantFormHref, tenantHref } from "../route";
-import { enterprises, renameChild, type Enterprise } from "./mock";
+import { editEnterpriseHref, enterpriseHref, tenantHref } from "../route";
+import { PLANS, enterprises, type Enterprise } from "./mock";
 import { tenantMark, tenantPicture } from "./tenants";
 
 const TYPES: readonly Enterprise["type"][] = ["Parent", "Standalone", "Child"];
-const PLANS = ["2 - Starter", "3 - Growth", "4 - Enterprise"] as const;
 
 /**
  * An enterprise, as the mark it is known by: a tenant wears its customer's logo (`tenantMark`); a
@@ -27,28 +26,8 @@ export const enterprisePicture = (one: Enterprise) => (one.tenant ? tenantPictur
 /** Where an enterprise opens: a tenant on its own record, a client account on the enterprise's. */
 export const enterpriseOpens = (one: Enterprise) => (one.tenant ? tenantHref(one.enterpriseId) : enterpriseHref(one.enterpriseId));
 
-/**
- * A client account renamed — the one thing RCC changes on a child enterprise. A tenant is edited
- * on its own form, which holds far more.
- */
-export function RenameEnterprise({ enterprise, ...held }: HeldBy & { enterprise: Enterprise }) {
-  return (
-    <FormDialog
-      {...held}
-      confirm="Save"
-      draft={{ name: owed(enterprise.name) }}
-      onCommit={(draft) => renameChild(enterprise.enterpriseId, draft.name.trim())}
-    >
-      <Field as="text" name="name" label="Name" />
-    </FormDialog>
-  );
-}
-
-/** How an enterprise is edited — on the tenant's form, or by renaming a client account. */
-export const editCommand = (one: Enterprise) =>
-  one.tenant
-    ? { label: "Edit enterprise", opens: tenantFormHref(one.enterpriseId, "edit") }
-    : { label: "Edit enterprise", dialog: <RenameEnterprise enterprise={one} /> };
+/** How an enterprise is edited — every one on the same form, tenant or client account, as RCC edits it. */
+export const editCommand = (one: Enterprise) => ({ label: "Edit enterprise", opens: editEnterpriseHref(one.enterpriseId) });
 
 /**
  * The enterprises — every account the product holds a catalogue in: each tenant, and each client

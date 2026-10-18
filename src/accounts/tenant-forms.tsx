@@ -42,8 +42,6 @@ const unmaybe = (value: string) => (value === "Not set" ? null : value === "Yes"
 
 /** The customer every demo and API sandbox is signed up under. */
 const DEMO_CUSTOMER = "232";
-const PLANS = ["2 - Starter", "3 - Growth", "4 - Enterprise"];
-const CURRENCIES = ["USD", "EUR", "GBP", "SEK", "CAD", "AUD", "ILS", "JPY", "BRL", "MXN"];
 
 /** Every customer, as a record a field offers — its mark and its id. */
 const customerOptions = () =>
@@ -87,11 +85,9 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
         masterChannel: owed(maybe(config.masterChannel)),
         featureFm: owed(maybe(config.featureFm)),
         minAudioLength: owed(yes(config.minAudioLength)),
-        tokenMintingWithoutValidation: owed(yes(config.tokenMintingWithoutValidation)),
         physicalReleases: owed(yes(config.physicalReleases)),
         withholdingTax: owed(yes(config.withholdingTax)),
         noTransactionalEmails: owed(yes(config.noTransactionalEmails)),
-        tokenNetwork: config.tokenNetwork ?? unanswered.text,
       }}
       // CONVERTING keeps no tenant under the demo account: the real customer is the point of it.
       ready={(answers) => !convert || answers.customer !== DEMO_CUSTOMER}
@@ -111,11 +107,9 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
             masterChannel: unmaybe(answers.masterChannel),
             featureFm: unmaybe(answers.featureFm),
             minAudioLength: answers.minAudioLength === "Yes",
-            tokenMintingWithoutValidation: answers.tokenMintingWithoutValidation === "Yes",
             physicalReleases: answers.physicalReleases === "Yes",
             withholdingTax: answers.withholdingTax === "Yes",
             noTransactionalEmails: answers.noTransactionalEmails === "Yes",
-            tokenNetwork: text(answers.tokenNetwork),
           },
           // A tenant moved to production loses its sandbox stores and its API partner's bench.
           ...(convert ? { stores: undefined, storesLive: 0, partnerId: undefined } : {}),
@@ -205,121 +199,17 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
             </WizardSectionBody>
           </WizardSection>
           <WizardSection>
-            <WizardSectionHeader title="Payments and royalty tokens" />
+            <WizardSectionHeader title="Payments" />
             <WizardSectionBody>
               <WizardRow title="Tax">
                 <WizardRowBody>
                   <Field as="choice" name="withholdingTax" label="Withholding tax active" options={YES_NO} />
                 </WizardRowBody>
               </WizardRow>
-              <WizardRow title="Royalty tokens">
-                <WizardRowBody>
-                  <Field as="choice" name="tokenMintingWithoutValidation" label="Token minting without distribution validation" options={YES_NO} />
-                  <Field as="text" name="tokenNetwork" label="Default royalty token network" />
-                </WizardRowBody>
-              </WizardRow>
             </WizardSectionBody>
           </WizardSection>
         </>
       )}
-    </Wizard>
-  );
-}
-
-/**
- * The enterprise itself — its name, its plan, how its payees are paid and what holds its account
- * back. RCC asks only what it holds; the product's every other setting is the product's own.
- */
-export function EditEnterprise({ id }: { id: string }) {
-  const tenant = tenantById(id);
-  const leave = back(tenant, "Details");
-  return (
-    <Wizard
-      editing
-      noun={{ one: "enterprise", many: "enterprises" }}
-      note={`${tenant.name} · enterprise ID ${tenant.enterpriseId}`}
-      onExit={leave}
-      subject={(answers) => ({ kind: "organization", name: answers.name ?? tenant.name, meta: [answers.plan ?? tenant.plan] })}
-      draft={{
-        name: owed(tenant.name),
-        plan: owed(tenant.plan),
-        partnerId: tenant.partnerId ?? unanswered.identifier,
-        currency: owed(tenant.currency),
-        minimumPayment: owed(tenant.minimumPayment),
-        onTrial: owed(yes(tenant.onTrial)),
-        lockedOut: owed(yes(tenant.lockedOut)),
-        paymentBlocked: owed(yes(tenant.paymentBlocked)),
-        fusionAuth: owed(yes(tenant.fusionAuth)),
-      }}
-      onCommit={(answers) => {
-        updateTenant(tenant.enterpriseId, {
-          name: answers.name.trim(),
-          plan: answers.plan,
-          partnerId: (typeof answers.partnerId === "string" && answers.partnerId) || undefined,
-          currency: answers.currency,
-          minimumPayment: answers.minimumPayment,
-          onTrial: answers.onTrial === "Yes",
-          lockedOut: answers.lockedOut === "Yes",
-          paymentBlocked: answers.paymentBlocked === "Yes",
-          fusionAuth: answers.fusionAuth === "Yes",
-        });
-        leave();
-      }}
-    >
-      <WizardSection>
-        <WizardSectionHeader title="Basics" />
-        <WizardSectionBody>
-          <WizardRow title="Enterprise">
-            <WizardRowBody>
-              <Field as="text" name="name" label="Name" />
-              <Field as="choice" name="plan" label="Subscription plan" options={choices(PLANS)} />
-              <Field as="identifier" standard="id" name="partnerId" label="Partner ID" help="The API partner it is connected to, where it is one." />
-            </WizardRowBody>
-          </WizardRow>
-        </WizardSectionBody>
-      </WizardSection>
-      <WizardSection>
-        <WizardSectionHeader title="Payments" />
-        <WizardSectionBody>
-          <WizardRow title="Payouts">
-            <WizardRowBody>
-              <Field as="choice" name="currency" label="Currency" noun={{ one: "currency", many: "currencies" }} options={choices(CURRENCIES)} />
-              <Field as="money" name="minimumPayment" label="Minimum payment" help="The smallest payout a payee of the tenant is paid." />
-            </WizardRowBody>
-          </WizardRow>
-        </WizardSectionBody>
-      </WizardSection>
-      <WizardSection>
-        <WizardSectionHeader title="Access" />
-        <WizardSectionBody>
-          <WizardRow title="On trial">
-            <WizardRowBody>
-              <Field as="choice" name="onTrial" label="On trial" options={YES_NO} />
-            </WizardRowBody>
-          </WizardRow>
-          <WizardRow title="Locked out">
-            <WizardRowBody>
-              <Field as="choice" name="lockedOut" label="Locked out" options={YES_NO} />
-            </WizardRowBody>
-            <WizardRowTips>
-              <WizardRowTip>Nobody at a tenant locked out can sign in.</WizardRowTip>
-            </WizardRowTips>
-          </WizardRow>
-          <WizardRow title="Payment blocked">
-            <WizardRowBody>
-              <Field as="choice" name="paymentBlocked" label="Payment blocked" options={YES_NO} />
-            </WizardRowBody>
-            <WizardRowTips>
-              <WizardRowTip>No payee of a blocked tenant is paid.</WizardRowTip>
-            </WizardRowTips>
-          </WizardRow>
-          <WizardRow title="Uses FusionAuth">
-            <WizardRowBody>
-              <Field as="choice" name="fusionAuth" label="Uses FusionAuth" options={YES_NO} />
-            </WizardRowBody>
-          </WizardRow>
-        </WizardSectionBody>
-      </WizardSection>
     </Wizard>
   );
 }

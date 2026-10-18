@@ -20,7 +20,8 @@ import { WhiteLabelDetail, whiteLabelPlace } from "./accounts/white-label";
 import { WhiteLabelWizard, WhiteLabels } from "./accounts/white-labels";
 import { SignUpTenant } from "./accounts/sign-up-tenant";
 import { TenantDetail, tenantPlace } from "./accounts/tenant";
-import { ApiPartner, EditEnterprise, ImportChildren, TenantConfiguration, WhiteLabelForm } from "./accounts/tenant-forms";
+import { ApiPartner, ImportChildren, TenantConfiguration, WhiteLabelForm } from "./accounts/tenant-forms";
+import { EditEnterprise } from "./accounts/enterprise-form";
 import { Tenants } from "./accounts/tenants";
 import { TODAY, useFixtures } from "./accounts/mock";
 import { AccessGroupDetail, accessGroupPlace } from "./platform/access-group";
@@ -124,6 +125,7 @@ function coverOf(route: Route): ReactNode {
   if (route.name === "new-customer") return <CustomerWizard key="new" />;
   if (route.name === "new-partner") return <NewPartner key="new" />;
   if (route.name === "edit-user") return <EditUser key={route.id} id={route.id} />;
+  if (route.name === "edit-enterprise") return <EditEnterprise key={route.id} id={route.id} />;
   if (route.name === "new-white-label") return <WhiteLabelWizard key="new" back={accountsHref("white-labels")} />;
   if (route.name === "edit-white-label")
     return <WhiteLabelWizard key={route.id} id={route.id} back={whiteLabelHref(route.id)} />;

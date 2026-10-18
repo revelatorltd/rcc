@@ -48,7 +48,8 @@ share read down the column with its figure.
 | 14 | A **second identifier on the band** that says whose it is (Enterprise ID beside Payee ID) | two labelled chips | the enterprise ID alone on the band; the payee ID in Details |
 | 15 | A **long value in a facet tile** (a white label's domain) | — | runs over its label; the tile shows the white label's title instead |
 | 29 | A **status family for a connection** (a payment provider tied to a tenant): connected is *settled*, disconnected is *waiting* | Is Connected: a tick | the Integrations table writes Yes or No in words; no badge borrows another family's meaning |
-| 30 | A **field for a count** (a retention in days) — the field genres hold money, percent and minutes-and-seconds, none a whole number of something | Trends / Revenue / V3 Trends Retention Days: free number inputs | Edit analytics offers each retention as a choice of standard spans (90, 365, 730 days…); a span off that list cannot be entered |
+| 30 | A **field for a count** (a retention in days) — the field genres hold money, percent and minutes-and-seconds, none a whole number of something | Trends / Revenue / V3 Trends Retention Days: free number inputs | Edit analytics offers each retention as a choice of standard spans (90, 365, 730 days…); a span off that list cannot be entered. Max artists on the enterprise form is a text field meanwhile, left blank for no limit |
+| 31 | **The identifier chip shows that it copies** — on hover, the copy icon animates in beside the value, so a reader knows pressing it puts the ID on the clipboard (asked for every ID chip: user, tenant, enterprise, payee IDs, in tables and on a record's band) | — | the chip already copies when pressed and names its whole value in a tooltip; nothing on it says it copies. No icon is drawn on the page |
 
 ## Forms (customers and tenants)
 

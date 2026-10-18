@@ -10,6 +10,9 @@ export const TODAY = new Date(2026, 9, 16);
 
 const day = (year: number, month: number, date: number) => new Date(year, month - 1, date);
 
+/** The subscription plans, as the product numbers them. */
+export const PLANS = ["1 - Free", "2 - Artist", "3 - Growth", "4 - Scale", "5 - Enterprise", "7 - Launch", "8 - Trends"] as const;
+
 /** Where the customer stands with Revelator. */
 export type CustomerStatus = "Active" | "Onboarding" | "Churned" | "Terminated";
 /** Who holds the contract: a client of Revelator's, an entity of Warner's, or Revelator's own demo. */
@@ -148,6 +151,14 @@ export interface ChildEnterprise {
   name: string;
   payeeId: string;
   created: Date;
+  /** What was set on the client account itself — otherwise its parent's. */
+  plan?: string;
+  onTrial?: boolean;
+  lockedOut?: boolean;
+  paymentBlocked?: boolean;
+  partnerId?: string;
+  currency?: string;
+  minimumPayment?: number;
 }
 
 /** Someone who can sign in to the tenant. */
@@ -266,8 +277,6 @@ export interface Tenant {
   children: readonly ChildEnterprise[];
   /** The payment providers its payees are paid through, where any is connected. */
   integrations?: readonly Integration[];
-  /** How long its analytics are kept, where it was set apart from the default. */
-  analytics?: Partial<TenantAnalytics>;
   /** Its entry in the supply chain's tenant configuration, where it differs from the default. */
   config?: Partial<TenantConfig>;
   /** What the team has written down about it, newest first. */
@@ -298,12 +307,10 @@ export interface TenantConfig {
   marketplacePage: boolean | null;
   masterChannel: boolean | null;
   featureFm: boolean | null;
-  tokenMintingWithoutValidation: boolean;
   minAudioLength: boolean;
   physicalReleases: boolean;
   withholdingTax: boolean;
   noTransactionalEmails: boolean;
-  tokenNetwork?: string;
   paymentBatcher: string;
 }
 
@@ -379,35 +386,35 @@ const child = (enterpriseId: string, name: string, created: Date): ChildEnterpri
 
 /** The tenants, newest first — each under its customer, a few still being set up, one never linked. */
 export let TENANTS: readonly Tenant[] = [
-  t({ enterpriseId: "612240", name: "Saltmarsh Tapes", plan: "2 - Starter", created: day(2026, 10, 14), onTrial: true, whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
-  t({ enterpriseId: "612034", customerId: "501", name: "Paperkite Sound", plan: "4 - Enterprise", created: day(2026, 10, 6), storesLive: 0, tested: false, emailed: false }),
-  t({ enterpriseId: "611980", customerId: "232", name: "Halcyon Pilot", plan: "4 - Enterprise", environment: "Demo", created: day(2026, 10, 1), tested: false, emailed: false }),
-  t({ enterpriseId: "611207", customerId: "497", name: "Ninefold Records", plan: "4 - Enterprise", created: day(2026, 9, 29), currency: "EUR", whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
-  t({ enterpriseId: "611150", customerId: "232", name: "Riverstone API Trial", plan: "4 - Enterprise", environment: "API sandbox", created: day(2026, 9, 26), storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "612240", name: "Saltmarsh Tapes", plan: "2 - Artist", created: day(2026, 10, 14), onTrial: true, whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "612034", customerId: "501", name: "Paperkite Sound", plan: "5 - Enterprise", created: day(2026, 10, 6), storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "611980", customerId: "232", name: "Halcyon Pilot", plan: "5 - Enterprise", environment: "Demo", created: day(2026, 10, 1), tested: false, emailed: false }),
+  t({ enterpriseId: "611207", customerId: "497", name: "Ninefold Records", plan: "5 - Enterprise", created: day(2026, 9, 29), currency: "EUR", whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "611150", customerId: "232", name: "Riverstone API Trial", plan: "5 - Enterprise", environment: "API sandbox", created: day(2026, 9, 26), storesLive: 0, tested: false, emailed: false }),
   t({ enterpriseId: "609882", customerId: "490", name: "Corvid Lane Publishing", plan: "3 - Growth", created: day(2026, 9, 15), emailed: false }),
   t({ enterpriseId: "609881", customerId: "490", name: "Corvid Lane", plan: "3 - Growth", created: day(2026, 9, 8), whiteLabel: whiteLabelFor("609881", "Corvid Lane", { enableIntercom: true, intercomAppId: "cv7k2lq9", showRevelatorBranding: true, customDashboardLinkUrl: "https://corvidlane.example/artists", customDashboardLinkText: "Artist portal", customLogoutUrl: "https://corvidlane.example" }), fusionAuth: true, team: [{ name: "Rui Tanaka", email: "rui@corvidlane.com" }], integrations: [{ providerId: "PP-77310428", provider: "PayPal", connected: true }], notes: [{ id: "n-3", created: day(2026, 9, 22), author: "Ines Calder", content: "Asked for a second admin for their publishing arm. Pointed them to Corvid Lane Publishing instead." }] }),
   t({ enterpriseId: "608540", customerId: "483", name: "Silverbirch Publishing House", plan: "3 - Growth", created: day(2026, 8, 25), currency: "GBP" }),
-  t({ enterpriseId: "606404", customerId: "469", name: "Opaline Sandbox", plan: "4 - Enterprise", environment: "API sandbox", partnerId: "231", created: day(2026, 8, 3), currency: "EUR" }),
+  t({ enterpriseId: "606404", customerId: "469", name: "Opaline Sandbox", plan: "5 - Enterprise", environment: "API sandbox", partnerId: "231", created: day(2026, 8, 3), currency: "EUR" }),
   t({ enterpriseId: "606403", customerId: "469", name: "Opaline Classics", plan: "3 - Growth", created: day(2026, 7, 20), currency: "EUR" }),
-  t({ enterpriseId: "607113", customerId: "476", name: "Marlow Tide Entertainment", plan: "2 - Starter", created: day(2026, 7, 12), paymentBlocked: true }),
-  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "4 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", whiteLabel: whiteLabelFor("606402", "Opaline", { domain: "app.opaline.example", domainV2: "app.opaline.example", authBaseUrl: "https://auth.opaline.example/", title: "Opaline | Distribution musicale", enabled: true, defaultPlanId: "7", loginHeader: "Bienvenue", loginSubheader: "Connectez-vous pour gérer vos sorties, votre catalogue et vos résultats.", signupHeader: "Inscrivez-vous pour distribuer votre musique et suivre son évolution.", signupSubheader: "Créez votre compte Opaline", faqUrl: "https://opaline.example/faq", helpUrl: "https://opaline.example/aide", distributionAgreementUrl: "https://opaline.example/contrat", googleAnalyticsSiteId: "G-OP4L1N3X", bccEmails: "ops@opaline.example" }), fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }, { name: "Lucie Garnier", email: "lucie@maisonbrune.example", access: "Label Portal" }, { name: "Malo Fournier", email: "malo.fournier@opalinejeunesse.example", access: "Payee Portal", legacy: true }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], analytics: { revenueDays: 1095 }, config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
-  t({ enterpriseId: "604380", customerId: "455", name: "Eastgate Test", plan: "4 - Enterprise", environment: "Demo", created: day(2026, 6, 10), currency: "EUR" }),
+  t({ enterpriseId: "607113", customerId: "476", name: "Marlow Tide Entertainment", plan: "2 - Artist", created: day(2026, 7, 12), paymentBlocked: true }),
+  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "5 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", whiteLabel: whiteLabelFor("606402", "Opaline", { domain: "app.opaline.example", domainV2: "app.opaline.example", authBaseUrl: "https://auth.opaline.example/", title: "Opaline | Distribution musicale", enabled: true, defaultPlanId: "7", loginHeader: "Bienvenue", loginSubheader: "Connectez-vous pour gérer vos sorties, votre catalogue et vos résultats.", signupHeader: "Inscrivez-vous pour distribuer votre musique et suivre son évolution.", signupSubheader: "Créez votre compte Opaline", faqUrl: "https://opaline.example/faq", helpUrl: "https://opaline.example/aide", distributionAgreementUrl: "https://opaline.example/contrat", googleAnalyticsSiteId: "G-OP4L1N3X", bccEmails: "ops@opaline.example" }), fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }, { name: "Lucie Garnier", email: "lucie@maisonbrune.example", access: "Label Portal" }, { name: "Malo Fournier", email: "malo.fournier@opalinejeunesse.example", access: "Payee Portal", legacy: true }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
+  t({ enterpriseId: "604380", customerId: "455", name: "Eastgate Test", plan: "5 - Enterprise", environment: "Demo", created: day(2026, 6, 10), currency: "EUR" }),
   t({ enterpriseId: "604379", customerId: "455", name: "Eastgate Kids", plan: "3 - Growth", created: day(2026, 6, 9), currency: "EUR" }),
-  t({ enterpriseId: "605118", customerId: "462", name: "Brackenridge Audio", plan: "2 - Starter", created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true, analytics: { enabled: false }, config: { noTransactionalEmails: true }, notes: [{ id: "n-5", created: day(2026, 9, 30), author: "Ines Calder", content: "Locked out and payment blocked over the unpaid June invoice. Unlock only once Finance confirms." }] }),
+  t({ enterpriseId: "605118", customerId: "462", name: "Brackenridge Audio", plan: "2 - Artist", created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true, config: { noTransactionalEmails: true }, notes: [{ id: "n-5", created: day(2026, 9, 30), author: "Ines Calder", content: "Locked out and payment blocked over the unpaid June invoice. Unlock only once Finance confirms." }] }),
   t({ enterpriseId: "604378", customerId: "455", name: "Eastgate Classics", plan: "3 - Growth", created: day(2026, 5, 18), currency: "EUR" }),
-  t({ enterpriseId: "604377", customerId: "455", name: "Eastgate Music", plan: "4 - Enterprise", type: "Parent", created: day(2026, 5, 4), currency: "EUR", fusionAuth: true, integrations: [{ providerId: "PP-61200937", provider: "PayPal", connected: true }, { providerId: "acct_1Q8eastgate", provider: "Stripe", connected: false }], config: { masterChannel: true, featureFm: true, physicalReleases: true }, children: [child("604601", "Nordhafen Beats", day(2026, 5, 28)), child("604602", "Elbe Strings", day(2026, 6, 20)), child("604603", "Kiezklang", day(2026, 8, 2))] }),
+  t({ enterpriseId: "604377", customerId: "455", name: "Eastgate Music", plan: "5 - Enterprise", type: "Parent", created: day(2026, 5, 4), currency: "EUR", fusionAuth: true, integrations: [{ providerId: "PP-61200937", provider: "PayPal", connected: true }, { providerId: "acct_1Q8eastgate", provider: "Stripe", connected: false }], config: { masterChannel: true, featureFm: true, physicalReleases: true }, children: [child("604601", "Nordhafen Beats", day(2026, 5, 28)), child("604602", "Elbe Strings", day(2026, 6, 20)), child("604603", "Kiezklang", day(2026, 8, 2))] }),
   t({ enterpriseId: "603011", customerId: "448", name: "Thistle & Thorn", plan: "3 - Growth", created: day(2026, 3, 19), currency: "EUR" }),
-  t({ enterpriseId: "602290", customerId: "441", name: "Grainfield Collective", plan: "2 - Starter", created: day(2026, 2, 27), onTrial: true, storesLive: 3, emailed: false }),
-  t({ enterpriseId: "598220", customerId: "427", name: "Bluefen API Sandbox", plan: "4 - Enterprise", environment: "API sandbox", partnerId: "198", created: day(2026, 2, 4), currency: "SEK" }),
+  t({ enterpriseId: "602290", customerId: "441", name: "Grainfield Collective", plan: "2 - Artist", created: day(2026, 2, 27), onTrial: true, storesLive: 3, emailed: false }),
+  t({ enterpriseId: "598220", customerId: "427", name: "Bluefen API Sandbox", plan: "5 - Enterprise", environment: "API sandbox", partnerId: "198", created: day(2026, 2, 4), currency: "SEK" }),
   t({ enterpriseId: "598219", customerId: "427", name: "Bluefen Archive", plan: "3 - Growth", created: day(2026, 2, 3), currency: "SEK" }),
   t({ enterpriseId: "598218", customerId: "427", name: "Bluefen Jazz", plan: "3 - Growth", created: day(2026, 1, 12), currency: "SEK" }),
   t({ enterpriseId: "598217", customerId: "427", name: "Bluefen Baltic", plan: "3 - Growth", created: day(2025, 11, 30), currency: "EUR" }),
-  t({ enterpriseId: "598216", customerId: "427", name: "Bluefen Nordic", plan: "4 - Enterprise", created: day(2025, 11, 2), currency: "SEK" }),
-  t({ enterpriseId: "598215", customerId: "427", name: "Bluefen Distribution", plan: "4 - Enterprise", type: "Parent", created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, integrations: [{ providerId: "TIP-0038816", provider: "Tipalti", connected: true }], config: { tokenNetwork: "Base", tokenMintingWithoutValidation: true }, notes: [{ id: "n-4", created: day(2026, 4, 2), author: "Dario Mendel", content: "Payouts to Gotland Folk held in March while the payee re-verified its bank. Released 1 April." }], team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }, { name: "Astrid Holm", email: "astrid.holm@gotlandfolk.example", access: "Artist Portal" }, { name: "Oskar Vik", email: "oskar@fjallsound.example", access: "Payee Portal" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
+  t({ enterpriseId: "598216", customerId: "427", name: "Bluefen Nordic", plan: "5 - Enterprise", created: day(2025, 11, 2), currency: "SEK" }),
+  t({ enterpriseId: "598215", customerId: "427", name: "Bluefen Distribution", plan: "5 - Enterprise", type: "Parent", created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, integrations: [{ providerId: "TIP-0038816", provider: "Tipalti", connected: true }], config: { minAudioLength: false, physicalReleases: true }, notes: [{ id: "n-4", created: day(2026, 4, 2), author: "Dario Mendel", content: "Payouts to Gotland Folk held in March while the payee re-verified its bank. Released 1 April." }], team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }, { name: "Astrid Holm", email: "astrid.holm@gotlandfolk.example", access: "Artist Portal" }, { name: "Oskar Vik", email: "oskar@fjallsound.example", access: "Payee Portal" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
   t({ enterpriseId: "600874", customerId: "434", name: "Kestrel Point Recordings", plan: "3 - Growth", created: day(2025, 12, 10), lockedOut: true }),
   t({ enterpriseId: "595661", customerId: "420", name: "Harrow Street Live", plan: "3 - Growth", created: day(2025, 9, 1), currency: "GBP" }),
-  t({ enterpriseId: "595660", customerId: "420", name: "Harrow Street Sound", plan: "4 - Enterprise", created: day(2025, 7, 9), currency: "GBP" }),
-  t({ enterpriseId: "593007", customerId: "413", name: "Mistral Arcade", plan: "2 - Starter", created: day(2025, 3, 25), currency: "EUR", lockedOut: true, paymentBlocked: true }),
+  t({ enterpriseId: "595660", customerId: "420", name: "Harrow Street Sound", plan: "5 - Enterprise", created: day(2025, 7, 9), currency: "GBP" }),
+  t({ enterpriseId: "593007", customerId: "413", name: "Mistral Arcade", plan: "2 - Artist", created: day(2025, 3, 25), currency: "EUR", lockedOut: true, paymentBlocked: true }),
   t({ enterpriseId: "590114", customerId: "406", name: "Cinderwell Films", plan: "3 - Growth", created: day(2025, 2, 17), currency: "CAD" }),
   t({ enterpriseId: "590113", customerId: "406", name: "Cinderwell Music", plan: "3 - Growth", created: day(2024, 12, 2), currency: "CAD" }),
   t({ enterpriseId: "571902", customerId: "219", name: "Foxglove Ridge Records", plan: "3 - Growth", created: day(2023, 9, 11) }),
@@ -486,14 +493,11 @@ const uuidOf = (seed: string) => {
 /** The payment providers a tenant is connected to. */
 export const integrationsOf = (one: Tenant): readonly Integration[] => one.integrations ?? [];
 
-/** How long a tenant's analytics are kept — the defaults, where it was not set apart. */
-export const analyticsOf = (one: Tenant): TenantAnalytics => ({
-  enabled: true,
-  trendsDays: 90,
-  revenueDays: 730,
-  v3TrendsDays: 365,
-  ...one.analytics,
-});
+/** How long a tenant's analytics are kept — its enterprise's settings. */
+export const analyticsOf = (one: Tenant): TenantAnalytics => {
+  const settings = settingsOf(one.enterpriseId);
+  return { enabled: settings.analyticsEnabled, trendsDays: settings.trendsDays, revenueDays: settings.revenueDays, v3TrendsDays: settings.v3TrendsDays };
+};
 
 /**
  * A tenant's entry in the supply chain's tenant configuration — none until a customer is linked,
@@ -509,7 +513,6 @@ export const configDefaultsOf = (one: Tenant): TenantConfig => ({
   marketplacePage: null,
   masterChannel: null,
   featureFm: null,
-  tokenMintingWithoutValidation: false,
   minAudioLength: true,
   physicalReleases: false,
   withholdingTax: false,
@@ -764,6 +767,8 @@ export interface Enterprise {
   onTrial: boolean;
   lockedOut: boolean;
   paymentBlocked: boolean;
+  currency: string;
+  minimumPayment: number;
   created: Date;
 }
 
@@ -782,6 +787,8 @@ export function enterprises(): readonly Enterprise[] {
       onTrial: tenant.onTrial,
       lockedOut: tenant.lockedOut,
       paymentBlocked: tenant.paymentBlocked,
+      currency: tenant.currency,
+      minimumPayment: tenant.minimumPayment,
       created: tenant.created,
     });
     for (const each of tenant.children)
@@ -790,12 +797,16 @@ export function enterprises(): readonly Enterprise[] {
         name: each.name,
         type: "Child",
         payeeId: each.payeeId,
-        // A client account is on its parent's plan, and held back where its parent is.
-        plan: tenant.plan,
+        // A client account is on its parent's plan, and held back where its parent is — unless
+        // it was set apart.
+        plan: each.plan ?? tenant.plan,
         parent: tenant,
-        onTrial: tenant.onTrial,
-        lockedOut: tenant.lockedOut,
-        paymentBlocked: tenant.paymentBlocked,
+        partnerId: each.partnerId,
+        onTrial: each.onTrial ?? tenant.onTrial,
+        lockedOut: each.lockedOut ?? tenant.lockedOut,
+        paymentBlocked: each.paymentBlocked ?? tenant.paymentBlocked,
+        currency: each.currency ?? tenant.currency,
+        minimumPayment: each.minimumPayment ?? tenant.minimumPayment,
         created: each.created,
       });
   }
@@ -804,13 +815,175 @@ export function enterprises(): readonly Enterprise[] {
 
 export const enterpriseById = (id: string) => enterprises().find((one) => one.enterpriseId === id);
 
-/** A child enterprise renamed — the one change RCC makes to a client account. */
-export function renameChild(id: string, name: string) {
+/** A switch the product also holds unset — null, neither on nor off. */
+export type Maybe = boolean | null;
+
+/**
+ * Everything RCC's enterprise form holds besides what the enterprise IS (its name, plan, access and
+ * partner): what its users may release, how it is paid and delivers, what a client account it
+ * makes may do, and how long its analytics are kept.
+ */
+export interface EnterpriseSettings {
+  allowRingtones: Maybe;
+  allowVideos: Maybe;
+  allowCoverSongs: Maybe;
+  defaultLabel?: string;
+  defaultArtist?: string;
+  requireApproval: boolean;
+  activateSubEnterprises: Maybe;
+  hasChildren: Maybe;
+  /** What Revelator keeps by default, in percent, and the kind of rate it is. */
+  contractRate?: number;
+  contractRateTypeId: string;
+  paymentProviderId?: string;
+  payMechanicals: Maybe;
+  payMechanicalsCoverOnly: Maybe;
+  suppressDeliveryEmails: Maybe;
+  audioValidation: Maybe;
+  /** How far into a track audio validation starts, in minutes and seconds. */
+  audioValidationOffset?: string;
+  autoDistroOptIn: Maybe;
+  isrcPrefix?: string;
+  filestack: string;
+  useNse: Maybe;
+  trendsPremium: boolean;
+  dspRestrictions: Maybe;
+  revenuePremium: boolean;
+  v1Trends: boolean;
+  syncAppleIds: Maybe;
+  /** Who its emails come from. */
+  outgoingEmail?: string;
+  senderName?: string;
+  /** What a client account it makes may do, by default. */
+  readOnlyContent: Maybe;
+  readOnlyContracts: Maybe;
+  readOnlyFinance: Maybe;
+  readOnlyDistribution: Maybe;
+  readOnlyPromote: Maybe;
+  readOnlyDaily: Maybe;
+  readOnlyServices: Maybe;
+  viewEarnings: boolean;
+  viewAnalytics: boolean;
+  viewBilling: boolean;
+  canInvite: boolean;
+  maxArtists?: string;
+  hideUserInfo: boolean;
+  canTakedown: Maybe;
+  vip: Maybe;
+  analyticsEnabled: boolean;
+  trendsDays: number;
+  revenueDays: number;
+  v3TrendsDays: number;
+}
+
+export const FILESTACK = ["0 - Not Set", "1 - Never", "2 - Mobile Only", "3 - Not On Desktop", "4 - Always"] as const;
+
+/** What was set on an enterprise, by its id — set apart from the defaults below. */
+let ENTERPRISE_SETTINGS: Readonly<Record<string, Partial<EnterpriseSettings>>> = {
+  "606402": { revenueDays: 1095, outgoingEmail: "hello@opaline.example", senderName: "Opaline", isrcPrefix: "FR-OP4", allowVideos: true, allowCoverSongs: true, requireApproval: true, payMechanicals: true },
+  "605118": { analyticsEnabled: false, suppressDeliveryEmails: true },
+  "604377": { allowRingtones: false, allowVideos: true, activateSubEnterprises: true, readOnlyFinance: true, readOnlyContent: false, maxArtists: "25", canTakedown: false },
+  "598215": { filestack: "4 - Always", useNse: true, syncAppleIds: true, trendsPremium: true },
+};
+
+/** An enterprise's settings — the defaults for what it is, then what was set on it. */
+export function settingsOf(enterpriseId: string): EnterpriseSettings {
+  const tenant = TENANTS.find((one) => one.enterpriseId === enterpriseId);
+  const parent = TENANTS.find((one) => one.type === "Parent" && one.enterpriseId === enterpriseId);
+  return {
+    allowRingtones: null,
+    allowVideos: null,
+    allowCoverSongs: null,
+    requireApproval: false,
+    activateSubEnterprises: null,
+    hasChildren: parent ? true : null,
+    contractRateTypeId: "2",
+    payMechanicals: null,
+    payMechanicalsCoverOnly: null,
+    suppressDeliveryEmails: null,
+    audioValidation: null,
+    autoDistroOptIn: null,
+    filestack: "0 - Not Set",
+    useNse: null,
+    trendsPremium: false,
+    dspRestrictions: null,
+    revenuePremium: false,
+    v1Trends: true,
+    syncAppleIds: null,
+    outgoingEmail: tenant?.whiteLabel?.enabled ? `hello@${tenant.whiteLabel.domain}` : undefined,
+    senderName: tenant?.whiteLabel?.enabled ? tenant.name : undefined,
+    readOnlyContent: null,
+    readOnlyContracts: null,
+    readOnlyFinance: null,
+    readOnlyDistribution: null,
+    readOnlyPromote: null,
+    readOnlyDaily: null,
+    readOnlyServices: null,
+    viewEarnings: false,
+    viewAnalytics: true,
+    viewBilling: false,
+    // A client account invites its own team only where its parent lets it.
+    canInvite: tenant !== undefined,
+    hideUserInfo: false,
+    canTakedown: null,
+    vip: null,
+    analyticsEnabled: true,
+    trendsDays: 90,
+    revenueDays: 730,
+    v3TrendsDays: 365,
+    ...ENTERPRISE_SETTINGS[enterpriseId],
+  };
+}
+
+/** What the enterprise form changes on what an enterprise IS. */
+export interface EnterpriseCore {
+  name: string;
+  plan: string;
+  onTrial: boolean;
+  lockedOut: boolean;
+  paymentBlocked: boolean;
+  partnerId?: string;
+  currency: string;
+  minimumPayment: number;
+}
+
+/**
+ * An enterprise saved from its form: what it is, on the tenant or on its parent's client account —
+ * moved to another parent where one was picked — and its settings.
+ */
+export function saveEnterprise(id: string, core: EnterpriseCore, settings: Partial<EnterpriseSettings>, parentId?: string) {
+  ENTERPRISE_SETTINGS = { ...ENTERPRISE_SETTINGS, [id]: { ...ENTERPRISE_SETTINGS[id], ...settings } };
+  const tenant = TENANTS.find((one) => one.enterpriseId === id);
+  if (tenant) return updateTenant(id, core);
   const parent = TENANTS.find((one) => one.children.some((each) => each.enterpriseId === id));
-  if (!parent) return;
-  updateTenant(parent.enterpriseId, {
-    children: parent.children.map((each) => (each.enterpriseId === id ? { ...each, name } : each)),
-  });
+  if (!parent) return changed();
+  const saved = { ...parent.children.find((each) => each.enterpriseId === id)!, ...core };
+  const to = parentId && parentId !== parent.enterpriseId ? TENANTS.find((one) => one.enterpriseId === parentId) : undefined;
+  if (!to) return updateTenant(parent.enterpriseId, { children: parent.children.map((each) => (each.enterpriseId === id ? saved : each)) });
+  // MOVED: it leaves one parent's client accounts and joins another's.
+  TENANTS = TENANTS.map((one) =>
+    one.enterpriseId === parent.enterpriseId
+      ? { ...one, children: one.children.filter((each) => each.enterpriseId !== id) }
+      : one.enterpriseId === to.enterpriseId
+        ? { ...one, children: [...one.children, saved] }
+        : one,
+  );
+  changed();
+}
+
+/** How long a tenant's analytics are kept, changed on its own. */
+export function updateAnalytics(id: string, analytics: TenantAnalytics) {
+  ENTERPRISE_SETTINGS = {
+    ...ENTERPRISE_SETTINGS,
+    [id]: {
+      ...ENTERPRISE_SETTINGS[id],
+      analyticsEnabled: analytics.enabled,
+      trendsDays: analytics.trendsDays,
+      revenueDays: analytics.revenueDays,
+      v3TrendsDays: analytics.v3TrendsDays,
+    },
+  };
+  changed();
 }
 
 /* ---------- Partners ---------- */

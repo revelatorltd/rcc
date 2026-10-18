@@ -48,12 +48,12 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
         <Metadata>
           {enterprise.lockedOut ? (
             <Alert intent="danger" title="Locked out">
-              Its parent is locked out, and nobody at this account can sign in until it is unlocked.
+              {parent.lockedOut ? "Its parent is locked out, and n" : "N"}obody at this account can sign in until it is unlocked.
             </Alert>
           ) : null}
           {enterprise.paymentBlocked ? (
             <Alert intent="danger" title="Payment blocked">
-              Its parent's payments are blocked, and this account's payee is not paid until they are unblocked.
+              {parent.paymentBlocked ? "Its parent's payments are blocked, and t" : "T"}his account's payee is not paid until they are unblocked.
             </Alert>
           ) : null}
           <FactCard

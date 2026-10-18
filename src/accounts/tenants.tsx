@@ -3,11 +3,10 @@ import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
 import { tenantArt } from "../platform/tenant-art";
 import { signUpTenantHref, tenantHref } from "../route";
-import { CUSTOMERS, TENANTS, customerOf, progressOf, type Environment, type Tenant } from "./mock";
+import { CUSTOMERS, PLANS, TENANTS, customerOf, progressOf, type Environment, type Tenant } from "./mock";
 import { ResetBalances } from "./tenant-dialogs";
 
 const ENVIRONMENTS: readonly Environment[] = ["Production", "Demo", "API sandbox"];
-const PLANS = ["2 - Starter", "3 - Growth", "4 - Enterprise"] as const;
 
 /** A customer's own mark, found by the name the cell is given. */
 const markOf = (name: string) => {

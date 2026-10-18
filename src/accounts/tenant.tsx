@@ -31,6 +31,7 @@ import {
   TENANT_FACETS,
   accountsHref,
   customerHref,
+  editEnterpriseHref,
   enterpriseHref,
   partnerHref,
   payeeHref,
@@ -141,7 +142,7 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
       header: {
         name: "Details",
         more: [
-          { label: "Edit enterprise", opens: tenantFormHref(tenant.enterpriseId, "edit") },
+          { label: "Edit enterprise", opens: editEnterpriseHref(tenant.enterpriseId) },
           { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
         ],
       },
@@ -203,7 +204,7 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
     ? [next.opens ? { label: next.label, opens: next.opens, primary: true } : { label: next.label, primary: true }]
     : [];
   const more: Command[] = [
-    { label: "Edit enterprise", opens: tenantFormHref(tenant.enterpriseId, "edit") },
+    { label: "Edit enterprise", opens: editEnterpriseHref(tenant.enterpriseId) },
     { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
     ...(isSandbox(tenant) ? [{ label: "Convert to production", opens: tenantFormHref(tenant.enterpriseId, "convert") }] : []),
     { label: "Billing" },

@@ -30,6 +30,7 @@ import {
   saveIntegration,
   saveWhiteLabel,
   transactionsOf,
+  updateAnalytics,
   updateTenant,
   type Integration,
   type PayorTransaction,
@@ -159,10 +160,10 @@ export function TenantTransactions({ tenant }: { tenant: Tenant }) {
 /* ---------- Analytics ---------- */
 
 // THE SPANS a retention is set to, in days: the system has no field for a count of days (gaps.md).
-const TRENDS_DAYS = [30, 90, 180, 365];
-const REVENUE_DAYS = [365, 730, 1095, 1825];
-const V3_TRENDS_DAYS = [90, 180, 365, 730];
-const days = (values: readonly number[]) => values.map((one) => ({ value: String(one), title: `${one} days` }));
+export const TRENDS_DAYS = [30, 90, 180, 365];
+export const REVENUE_DAYS = [365, 730, 1095, 1825];
+export const V3_TRENDS_DAYS = [90, 180, 365, 730];
+export const days = (values: readonly number[]) => values.map((one) => ({ value: String(one), title: `${one} days` }));
 
 /** How long the tenant's analytics are kept, and whether it has them at all. */
 export function EditAnalytics({ tenant, ...held }: HeldBy & { tenant: Tenant }) {
@@ -178,13 +179,11 @@ export function EditAnalytics({ tenant, ...held }: HeldBy & { tenant: Tenant }) 
         v3TrendsDays: owed<string>(String(analytics.v3TrendsDays)),
       }}
       onCommit={(draft) =>
-        updateTenant(tenant.enterpriseId, {
-          analytics: {
-            enabled: draft.enabled === "Yes",
-            trendsDays: Number(draft.trendsDays),
-            revenueDays: Number(draft.revenueDays),
-            v3TrendsDays: Number(draft.v3TrendsDays),
-          },
+        updateAnalytics(tenant.enterpriseId, {
+          enabled: draft.enabled === "Yes",
+          trendsDays: Number(draft.trendsDays),
+          revenueDays: Number(draft.revenueDays),
+          v3TrendsDays: Number(draft.v3TrendsDays),
         })
       }
     >
@@ -307,12 +306,10 @@ export function TenantConfigurationFacet({ tenant }: { tenant: Tenant }) {
         ]}
       />
       <FactCard
-        title="Payments and royalty tokens"
+        title="Payments"
         facts={[
           { label: "Payment batcher", value: config.paymentBatcher },
           { label: "Withholding tax active", value: yesNo(config.withholdingTax) },
-          { label: "Royalty token network", value: config.tokenNetwork },
-          { label: "Token minting without distribution validation", value: yesNo(config.tokenMintingWithoutValidation) },
         ]}
       />
     </Metadata>
