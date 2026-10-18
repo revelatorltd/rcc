@@ -386,14 +386,14 @@ export function setupOf(one: Tenant): readonly SetupStep[] {
     },
     {
       key: "stores",
-      title: "Stores",
+      title: "DSPs",
       detail: sandbox
         ? liveStoresOf(one)
-          ? "The two sandbox stores are on, so a test delivery can be tried. Nothing reaches a real store."
-          : "Turn on the two sandbox stores to let the owner try a test delivery."
+          ? "The two sandbox DSPs are on, so a test delivery can be tried. Nothing reaches a real DSP."
+          : "Turn on the two sandbox DSPs to let the owner try a test delivery."
         : liveStoresOf(one)
-          ? `${liveStoresOf(one)} of ${PRODUCTION_STORES.length} stores on and shown`
-          : "Every store starts off, so the tenant cannot deliver yet.",
+          ? `${liveStoresOf(one)} of ${PRODUCTION_STORES.length} DSPs on and shown`
+          : "Every DSP starts off, so the tenant cannot deliver yet.",
       done: liveStoresOf(one) > 0,
       optional: sandbox,
     },

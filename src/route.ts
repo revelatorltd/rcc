@@ -17,7 +17,7 @@ export type CustomerFacet = (typeof CUSTOMER_FACETS)[number];
  * A tenant's facets, in the order its nav lists them. Children is a parent's alone: a standalone
  * tenant's nav leaves it out.
  */
-export const TENANT_FACETS = ["Overview", "Setup", "Details", "Users", "Payees", "Stores", "White label", "Children"] as const;
+export const TENANT_FACETS = ["Overview", "Setup", "Details", "Users", "Payees", "DSPs", "White label", "Children"] as const;
 export type TenantFacet = (typeof TENANT_FACETS)[number];
 
 /** The facets of the records the other Accounts pages open, each in the order its nav lists them. */

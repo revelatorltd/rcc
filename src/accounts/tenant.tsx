@@ -74,7 +74,7 @@ function commandOf(one: Tenant, step: SetupStep): Command {
         ? { label: "Open white label", opens: tenantHref(one.enterpriseId, "White label") }
         : { label: "Create white label", opens: tenantFormHref(one.enterpriseId, "new-white-label") };
     case "stores":
-      return { label: step.done ? "Open stores" : "Turn on stores", opens: tenantHref(one.enterpriseId, "Stores") };
+      return { label: step.done ? "Open DSPs" : "Turn on DSPs", opens: tenantHref(one.enterpriseId, "DSPs") };
     case "partner":
       return one.partnerId
         ? { label: "Open partner", opens: partnerHref(one.partnerId) }
@@ -137,7 +137,7 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
       body: <TenantUsers tenant={tenant} />,
     },
     Payees: { header: { name: "Payees" }, body: <TenantPayees tenant={tenant} /> },
-    Stores: { header: { name: "Stores", more: [{ label: "Export" }] }, body: <TenantStores tenant={tenant} /> },
+    DSPs: { header: { name: "DSPs", more: [{ label: "Export" }] }, body: <TenantStores tenant={tenant} /> },
     "White label": {
       header: {
         name: "White label",
@@ -244,8 +244,8 @@ function TenantOverview({ tenant }: { tenant: Tenant }) {
           </TitledCard>
         )}
         <FacetCard
-          title="Stores"
-          opens={tenantHref(tenant.enterpriseId, "Stores")}
+          title="DSPs"
+          opens={tenantHref(tenant.enterpriseId, "DSPs")}
           figures={[
             { label: "On", as: "count", value: on },
             { label: "Off", as: "count", value: stores.length - on },
@@ -484,8 +484,8 @@ function TenantStores({ tenant }: { tenant: Tenant }) {
     <RecordIndex
       rows={stores}
       rowKey={(one) => one.name}
-      noun={{ one: "store", many: "stores" }}
-      identity={{ title: "Store", name: (one) => one.name }}
+      noun={{ one: "DSP", many: "DSPs" }}
+      identity={{ title: "DSP", name: (one) => one.name }}
       columns={[
         {
           name: "Active",
