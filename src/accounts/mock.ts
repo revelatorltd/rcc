@@ -243,6 +243,8 @@ export interface Tenant {
   name: string;
   /** The customer whose contract the tenant reports and pays against — none where it was never linked. */
   customerId?: string;
+  /** The customer's subscription it was signed up on — its first, where none was picked. */
+  subscriptionId?: string;
   type: TenantType;
   plan: string;
   environment: Environment;
@@ -571,7 +573,7 @@ export interface SetupStep {
  */
 export function setupOf(one: Tenant): readonly SetupStep[] {
   const customer = customerOf(one);
-  const linked = customer?.subscriptions[0];
+  const linked = customer?.subscriptions.find((each) => each.id === one.subscriptionId) ?? customer?.subscriptions[0];
   const sandbox = isSandbox(one);
   const steps: (SetupStep | null)[] = [
     {
