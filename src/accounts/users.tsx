@@ -15,7 +15,7 @@ import {
 } from "@revelator/pro-ui";
 
 import { editUserHref, go, userHref } from "../route";
-import { PARTNERS, accountById, accounts, partnerById, updateAccount, type Account } from "./mock";
+import { PARTNERS, accountById, accounts, partnerById, updateAccount, usersOf, type Account } from "./mock";
 
 /** A user, as the mark a person is known by — round, their initials. */
 export const userMark = (one: { name: string }) => <Avatar kind="person" name={one.name} />;
@@ -106,32 +106,44 @@ export function EditUser({ id }: { id: string }) {
  * The users — everyone who signs in, one account for one address, across every tenant that gave
  * them access. Read, never grown here: a user is given access on a tenant.
  */
+/** A name as RCC holds it: the first word the first name, the rest the last. */
+const firstOf = (name: string) => name.split(" ")[0] ?? "";
+const lastOf = (name: string) => name.split(" ").slice(1).join(" ");
+
+/** The auth tenant a user signs in through — the first enterprise that gave them access. */
+const authTenantOf = (one: Account) => {
+  const first = one.memberships[0];
+  return first ? usersOf(first.tenant).find((each) => each.email === one.email)?.tenantId : undefined;
+};
+
 export function Users() {
   const rows = accounts();
   const partnerName = (one: Account) => (one.partnerId ? (partnerById(one.partnerId)?.name ?? one.partnerId) : "No partner");
   return (
     <CollectionPage
       title="Users"
-      more={[{ label: "Export" }]}
+      more={[{ label: "Download as CSV" }]}
       index={{
         rows,
         rowKey: (one) => one.userId,
         noun: { one: "user", many: "users" },
         identity: {
-          title: "Name",
-          name: (one) => one.name,
+          title: "Username",
+          name: (one) => one.email,
           mark: (one) => userMark(one),
           sortable: true,
           opens: (one) => userHref(one.userId),
         },
-        sort: { column: "Name", direction: "ascending" },
-        searchBy: ["Name", "Email", "User ID"],
+        sort: { column: "Username", direction: "ascending" },
+        searchBy: ["Username", "User ID", "Auth tenant ID", "First name", "Last name", "Partner ID"],
         columns: [
-          { name: "Email", value: (one) => one.email, cell: (one) => one.email },
-          { name: "User ID", as: "identifier", standard: "id", hidden: true, value: (one) => one.userId },
-          { name: "Enterprises", as: "count", value: (one) => one.memberships.length },
+          { name: "User ID", as: "identifier", standard: "id", value: (one) => one.userId },
+          { name: "Auth tenant ID", as: "identifier", standard: "id", value: (one) => authTenantOf(one) },
+          { name: "First name", value: (one) => firstOf(one.name), cell: (one) => firstOf(one.name) },
+          { name: "Last name", value: (one) => lastOf(one.name), cell: (one) => lastOf(one.name) },
           { name: "Partner ID", as: "identifier", standard: "id", value: (one) => one.partnerId },
           { name: "Last login", as: "date", value: (one) => one.lastLogin },
+          { name: "Enterprises", as: "count", hidden: true, value: (one) => one.memberships.length },
         ],
         filters: [
           {
