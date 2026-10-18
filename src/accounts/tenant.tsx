@@ -43,6 +43,7 @@ import {
 import {
   customerOf,
   isSandbox,
+  payees,
   payeesOf,
   progressOf,
   setupOf,
@@ -69,6 +70,8 @@ import {
   TenantNotes,
   TenantTransactions,
 } from "./tenant-facets";
+import { enterprisePicture } from "./enterprises";
+import { payeeMark } from "./payees";
 import { tenantMark } from "./tenants";
 import { WhiteLabelFacts } from "./white-labels";
 
@@ -519,24 +522,55 @@ function TenantUsers({ tenant }: { tenant: Tenant }) {
   );
 }
 
-/** Who the tenant pays: its own payee, and one for each client account a parent holds. */
+/**
+ * Who the tenant pays — its own payee, and one for each client account a parent holds — with what
+ * RCC shows of each: its enterprise and parent, where it stands, who pays it and its contact.
+ */
 function TenantPayees({ tenant }: { tenant: Tenant }) {
+  const rows = useMemo(() => {
+    const held = new Set(payeesOf(tenant).map((one) => one.payeeId));
+    return payees().filter((one) => held.has(one.payeeId));
+  }, [tenant]);
+  const pictures = new Map(rows.map((one) => [one.enterprise.name, enterprisePicture(one.enterprise)]));
   return (
     <RecordIndex
-      rows={payeesOf(tenant)}
+      rows={rows}
       rowKey={(one) => one.payeeId}
       noun={{ one: "payee", many: "payees" }}
       identity={{
-        title: "Name",
+        title: "Payee",
         name: (one) => one.name,
-        mark: (one) => <Avatar kind="organization" name={one.name} />,
+        mark: (one) => payeeMark(one),
         opens: (one) => payeeHref(one.payeeId),
       }}
+      searchBy={["Payee", "Payee ID", "Enterprise ID", "Enterprise", "Contact ID", "Contact", "Email"]}
       columns={[
         { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
-        { name: "Enterprise ID", as: "identifier", standard: "id", value: (one) => one.enterpriseId },
+        { name: "Enterprise ID", as: "identifier", standard: "id", value: (one) => one.enterprise.enterpriseId },
+        {
+          name: "Enterprise",
+          as: "entities",
+          value: (one) => [one.enterprise.name],
+          noun: { one: "enterprise", many: "enterprises" },
+          entity: "organization",
+          picture: (named) => pictures.get(named),
+        },
+        { name: "On trial", value: (one) => (one.onTrial ? 1 : 0), cell: (one) => yesNo(one.onTrial) },
+        { name: "Locked out", value: (one) => (one.lockedOut ? 1 : 0), cell: (one) => yesNo(one.lockedOut) },
+        { name: "Payor", as: "identifier", standard: "id", value: (one) => one.payorId },
+        {
+          name: "Parent enterprise",
+          as: "entities",
+          value: (one) => (one.enterprise.parent ? [one.enterprise.parent.name] : []),
+          noun: { one: "parent enterprise", many: "parent enterprises" },
+          entity: "organization",
+          picture: (named) => pictures.get(named),
+        },
+        { name: "Contact ID", as: "identifier", standard: "id", value: (one) => one.contactId },
+        { name: "Contact", value: (one) => one.contact ?? "", cell: (one) => one.contact },
+        { name: "Email", value: (one) => one.email ?? "", cell: (one) => one.email },
+        { name: "Payment blocked", value: (one) => (one.paymentBlocked ? 1 : 0), cell: (one) => yesNo(one.paymentBlocked) },
       ]}
-      chooser={false}
       empty={{ holder: "this tenant", line: true }}
     />
   );
