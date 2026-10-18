@@ -1,3 +1,4 @@
+import { formatMeta } from "@revelator/pro-ui";
 import type { OrganizationSlug } from "@revelator/pro-ui/assets";
 
 /**
@@ -334,7 +335,7 @@ export function setupOf(one: Tenant): readonly SetupStep[] {
       key: "customer",
       title: "Customer and subscription",
       detail: customer
-        ? `${customer.name} · ${linked ? linked.id : "no subscription yet"}`
+        ? formatMeta([customer.name, linked ? linked.id : "no subscription yet"])!
         : "No customer linked: royalty runs and reports need the tenant tied to its contract.",
       done: Boolean(linked),
     },
@@ -342,7 +343,7 @@ export function setupOf(one: Tenant): readonly SetupStep[] {
       key: "white-label",
       title: "White label",
       detail: one.whiteLabel
-        ? `White label ${one.whiteLabel.id} · ${one.whiteLabel.domain}`
+        ? formatMeta([`White label ${one.whiteLabel.id}`, one.whiteLabel.domain])!
         : "Every tenant needs one, white label client or not: without it the tenant does not load.",
       done: Boolean(one.whiteLabel),
     },
