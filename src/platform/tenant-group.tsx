@@ -17,6 +17,7 @@ import {
   RemoveTenants,
   groupMark,
   personMark,
+  regionMark,
   tenantPool,
 } from "./dialogs";
 import { accessGroupIndex } from "./indexes";
@@ -147,7 +148,7 @@ export function TenantGroupDetail({ id, facet }: { id: string; facet: TenantGrou
         facts: [
           { text: scopeName(group.scope) },
           { as: "count", value: group.tenants.length, noun: { one: "tenant", many: "tenants" } },
-          { text: group.region },
+          { text: group.region, mark: regionMark(group.region) },
           { text: `Changed ${group.changed}` },
         ],
         actions: [{ label: "Edit tenant group", opens: editTenantGroupHref(group.id) }],

@@ -59,6 +59,46 @@ export const ENDS = [
 ] as const;
 export const endLabel = (value: string) => ENDS.find((one) => one.value === value)?.label ?? "No end date";
 
+/* ---------- Regions ---------- */
+
+/**
+ * The regions a tenant group is filed under — a country, where it is one, or a run of them. A
+ * country is named as the region reads (UK) and carries the name its flag is filed under in the
+ * system's set (United Kingdom); a run of countries has no flag of its own.
+ */
+export const REGIONS: readonly { name: string; country?: string }[] = [
+  { name: "Worldwide" },
+  { name: "EMEA" },
+  { name: "Europe" },
+  { name: "Iberia" },
+  { name: "DACH" },
+  { name: "North America" },
+  { name: "Latin America" },
+  { name: "APAC" },
+  { name: "US", country: "United States of America" },
+  { name: "Canada", country: "Canada" },
+  { name: "Mexico", country: "Mexico" },
+  { name: "Brazil", country: "Brazil" },
+  { name: "Argentina", country: "Argentina" },
+  { name: "Colombia", country: "Colombia" },
+  { name: "UK", country: "United Kingdom" },
+  { name: "Ireland", country: "Ireland" },
+  { name: "Spain", country: "Spain" },
+  { name: "Portugal", country: "Portugal" },
+  { name: "France", country: "France" },
+  { name: "Germany", country: "Germany" },
+  { name: "Austria", country: "Austria" },
+  { name: "Switzerland", country: "Switzerland" },
+  { name: "Italy", country: "Italy" },
+  { name: "Netherlands", country: "Netherlands" },
+  { name: "Sweden", country: "Sweden" },
+  { name: "Japan", country: "Japan" },
+  { name: "Australia", country: "Australia" },
+];
+
+/** The country a region's flag is filed under — none for a run of countries. */
+export const countryOfRegion = (name: string) => REGIONS.find((one) => one.name === name)?.country;
+
 /* ---------- The records ---------- */
 
 /** What members of an organization see first, unless they choose otherwise. */

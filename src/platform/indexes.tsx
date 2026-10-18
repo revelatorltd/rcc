@@ -11,6 +11,8 @@ import {
   groupMark,
   orgMark,
   personMark,
+  regionFlag,
+  regionMark,
 } from "./dialogs";
 import { logoByName, logoOf } from "./logos";
 import {
@@ -145,7 +147,7 @@ const reachedBy = (one: TenantGroup) => {
   return members ? new Set(members.flatMap((each) => peopleWithAccess(each.id))).size : peopleWithAccess(one.id).length;
 };
 const scopesOf = (one: TenantGroup) => [...new Set((membersOf(one) ?? [one]).map((each) => scopeName(each.scope)))];
-const regionsOf = (one: TenantGroup) => [...new Set((membersOf(one) ?? [one]).map((each) => each.region))].join(", ");
+const regionsOf = (one: TenantGroup) => [...new Set((membersOf(one) ?? [one]).map((each) => each.region))].filter((each) => each !== "—");
 
 /** The tenant groups — of one scope, or of every one. */
 export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> {
@@ -184,7 +186,15 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
         entity: "organization",
       },
       { name: "People with access", as: "count", value: (one) => reachedBy(one) },
-      { name: "Region", value: (one) => regionsOf(one), cell: (one) => regionsOf(one) },
+      {
+        // Each region a place, led by its flag where it is one country.
+        name: "Region",
+        as: "entities",
+        value: (one) => regionsOf(one),
+        noun: { one: "region", many: "regions" },
+        entity: "place",
+        picture: regionFlag,
+      },
       { name: "Last changed", value: (one) => one.changed, cell: (one) => one.changed || undefined },
     ],
     // GATHERED on the whole set — by the organization that owns each group, or by its region — so a
@@ -201,7 +211,7 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
                 key: (one: TenantGroup) => scopeName(one.scope),
                 mark: (key: string) => orgMarkByName(key),
               },
-              { name: "By region", identity: "Region", key: (one: TenantGroup) => one.region },
+              { name: "By region", identity: "Region", key: (one: TenantGroup) => one.region, mark: (key: string) => regionMark(key) },
             ],
             row: (members: readonly TenantGroup[], key: string): Gathered => ({
               id: `gathered:${key}`,

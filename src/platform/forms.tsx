@@ -12,7 +12,7 @@ import {
   unanswered,
 } from "@revelator/pro-ui";
 
-import { endOptions, endValue, personOptions, templateOptions, tenantPool } from "./dialogs";
+import { endOptions, endValue, personOptions, regionOptions, templateOptions, tenantPool } from "./dialogs";
 import {
   ENTERPRISE_SCOPE,
   GUARDS,
@@ -199,7 +199,7 @@ export function TenantGroupWizard({ id, scope: given }: { id?: string; scope?: s
       draft={{
         name: owed(group?.name ?? ""),
         description: group?.description ?? unanswered.text,
-        region: group?.region ?? unanswered.text,
+        region: group && group.region !== "—" ? group.region : unanswered.record,
         tenants: (group?.tenants ?? []) as readonly string[],
         pasted: unanswered.longtext,
       }}
@@ -229,7 +229,15 @@ export function TenantGroupWizard({ id, scope: given }: { id?: string; scope?: s
             <WizardRowBody>
               <Field as="text" name="name" label="Name" help="Unique in the organization — by region or function." />
               <Field as="text" name="description" label="Description" help="Shown in lists and when an access group picks it." />
-              <Field as="text" name="region" label="Region" help="Used to filter lists. It does not affect access." />
+              <Field
+                as="record"
+                name="region"
+                label="Region"
+                entity="place"
+                noun={{ one: "region", many: "regions" }}
+                options={regionOptions}
+                help="Used to filter and gather lists. It does not affect access."
+              />
             </WizardRowBody>
             <WizardRowTips>
               <WizardRowTip>

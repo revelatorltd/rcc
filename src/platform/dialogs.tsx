@@ -1,9 +1,11 @@
 import { Avatar, ConfirmationDialog, Field, FormDialog, owed, unanswered, type HeldBy } from "@revelator/pro-ui";
+import { flagFor } from "@revelator/pro-ui/assets";
 
 import {
   ENDS,
   ORGANIZATIONS,
   PEOPLE,
+  REGIONS,
   TEMPLATES,
   accessGroups,
   addMembers,
@@ -12,6 +14,7 @@ import {
   addTenantsToGroup,
   archiveAccessGroups,
   archiveTenantGroups,
+  countryOfRegion,
   emailsIn,
   moveTenants,
   orgById,
@@ -49,6 +52,21 @@ export const orgMark = (one: { id: string; name: string }) => {
     </Avatar>
   );
 };
+/**
+ * A region — its country's flag, where it is one country; the place's own mark where it is a run of
+ * them, since the system draws no flag for one and invents none.
+ */
+export const regionMark = (name: string) => <Avatar kind="place" name={countryOfRegion(name) ?? name} />;
+
+/** A region's flag, as a cell naming it asks — none for a run of countries. */
+export const regionFlag = (name: string) => {
+  const country = countryOfRegion(name);
+  return (country && flagFor(country)) || undefined;
+};
+
+/** The regions, as a field offers them — each a place, led by its flag where it has one. */
+export const regionOptions = REGIONS.map((one) => ({ value: one.name, title: one.name, art: regionFlag(one.name) }));
+
 /** A person — round, their initials. */
 export const personMark = (one: { name: string }) => <Avatar kind="person" name={one.name} />;
 
