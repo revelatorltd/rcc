@@ -66,6 +66,16 @@ export const scopedMark = (one: { scope: string; name: string }) => {
   );
 };
 
+/** A tenant group's or an access group's logo — its organization's — found by the name a cell gives. */
+export const tenantGroupLogo = (name: string) => {
+  const group = tenantGroups().find((one) => one.name === name);
+  return group ? logoOf(group.scope) : undefined;
+};
+export const accessGroupLogo = (name: string) => {
+  const group = accessGroups().find((one) => one.name === name);
+  return group ? logoOf(group.scope) : undefined;
+};
+
 /**
  * A region — its country's flag, where it is one country; the place's own mark where it is a run of
  * them, since the system draws no flag for one and invents none.

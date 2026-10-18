@@ -8,11 +8,13 @@ import {
   ArchiveAccessGroups,
   ArchiveTenantGroups,
   RemoveFromAll,
+  accessGroupLogo,
   orgMark,
   personMark,
   regionFlag,
   regionMark,
   scopedMark,
+  tenantGroupLogo,
 } from "./dialogs";
 import { logoByName, logoOf } from "./logos";
 import {
@@ -184,6 +186,7 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
         value: (one) => usedBy(one).map((ag) => ag.name),
         noun: { one: "access group", many: "access groups" },
         entity: "organization",
+        picture: accessGroupLogo,
       },
       { name: "People with access", as: "count", value: (one) => reachedBy(one) },
       {
@@ -290,6 +293,18 @@ export function accessGroupIndex({ scope, tgId }: { scope?: string; tgId?: strin
         value: (one) => one.targets.map((id) => tenantGroupById(id)?.name ?? id),
         noun: { one: "tenant group", many: "tenant groups" },
         entity: "organization",
+        picture: tenantGroupLogo,
+      },
+      {
+        // WHERE its tenant groups are — each region once, led by its flag where it is one country.
+        name: "Regions",
+        as: "entities",
+        value: (one) => [
+          ...new Set(one.targets.map((id) => tenantGroupById(id)?.region).filter((region): region is string => Boolean(region) && region !== "—")),
+        ],
+        noun: { one: "region", many: "regions" },
+        entity: "place",
+        picture: regionFlag,
       },
       { name: "Tenants", as: "count", value: (one) => tenantsOfTargets(one.targets).length },
       { name: "Members", as: "count", value: (one) => one.members.length },
@@ -373,6 +388,7 @@ export function peopleIndex(orgId?: string): RecordIndexProps<Person> {
         value: (one) => accessGroupsOf(one.id).map((ag) => ag.name),
         noun: { one: "access group", many: "access groups" },
         entity: "organization",
+        picture: accessGroupLogo,
       },
       { name: "Tenants", as: "count", value: (one) => effectiveAccess(one.id).length },
       { name: "Last active", value: (one) => lastActiveRank(one.lastActive), cell: (one) => one.lastActive },

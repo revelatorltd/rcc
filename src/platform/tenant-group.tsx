@@ -15,6 +15,7 @@ import {
   AddToTenantGroup,
   ArchiveTenantGroups,
   RemoveTenants,
+  accessGroupLogo,
   groupMark,
   personMark,
   regionMark,
@@ -129,6 +130,7 @@ export function TenantGroupDetail({ id, facet }: { id: string; facet: TenantGrou
               value: (one) => accessGroupsOf(one.id).filter((ag) => ag.targets.includes(group.id)).map((ag) => ag.name),
               noun: { one: "access group", many: "access groups" },
               entity: "organization",
+              picture: accessGroupLogo,
             },
             { name: "Last active", value: (one) => lastActiveRank(one.lastActive), cell: (one) => one.lastActive },
           ]}

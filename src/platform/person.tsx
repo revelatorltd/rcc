@@ -9,7 +9,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { AddPeople, AddToGroup, RemoveFromAll, RemoveMember, groupMark, personMark, scopedMark } from "./dialogs";
+import { AddPeople, AddToGroup, RemoveFromAll, RemoveMember, groupMark, personMark, scopedMark, tenantGroupLogo } from "./dialogs";
 import {
   GUARDS,
   LEVELS,
@@ -67,6 +67,7 @@ export function PersonDetail({ id, facet }: { id: string; facet: PersonFacet }) 
               value: (one) => one.targets.map((tid) => tenantGroupById(tid)?.name ?? tid),
               noun: { one: "tenant group", many: "tenant groups" },
               entity: "organization",
+              picture: tenantGroupLogo,
             },
             { name: "Permissions", value: (one) => permissionsSaid(one.perms), cell: (one) => permissionsSaid(one.perms) },
             {
