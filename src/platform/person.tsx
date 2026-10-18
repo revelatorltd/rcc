@@ -9,7 +9,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { AddPeople, AddToGroup, RemoveFromAll, RemoveMember, groupMark, personMark } from "./dialogs";
+import { AddPeople, AddToGroup, RemoveFromAll, RemoveMember, groupMark, personMark, scopedMark } from "./dialogs";
 import {
   GUARDS,
   LEVELS,
@@ -59,7 +59,7 @@ export function PersonDetail({ id, facet }: { id: string; facet: PersonFacet }) 
           rows={groups}
           rowKey={(one) => one.id}
           noun={{ one: "access group", many: "access groups" }}
-          identity={{ title: "Access group", name: (one) => one.name, mark: (one) => groupMark(one), opens: (one) => accessGroupHref(one.id) }}
+          identity={{ title: "Access group", name: (one) => one.name, mark: (one) => scopedMark(one), opens: (one) => accessGroupHref(one.id) }}
           columns={[
             {
               name: "Applies to",

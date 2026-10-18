@@ -18,7 +18,7 @@ import {
   groupMark,
   personMark,
   regionMark,
-  tenantGroupMark,
+  scopedMark,
   tenantPool,
 } from "./dialogs";
 import { accessGroupIndex } from "./indexes";
@@ -143,7 +143,7 @@ export function TenantGroupDetail({ id, facet }: { id: string; facet: TenantGrou
   return (
     <DetailPage
       record={{
-        mark: tenantGroupMark(group),
+        mark: scopedMark(group),
         name: group.name,
         kind: "Tenant group",
         facts: [

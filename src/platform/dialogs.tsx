@@ -53,11 +53,11 @@ export const orgMark = (one: { id: string; name: string }) => {
   );
 };
 /**
- * A tenant group — its organization's logo, so a group reads as its organization's wherever it
- * stands, whatever its region; the enterprise level's for an enterprise group, its initials where
- * its organization has no logo.
+ * A tenant group or an access group — its organization's logo, so a group reads as its
+ * organization's wherever it stands, whatever its region; the enterprise level's for an enterprise
+ * group, its initials where its organization has no logo.
  */
-export const tenantGroupMark = (one: { scope: string; name: string }) => {
+export const scopedMark = (one: { scope: string; name: string }) => {
   const logo = logoOf(one.scope);
   return (
     <Avatar kind="organization" name={one.name}>

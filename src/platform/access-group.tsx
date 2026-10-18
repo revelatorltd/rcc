@@ -8,7 +8,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { AddMembers, ArchiveAccessGroups, RemoveMember, groupMark, personMark, regionFlag, tenantGroupMark } from "./dialogs";
+import { AddMembers, ArchiveAccessGroups, RemoveMember, personMark, regionFlag, scopedMark } from "./dialogs";
 import {
   GUARDS,
   LEVELS,
@@ -84,7 +84,7 @@ export function AccessGroupDetail({ id, facet }: { id: string; facet: AccessGrou
           rows={targets}
           rowKey={(one) => one.id}
           noun={{ one: "tenant group", many: "tenant groups" }}
-          identity={{ title: "Tenant group", name: (one) => one.name, mark: (one) => tenantGroupMark(one), opens: (one) => tenantGroupHref(one.id) }}
+          identity={{ title: "Tenant group", name: (one) => one.name, mark: (one) => scopedMark(one), opens: (one) => tenantGroupHref(one.id) }}
           columns={[
             {
               name: "Region",
@@ -134,7 +134,7 @@ export function AccessGroupDetail({ id, facet }: { id: string; facet: AccessGrou
   return (
     <DetailPage
       record={{
-        mark: groupMark(group),
+        mark: scopedMark(group),
         name: group.name,
         kind: "Access group",
         facts: [

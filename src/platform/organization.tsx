@@ -18,7 +18,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { AddOrgAdmin, AddPeople, EditDefaults, MoveTenant, RemoveOrgAdmin, groupMark, orgMark, personMark } from "./dialogs";
+import { AddOrgAdmin, AddPeople, EditDefaults, MoveTenant, RemoveOrgAdmin, groupMark, orgMark, personMark, scopedMark } from "./dialogs";
 import { accessGroupIndex, peopleIndex, tenantGroupIndex } from "./indexes";
 import {
   ENTERPRISE,
@@ -91,7 +91,7 @@ export function OrganizationDetail({ id, facet }: { id: string; facet: Organizat
               <Slot layout="list">
                 {groups.slice(0, 5).map((one) => (
                   <SlotItem key={one.id}>
-                    {groupMark(one)}
+                    {scopedMark(one)}
                     <Text kind="title">{one.name}</Text>
                   </SlotItem>
                 ))}

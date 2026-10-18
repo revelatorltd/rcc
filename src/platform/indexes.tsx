@@ -8,12 +8,11 @@ import {
   ArchiveAccessGroups,
   ArchiveTenantGroups,
   RemoveFromAll,
-  groupMark,
   orgMark,
   personMark,
   regionFlag,
   regionMark,
-  tenantGroupMark,
+  scopedMark,
 } from "./dialogs";
 import { logoByName, logoOf } from "./logos";
 import {
@@ -160,7 +159,7 @@ export function tenantGroupIndex(scope?: string): RecordIndexProps<TenantGroup> 
     identity: {
       title: "Tenant group",
       name: (one) => one.name,
-      mark: (one) => tenantGroupMark(one),
+      mark: (one) => scopedMark(one),
       sortable: true,
       opens: (one) => tenantGroupHref(one.id),
     },
@@ -266,7 +265,7 @@ export function accessGroupIndex({ scope, tgId }: { scope?: string; tgId?: strin
     identity: {
       title: "Access group",
       name: (one) => one.name,
-      mark: (one) => groupMark(one),
+      mark: (one) => scopedMark(one),
       sortable: true,
       opens: (one) => accessGroupHref(one.id),
     },
