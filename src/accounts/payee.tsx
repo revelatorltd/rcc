@@ -12,8 +12,11 @@ import {
 } from "@revelator/pro-ui";
 
 import { PAYEE_FACETS, accountsHref, enterpriseHref, payeeHref, tenantHref, userHref, type PayeeFacet } from "../route";
-import { accounts, payeeById, payees } from "./mock";
+import { payeeById, payees, usersOf } from "./mock";
+import { RemoveAccess, SetOwner } from "./tenant-dialogs";
 import { EditSettingsChanges, EditTaxCountry, countryChip, payeeMark } from "./payees";
+
+const yesNo = (value: boolean) => (value ? "Yes" : "No");
 
 /** The payee the address names, or the first. */
 const payeeOf = (id: string) => payeeById(id) ?? payees()[0]!;
@@ -26,10 +29,9 @@ export function PayeeDetail({ id, facet }: { id: string; facet: PayeeFacet }) {
   const payee = payeeOf(id);
   const enterprise = payee.enterprise;
   const enterpriseOpens = enterprise.tenant ? tenantHref(enterprise.enterpriseId) : enterpriseHref(enterprise.enterpriseId);
-  // The people with access are the tenant's own; a client account's payee has none of its own.
-  const users = enterprise.tenant
-    ? accounts().filter((one) => one.memberships.some((each) => each.tenant.enterpriseId === enterprise.enterpriseId))
-    : [];
+  // The people with access are the tenant's own, its owner first; a client account's payee has none.
+  const tenant = enterprise.tenant;
+  const users = tenant ? usersOf(tenant) : [];
 
   const FACETS: Record<PayeeFacet, { header?: DetailFacet; body: ReactNode }> = {
     Details: {
@@ -39,19 +41,40 @@ export function PayeeDetail({ id, facet }: { id: string; facet: PayeeFacet }) {
             title="Payee"
             facts={[
               { label: "Payee ID", value: payee.payeeId, standard: "id" },
-              { label: "Name", value: payee.name },
-              { label: "Contact", value: payee.contact },
-              { label: "Email", value: payee.email },
+              { label: "Company name", value: payee.companyName },
+              { label: "Is company", value: yesNo(payee.isCompany) },
+              { label: "Role", value: payee.role },
+              { label: "Last update", as: "date", value: payee.lastUpdated },
+            ]}
+          />
+          <FactCard
+            title="Contact"
+            facts={[
+              { label: "Contact ID", value: payee.contactId, standard: "id" },
+              { label: "Name", value: payee.contact },
+              { label: "Email address", value: payee.email },
+            ]}
+          />
+          <FactCard
+            title="Payments"
+            facts={[
+              {
+                label: "Payment provider",
+                value: payee.paymentProvider ? `${payee.paymentProvider.id} - ${payee.paymentProvider.name}` : undefined,
+              },
+              { label: "Payment user ID", value: payee.paymentUserId, standard: "id" },
               { label: "Currency", value: payee.currency },
               { label: "Minimum payment", as: "money", value: payee.minimumPayment, currency: payee.currency },
-              { label: "Sends statements itself", value: payee.autoSendStatements ? "Yes" : "No" },
+              { label: "Payment blocked", value: yesNo(payee.paymentBlocked) },
+              { label: "Auto-sends statements", value: yesNo(payee.autoSendStatements) },
+              { label: "Last statement sent", as: "date", value: payee.lastStatementSent },
             ]}
           />
           <FactCard
             title="Tax and settings"
             facts={[
               { label: "Tax domicile country", value: payee.taxCountry ? countryChip(payee.taxCountry) : undefined },
-              { label: "Payee settings changes allowed", value: payee.settingsAllowed ? "Yes" : "No" },
+              { label: "Payee settings changes allowed", value: yesNo(payee.settingsAllowed) },
             ]}
           />
           <FactCard
@@ -70,7 +93,7 @@ export function PayeeDetail({ id, facet }: { id: string; facet: PayeeFacet }) {
       ),
     },
     Users: {
-      header: { name: "Users", more: [{ label: "Export" }] },
+      header: { name: "Users", more: [{ label: "Download as CSV" }] },
       body: (
         <RecordIndex
           rows={users}
@@ -83,12 +106,20 @@ export function PayeeDetail({ id, facet }: { id: string; facet: PayeeFacet }) {
             opens: (one) => userHref(one.userId),
           }}
           columns={[
-            { name: "Email", value: (one) => one.email, cell: (one) => one.email },
-            {
-              name: "Role",
-              value: (one) => (one.memberships.find((each) => each.tenant.enterpriseId === enterprise.enterpriseId)?.owner ? "Owner" : "Team member"),
-              cell: (one) => (one.memberships.find((each) => each.tenant.enterpriseId === enterprise.enterpriseId)?.owner ? "Owner" : "Team member"),
-            },
+            { name: "Username", value: (one) => one.email, cell: (one) => one.email },
+            { name: "User ID", as: "identifier", standard: "id", value: (one) => one.userId },
+            { name: "Role", value: (one) => (one.owner ? "Owner" : "Team member"), cell: (one) => (one.owner ? "Owner" : "Team member") },
+          ]}
+          commands={(one) => [
+            // Signing in as them leaves RCC, which this rebuild does not model.
+            { label: "Impersonate in V2" },
+            { label: "Impersonate in API" },
+            !tenant || one.owner
+              ? { label: "Change ownership", unavailable: "They are the owner." }
+              : { label: "Change ownership", dialog: <SetOwner tenant={tenant} user={one} /> },
+            !tenant || one.owner
+              ? { label: "Remove access", destructive: true, unavailable: "Make someone else the owner first." }
+              : { label: "Remove access", destructive: true, dialog: <RemoveAccess tenant={tenant} user={one} /> },
           ]}
           chooser={false}
           empty={{ holder: "this payee", line: true }}

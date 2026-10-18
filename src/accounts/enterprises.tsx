@@ -3,7 +3,7 @@ import { Avatar, CollectionPage, Field, FormDialog, owed, type HeldBy } from "@r
 import { tenantArt } from "../platform/tenant-art";
 import { enterpriseHref, tenantFormHref, tenantHref } from "../route";
 import { enterprises, renameChild, type Enterprise } from "./mock";
-import { tenantMark } from "./tenants";
+import { tenantMark, tenantPicture } from "./tenants";
 
 const TYPES: readonly Enterprise["type"][] = ["Parent", "Standalone", "Child"];
 const PLANS = ["2 - Starter", "3 - Growth", "4 - Enterprise"] as const;
@@ -20,6 +20,9 @@ export const enterpriseMark = (one: Enterprise) =>
       <img src={tenantArt(one.name)} alt="" />
     </Avatar>
   );
+
+/** An enterprise's logo, as an image address — the one its mark wears. */
+export const enterprisePicture = (one: Enterprise) => (one.tenant ? tenantPicture(one.tenant) : tenantArt(one.name));
 
 /** Where an enterprise opens: a tenant on its own record, a client account on the enterprise's. */
 export const enterpriseOpens = (one: Enterprise) => (one.tenant ? tenantHref(one.enterpriseId) : enterpriseHref(one.enterpriseId));

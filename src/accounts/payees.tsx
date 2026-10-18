@@ -1,8 +1,10 @@
 import { Avatar, Badge, Chip, CollectionPage, Field, FormDialog, owed, type HeldBy } from "@revelator/pro-ui";
 
 import { payeeHref } from "../route";
-import { enterpriseMark } from "./enterprises";
+import { enterpriseMark, enterprisePicture } from "./enterprises";
 import { payees, updatePayee, type Payee, type PayeeStatus } from "./mock";
+
+const yesNo = (value: boolean) => (value ? "Yes" : "No");
 
 /** Where a payee stands, in the order the system's family runs. */
 export const PAYEE_STATUSES: readonly PayeeStatus[] = ["Not Invited", "Invited", "Active", "Payout Blocked", "Account Locked"];
@@ -62,10 +64,11 @@ export function EditSettingsChanges({ payee, ...held }: HeldBy & { payee: Payee 
  */
 export function Payees() {
   const rows = payees();
+  const pictures = new Map(rows.map((one) => [one.enterprise.name, enterprisePicture(one.enterprise)]));
   return (
     <CollectionPage
       title="Payees"
-      more={[{ label: "Export" }]}
+      more={[{ label: "Download" }]}
       index={{
         rows,
         rowKey: (one) => one.payeeId,
@@ -78,7 +81,7 @@ export function Payees() {
           opens: (one) => payeeHref(one.payeeId),
         },
         sort: { column: "Name", direction: "ascending" },
-        searchBy: ["Name", "Payee ID", "Email"],
+        searchBy: ["Name", "Payee ID", "Enterprise ID", "Enterprise", "Contact ID", "Contact", "Email", "Payor IDs"],
         columns: [
           { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
           {
@@ -88,10 +91,23 @@ export function Payees() {
             readings: ["All"],
           },
           { name: "Enterprise ID", as: "identifier", standard: "id", value: (one) => one.enterprise.enterpriseId },
-          { name: "Paid by", as: "identifier", standard: "id", hidden: true, value: (one) => one.payorId },
+          {
+            // ANOTHER RECORD as a value: the enterprise it pays out for, wearing its logo.
+            name: "Enterprise",
+            as: "entities",
+            value: (one) => [one.enterprise.name],
+            noun: { one: "enterprise", many: "enterprises" },
+            entity: "organization",
+            picture: (named) => pictures.get(named),
+          },
+          { name: "On trial", value: (one) => (one.onTrial ? 1 : 0), cell: (one) => yesNo(one.onTrial) },
+          { name: "Locked out", value: (one) => (one.lockedOut ? 1 : 0), cell: (one) => yesNo(one.lockedOut) },
+          { name: "Contact ID", as: "identifier", standard: "id", value: (one) => one.contactId },
           { name: "Contact", value: (one) => one.contact ?? "", cell: (one) => one.contact },
           { name: "Email", value: (one) => one.email ?? "", cell: (one) => one.email },
-          { name: "Currency", value: (one) => one.currency, cell: (one) => one.currency },
+          { name: "Payment blocked", value: (one) => (one.paymentBlocked ? 1 : 0), cell: (one) => yesNo(one.paymentBlocked) },
+          { name: "Payor IDs", value: (one) => one.payorIds.join(", "), cell: (one) => one.payorIds.join(", ") },
+          { name: "Currency", hidden: true, value: (one) => one.currency, cell: (one) => one.currency },
         ],
         readings: [
           { name: "All", holds: () => true },
@@ -112,6 +128,9 @@ export function Payees() {
             switches: [
               { key: "child", label: "Client accounts only", holds: (one) => one.enterprise.type === "Child" },
               { key: "settings", label: "Settings changes allowed", holds: (one) => one.settingsAllowed },
+              { key: "trial", label: "On trial", holds: (one) => one.onTrial },
+              { key: "locked", label: "Locked out", holds: (one) => one.lockedOut },
+              { key: "blocked", label: "Payment blocked", holds: (one) => one.paymentBlocked },
             ],
           },
         ],

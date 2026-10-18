@@ -22,13 +22,16 @@ const markOf = (name: string) => {
  * invented from its name. ONE function, so the row a reader pressed and the band they landed on
  * wear the same mark.
  */
-export const tenantMark = (one: Tenant) => {
+export const tenantMark = (one: Tenant) => (
+  <Avatar kind="organization" name={one.name}>
+    <img src={tenantPicture(one)} alt="" />
+  </Avatar>
+);
+
+/** A tenant's logo, as an image address: its customer's, else one invented from its name. */
+export const tenantPicture = (one: Tenant) => {
   const organization = customerOf(one)?.organization;
-  return (
-    <Avatar kind="organization" name={one.name}>
-      <img src={organization ? ORGANIZATIONS[organization].art : tenantArt(one.name)} alt="" />
-    </Avatar>
-  );
+  return organization ? ORGANIZATIONS[organization].art : tenantArt(one.name);
 };
 
 /**

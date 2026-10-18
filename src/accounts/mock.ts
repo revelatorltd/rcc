@@ -854,7 +854,26 @@ export interface Payee {
   /** Whether the payee may change its own payment settings. */
   settingsAllowed: boolean;
   autoSendStatements: boolean;
+  /** The contact record its statements are addressed to. */
+  contactId: string;
+  /** The company it is paid as, and whether it is paid as one. */
+  companyName?: string;
+  isCompany: boolean;
+  role?: string;
+  /** The provider it is paid through, as the provider is numbered here, and its account there. */
+  paymentProvider?: { id: string; name: string };
+  paymentUserId?: string;
+  onTrial: boolean;
+  lockedOut: boolean;
+  paymentBlocked: boolean;
+  /** Every payee that pays it — a client account's parent, or itself. */
+  payorIds: readonly string[];
+  lastUpdated: Date;
+  lastStatementSent?: Date;
 }
+
+/** The payment providers, as the product numbers them. */
+const PROVIDER_IDS: Readonly<Record<string, string>> = { PayPal: "1", Tipalti: "3", Stripe: "4" };
 
 /** What a form changed on a payee, by its id. */
 let PAYEE_EDITS: Readonly<Record<string, Partial<Pick<Payee, "taxCountry" | "settingsAllowed">>>> = {};
@@ -869,6 +888,7 @@ export function payees(): readonly Payee[] {
     const owner = usersOf(tenant)[0]!;
     const own = enterprise.tenant !== undefined;
     const record = tenant.customerId ? RECORDS[tenant.customerId] : undefined;
+    const provider = integrationsOf(tenant).find((one) => one.connected);
     const status: PayeeStatus = enterprise.lockedOut
       ? "Account Locked"
       : enterprise.paymentBlocked
@@ -882,13 +902,27 @@ export function payees(): readonly Payee[] {
       enterprise,
       payorId: tenant.payeeId,
       status,
-      contact: own ? owner.name : undefined,
-      email: own ? owner.email : undefined,
+      // A client account's contact is the label itself, at the address its parent gave it.
+      contact: own ? owner.name : enterprise.name,
+      email: own ? owner.email : `royalties@${enterprise.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.example`,
       currency: tenant.currency,
       minimumPayment: tenant.minimumPayment,
       taxCountry: own ? record?.country : undefined,
       settingsAllowed: own,
       autoSendStatements: own,
+      contactId: String(3_600_000 + Number(enterprise.payeeId) % 400_000),
+      companyName: enterprise.name,
+      isCompany: own && tenant.type !== "Standalone",
+      role: own ? "Label" : undefined,
+      paymentProvider: provider ? { id: PROVIDER_IDS[provider.provider] ?? "0", name: provider.provider } : undefined,
+      paymentUserId: provider ? `${provider.providerId}-${enterprise.payeeId}` : undefined,
+      onTrial: enterprise.onTrial,
+      lockedOut: enterprise.lockedOut,
+      paymentBlocked: enterprise.paymentBlocked,
+      payorIds: [tenant.payeeId],
+      // Touched when it was made, and again each month it was paid.
+      lastUpdated: new Date(Math.max(enterprise.created.getTime(), TODAY.getTime() - ((Number(enterprise.payeeId) % 40) + 1) * 86_400_000)),
+      lastStatementSent: own && liveStoresOf(tenant) > 0 ? new Date(TODAY.getFullYear(), TODAY.getMonth(), 5) : undefined,
       ...PAYEE_EDITS[enterprise.payeeId],
     };
   });
