@@ -2,7 +2,7 @@ import { Badge, CollectionPage } from "@revelator/pro-ui";
 
 import { customerHref } from "../route";
 import { customerMark } from "./mark";
-import { CUSTOMERS, RECORDS, type Customer } from "./mock";
+import { CUSTOMERS, tenantsOf, type Customer } from "./mock";
 
 const STATUSES: readonly Customer["status"][] = ["Active", "Onboarding", "Churned", "Terminated"];
 const TYPES: readonly Customer["type"][] = ["Client", "Warner entity", "Demo"];
@@ -55,7 +55,7 @@ export function Customers() {
           },
           { name: "Email", value: (one) => one.email ?? "", cell: (one) => one.email },
           { name: "Type", value: (one) => one.type, cell: (one) => one.type },
-          { name: "Tenants", as: "count", value: (one) => RECORDS[one.id]!.tenants.length },
+          { name: "Tenants", as: "count", value: (one) => tenantsOf(one.id).length },
           { name: "DSP rate", as: "percent", value: (one) => one.dspRate },
           { name: "Created", as: "date", value: (one) => one.created },
         ],

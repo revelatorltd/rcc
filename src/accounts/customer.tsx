@@ -11,6 +11,7 @@ import {
   EmptyState,
   FacetCard,
   FactCard,
+  Progress,
   Metadata,
   RecordIndex,
   Slot,
@@ -29,10 +30,12 @@ import {
   CUSTOMER_FACETS,
   accountsHref,
   customerHref,
+  tenantHref,
   type CustomerFacet,
 } from "../route";
 import { customerMark } from "./mark";
-import { MONTHS, RECORDS, customerById, monthlyOf, type Customer, type CustomerRecord } from "./mock";
+import { MONTHS, RECORDS, customerById, isSandbox, monthlyOf, progressOf, tenantsOf, type Customer, type CustomerRecord } from "./mock";
+import { tenantMark } from "./tenants";
 
 /**
  * One customer, as a record with facets.
@@ -64,7 +67,7 @@ export function CustomerDetail({ id, facet }: { id: string; facet: CustomerFacet
     },
     Tenants: {
       header: { name: "Tenants" },
-      body: <CustomerTenants record={record} />,
+      body: <CustomerTenants customer={customer} />,
     },
   };
   const shown = FACETS[facet];
@@ -126,7 +129,8 @@ const country = (named: string) => (
 function CustomerOverview({ customer, record }: { customer: Customer; record: CustomerRecord }) {
   const live = customer.subscriptions.filter((one) => !one.sandbox).length;
   const sandboxes = customer.subscriptions.length - live;
-  const production = record.tenants.filter((one) => !one.sandbox).length;
+  const tenants = tenantsOf(customer.id);
+  const production = tenants.filter((one) => !isSandbox(one)).length;
   const owed = customer.subscriptions.length === 0;
   return (
     <DetailOverview>
@@ -204,7 +208,7 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
             ))}
           </Slot>
         </TitledCard>
-        {record.tenants.length === 0 ? (
+        {tenants.length === 0 ? (
           <TitledCard title="Tenants">
             <Slot layout="empty">
               <EmptyState
@@ -218,11 +222,11 @@ function CustomerOverview({ customer, record }: { customer: Customer; record: Cu
         ) : (
           <FacetCard
             title="Tenants"
-            count={record.tenants.length}
+            count={tenants.length}
             opens={customerHref(customer.id, "Tenants")}
             figures={[
               { label: "Production", as: "count", value: production },
-              { label: "Demo or sandbox", as: "count", value: record.tenants.length - production },
+              { label: "Demo or sandbox", as: "count", value: tenants.length - production },
             ]}
           />
         )}
@@ -327,25 +331,31 @@ function CustomerContacts({ record }: { record: CustomerRecord }) {
 }
 
 /** The tenants signed up under the customer, newest first. */
-function CustomerTenants({ record }: { record: CustomerRecord }) {
+function CustomerTenants({ customer }: { customer: Customer }) {
   return (
     <RecordIndex
-      rows={record.tenants}
+      rows={tenantsOf(customer.id)}
       rowKey={(one) => one.enterpriseId}
       noun={{ one: "tenant", many: "tenants" }}
       identity={{
         title: "Name",
         name: (one) => one.name,
-        mark: (one) => <Avatar kind="organization" name={one.name} />,
+        // The mark the Tenants index wears, and the row opens the same tenant it does.
+        mark: (one) => tenantMark(one),
+        opens: (one) => tenantHref(one.enterpriseId),
       }}
       sort={{ column: "Created", direction: "descending" }}
       columns={[
         { name: "Enterprise ID", as: "identifier", standard: "id", value: (one) => one.enterpriseId },
         { name: "Plan", value: (one) => one.plan, cell: (one) => one.plan },
+        { name: "Environment", value: (one) => one.environment, cell: (one) => one.environment },
         {
-          name: "Environment",
-          value: (one) => (one.sandbox ? "Demo or sandbox" : "Production"),
-          cell: (one) => (one.sandbox ? "Demo or sandbox" : "Production"),
+          name: "Setup",
+          value: (one) => progressOf(one).done / progressOf(one).of,
+          cell: (one) => {
+            const { done, of } = progressOf(one);
+            return <Progress value={done} max={of} reading={`${done} of ${of}`} aria-label="Setup" />;
+          },
         },
         { name: "Created", as: "date", value: (one) => one.created },
       ]}

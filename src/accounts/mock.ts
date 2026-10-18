@@ -69,17 +69,7 @@ export interface Contact {
   roles: readonly ("Primary" | "Billing" | "Royalties" | "Technical")[];
 }
 
-/** A tenant signed up under the customer — the workspace its catalogue lives in. */
-export interface Tenant {
-  enterpriseId: string;
-  name: string;
-  plan: string;
-  /** Demo or sandbox, never a live catalogue. */
-  sandbox: boolean;
-  created: Date;
-}
-
-/** What a customer's record holds beyond its row: the company, the contract, its people and tenants. */
+/** What a customer's record holds beyond its row: the company, the contract and its people. Its tenants are their own set (TENANTS). */
 export interface CustomerRecord {
   stripe: string;
   phone: string;
@@ -98,32 +88,30 @@ export interface CustomerRecord {
   revelatorRevenue: number;
   clientRevenue: number;
   contacts: readonly Contact[];
-  tenants: readonly Tenant[];
 }
 
-const tenant = (enterpriseId: string, name: string, plan: string, created: Date, sandbox = false): Tenant => ({ enterpriseId, name, plan, sandbox, created });
 
 export const RECORDS: Record<string, CustomerRecord> = {
-  "512": { stripe: "cus_R8lowtide512", revelatorRevenue: 320, clientRevenue: 2670, phone: "+61 2 5550 1188", address: "44 Kent St, 2000", country: "Australia", taxType: "AU ABN", taxId: "51 824 753 556", ugcRate: 15, youtubeRate: 10, misc: 0, newCustomer: true, comment: "Signed at the Sydney showcase", contacts: [{ name: "Harriet Vale", email: "harriet@lowtide-assembly.co", roles: ["Primary", "Billing"] }], tenants: [] },
-  "509": { stripe: "cus_R8verdant509", revelatorRevenue: 410, clientRevenue: 8200, phone: "+1 415 555 0172", address: "210 Valencia St, 94103", country: "United States of America", taxType: "US EIN", taxId: "84-2219073", ugcRate: 8, youtubeRate: 6.5, misc: 0, newCustomer: true, contacts: [{ name: "Omar Reyes", email: "omar@verdantstatic.io", phone: "+1 415 555 0173", roles: ["Primary"] }, { name: "Lena Brandt", email: "billing@verdantstatic.io", roles: ["Billing"] }], tenants: [] },
-  "506": { stripe: "cus_R8atlas506", revelatorRevenue: 260, clientRevenue: 9480, phone: "+31 20 555 0161", address: "Prinsengracht 412, 1016 JA", country: "Netherlands", taxType: "EU VAT", taxId: "NL862204517B01", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: true, comment: "Warner Benelux imprint", contacts: [{ name: "Sanne Kuipers", email: "sanne@atlasharbor.nl", roles: ["Primary", "Royalties"] }], tenants: [] },
-  "501": { stripe: "cus_R8paperkite501", revelatorRevenue: 184, clientRevenue: 6130, phone: "+44 20 7946 0518", address: "9 Hoxton Sq, N1 6NU", country: "United Kingdom", taxType: "GB VAT", taxId: "GB318274650", ugcRate: 5, youtubeRate: 4, misc: 0, newCustomer: true, comment: "Referred by a distribution partner", contacts: [{ name: "Felix Ashby", email: "felix@paperkite.fm", roles: ["Primary", "Billing"] }], tenants: [tenant("612034", "Paperkite Sound", "4 - Enterprise", day(2026, 10, 6))] },
-  "497": { stripe: "cus_R8ninefold497", revelatorRevenue: 350, clientRevenue: 12740, phone: "+49 30 5557 2210", country: "Germany", taxType: "EU VAT", taxId: "DE318842271", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: true, contacts: [{ name: "Jana Wolff", email: "jana.wolff@ninefold.example", roles: ["Primary"] }], tenants: [tenant("611207", "Ninefold Records", "4 - Enterprise", day(2026, 9, 29))] },
-  "490": { stripe: "cus_R8corvid490", revelatorRevenue: 2290, clientRevenue: 15270, phone: "+1 212 555 0148", address: "88 Bowery, 10013", country: "United States of America", taxType: "US EIN", taxId: "87-1140526", ugcRate: 18, youtubeRate: 12.5, misc: 250, newCustomer: false, contacts: [{ name: "Dana Whitlock", email: "dana@corvidlane.com", phone: "+1 212 555 0149", roles: ["Primary"] }, { name: "Rui Tanaka", email: "rui@corvidlane.com", roles: ["Technical"] }], tenants: [tenant("609881", "Corvid Lane", "3 - Growth", day(2026, 9, 8)), tenant("609882", "Corvid Lane Publishing", "3 - Growth", day(2026, 9, 15))] },
-  "483": { stripe: "cus_R8silver483", revelatorRevenue: 1410, clientRevenue: 7050, phone: "+44 161 555 0193", address: "3 Tib St, M4 1LA", country: "United Kingdom", taxType: "GB VAT", taxId: "GB284716093", ugcRate: 25, youtubeRate: 15, misc: 0, newCustomer: false, contacts: [{ name: "Ivo Marsh", email: "rights@silverbirchph.co.uk", roles: ["Primary", "Royalties"] }], tenants: [tenant("608540", "Silverbirch Publishing House", "3 - Growth", day(2026, 8, 25))] },
-  "476": { stripe: "cus_R8marlow476", revelatorRevenue: 530, clientRevenue: 3530, phone: "+1 615 555 0127", country: "United States of America", taxType: "US EIN", taxId: "82-6630194", ugcRate: 22.5, youtubeRate: 18, misc: 0, newCustomer: false, comment: "Left after the September renewal", contacts: [{ name: "Grady Holt", email: "grady@marlowtide.example", roles: ["Primary"] }], tenants: [tenant("607113", "Marlow Tide Entertainment", "2 - Starter", day(2026, 7, 12))] },
-  "469": { stripe: "cus_R8opaline469", revelatorRevenue: 4870, clientRevenue: 48700, phone: "+33 1 55 50 21 40", address: "17 rue Oberkampf, 75011", country: "France", taxType: "EU VAT", taxId: "FR41829304776", ugcRate: 12, youtubeRate: 7.5, misc: 500, newCustomer: false, contacts: [{ name: "Clémence Roy", email: "clemence@opaline.audio", roles: ["Primary", "Billing"] }, { name: "Théo Martin", email: "dev@opaline.audio", roles: ["Technical"] }], tenants: [tenant("606402", "Opaline", "4 - Enterprise", day(2026, 7, 2)), tenant("606403", "Opaline Classics", "3 - Growth", day(2026, 7, 20)), tenant("606404", "Opaline Sandbox", "4 - Enterprise", day(2026, 8, 3), true)] },
-  "462": { stripe: "cus_R8bracken462", revelatorRevenue: 690, clientRevenue: 3450, phone: "+1 503 555 0164", country: "United States of America", taxType: "US EIN", taxId: "83-4471209", ugcRate: 25, youtubeRate: 17, misc: 0, newCustomer: false, comment: "Contract ended for breach of terms", contacts: [{ name: "Walt Ferris", email: "walt@brackenridge.example", roles: ["Primary"] }], tenants: [tenant("605118", "Brackenridge Audio", "2 - Starter", day(2026, 5, 22))] },
-  "455": { stripe: "cus_R8eastgate455", revelatorRevenue: 1150, clientRevenue: 61480, phone: "+49 40 5550 7712", address: "Große Elbstraße 61, 22767", country: "Germany", taxType: "EU VAT", taxId: "DE297731846", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: false, contacts: [{ name: "Katrin Lüders", email: "finance@eastgatemusic.de", roles: ["Primary", "Billing", "Royalties"] }], tenants: [tenant("604377", "Eastgate Music", "4 - Enterprise", day(2026, 5, 4)), tenant("604378", "Eastgate Classics", "3 - Growth", day(2026, 5, 18)), tenant("604379", "Eastgate Kids", "3 - Growth", day(2026, 6, 9)), tenant("604380", "Eastgate Test", "4 - Enterprise", day(2026, 6, 10), true)] },
-  "448": { stripe: "cus_R8thistle448", revelatorRevenue: 960, clientRevenue: 5330, phone: "+353 1 555 0136", country: "Ireland", taxType: "EU VAT", taxId: "IE3829104KH", ugcRate: 20, youtubeRate: 15.5, misc: 0, newCustomer: false, contacts: [{ name: "Aoife Brennan", email: "label@thistleandthorn.ie", roles: ["Primary"] }], tenants: [tenant("603011", "Thistle & Thorn", "3 - Growth", day(2026, 3, 19))] },
-  "441": { stripe: "cus_R8grain441", revelatorRevenue: 85, clientRevenue: 425, phone: "+1 312 555 0181", country: "United States of America", taxType: "US EIN", ugcRate: 25, youtubeRate: 22, misc: 0, newCustomer: true, contacts: [{ name: "Mo Abernathy", email: "mo@grainfield.example", roles: ["Primary"] }], tenants: [tenant("602290", "Grainfield Collective", "2 - Starter", day(2026, 2, 27))] },
-  "434": { stripe: "cus_R8kestrel434", revelatorRevenue: 745, clientRevenue: 4970, phone: "+1 718 555 0119", country: "United States of America", taxType: "US EIN", taxId: "81-9930412", ugcRate: 17.5, youtubeRate: 12, misc: 0, newCustomer: false, comment: "Moved to another distributor", contacts: [{ name: "Priya Lal", email: "admin@kestrelpoint.com", roles: ["Primary", "Billing"] }], tenants: [tenant("600874", "Kestrel Point Recordings", "3 - Growth", day(2025, 12, 10))] },
-  "427": { stripe: "cus_R8bluefen427", revelatorRevenue: 9340, clientRevenue: 116750, phone: "+46 8 555 102 40", address: "Hornsgatan 54, 118 21", country: "Sweden", taxType: "EU VAT", taxId: "SE559183420101", ugcRate: 10, youtubeRate: 6, misc: 1200, newCustomer: false, contacts: [{ name: "Elin Sjöberg", email: "support@bluefen.dist", roles: ["Primary"] }, { name: "Nils Ek", email: "nils@bluefen.dist", roles: ["Billing"] }, { name: "Saga Lind", email: "api@bluefen.dist", roles: ["Technical"] }], tenants: [tenant("598215", "Bluefen Distribution", "4 - Enterprise", day(2025, 10, 14)), tenant("598216", "Bluefen Nordic", "4 - Enterprise", day(2025, 11, 2)), tenant("598217", "Bluefen Baltic", "3 - Growth", day(2025, 11, 30)), tenant("598218", "Bluefen Jazz", "3 - Growth", day(2026, 1, 12)), tenant("598219", "Bluefen Archive", "3 - Growth", day(2026, 2, 3)), tenant("598220", "Bluefen API Sandbox", "4 - Enterprise", day(2026, 2, 4), true)] },
-  "420": { stripe: "cus_R8harrow420", revelatorRevenue: 880, clientRevenue: 38920, phone: "+44 20 7946 0402", country: "United Kingdom", taxType: "GB VAT", taxId: "GB271938460", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: false, contacts: [{ name: "Tess Morley", email: "tess.morley@harrowstreet.example", roles: ["Primary", "Royalties"] }], tenants: [tenant("595660", "Harrow Street Sound", "4 - Enterprise", day(2025, 7, 9)), tenant("595661", "Harrow Street Live", "3 - Growth", day(2025, 9, 1))] },
-  "413": { stripe: "cus_R8mistral413", revelatorRevenue: 560, clientRevenue: 2800, phone: "+33 4 55 50 77 12", country: "France", taxType: "EU VAT", taxId: "FR22811930475", ugcRate: 22, youtubeRate: 25, misc: 0, newCustomer: false, comment: "Unpaid invoices since June", contacts: [{ name: "Luc Garnier", email: "hello@mistralarcade.fr", roles: ["Primary"] }], tenants: [tenant("593007", "Mistral Arcade", "2 - Starter", day(2025, 3, 25))] },
-  "406": { stripe: "cus_R8cinder406", revelatorRevenue: 1780, clientRevenue: 14830, phone: "+1 604 555 0158", address: "1200 Granville St, V6Z 1M6", country: "Canada", taxType: "CA BN", taxId: "781946320RT0001", ugcRate: 15, youtubeRate: 10, misc: 0, newCustomer: false, contacts: [{ name: "Maeve Duncan", email: "ops@cinderwell.com", roles: ["Primary", "Billing"] }], tenants: [tenant("590113", "Cinderwell Music", "3 - Growth", day(2024, 12, 2)), tenant("590114", "Cinderwell Films", "3 - Growth", day(2025, 2, 17))] },
-  "232": { stripe: "cus_P2demo232", revelatorRevenue: 120, clientRevenue: 1600, phone: "+1 212 555 0100", country: "United States of America", taxType: "US EIN", ugcRate: 7.5, youtubeRate: 12, misc: 0, newCustomer: false, comment: "Holds every demo and sandbox tenant", contacts: [{ name: "Ezra Quinn", email: "demo@revelator.example", roles: ["Primary"] }], tenants: [] },
-  "219": { stripe: "cus_P2foxglove219", revelatorRevenue: 1215, clientRevenue: 6075, phone: "+1 512 555 0133", country: "United States of America", taxType: "US EIN", taxId: "80-5521847", ugcRate: 25, youtubeRate: 17.5, misc: 0, newCustomer: false, contacts: [{ name: "June Calloway", email: "june@foxgloveridge.example", roles: ["Primary"] }], tenants: [tenant("571902", "Foxglove Ridge Records", "3 - Growth", day(2023, 9, 11))] },
+  "512": { stripe: "cus_R8lowtide512", revelatorRevenue: 320, clientRevenue: 2670, phone: "+61 2 5550 1188", address: "44 Kent St, 2000", country: "Australia", taxType: "AU ABN", taxId: "51 824 753 556", ugcRate: 15, youtubeRate: 10, misc: 0, newCustomer: true, comment: "Signed at the Sydney showcase", contacts: [{ name: "Harriet Vale", email: "harriet@lowtide-assembly.co", roles: ["Primary", "Billing"] }] },
+  "509": { stripe: "cus_R8verdant509", revelatorRevenue: 410, clientRevenue: 8200, phone: "+1 415 555 0172", address: "210 Valencia St, 94103", country: "United States of America", taxType: "US EIN", taxId: "84-2219073", ugcRate: 8, youtubeRate: 6.5, misc: 0, newCustomer: true, contacts: [{ name: "Omar Reyes", email: "omar@verdantstatic.io", phone: "+1 415 555 0173", roles: ["Primary"] }, { name: "Lena Brandt", email: "billing@verdantstatic.io", roles: ["Billing"] }] },
+  "506": { stripe: "cus_R8atlas506", revelatorRevenue: 260, clientRevenue: 9480, phone: "+31 20 555 0161", address: "Prinsengracht 412, 1016 JA", country: "Netherlands", taxType: "EU VAT", taxId: "NL862204517B01", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: true, comment: "Warner Benelux imprint", contacts: [{ name: "Sanne Kuipers", email: "sanne@atlasharbor.nl", roles: ["Primary", "Royalties"] }] },
+  "501": { stripe: "cus_R8paperkite501", revelatorRevenue: 184, clientRevenue: 6130, phone: "+44 20 7946 0518", address: "9 Hoxton Sq, N1 6NU", country: "United Kingdom", taxType: "GB VAT", taxId: "GB318274650", ugcRate: 5, youtubeRate: 4, misc: 0, newCustomer: true, comment: "Referred by a distribution partner", contacts: [{ name: "Felix Ashby", email: "felix@paperkite.fm", roles: ["Primary", "Billing"] }] },
+  "497": { stripe: "cus_R8ninefold497", revelatorRevenue: 350, clientRevenue: 12740, phone: "+49 30 5557 2210", country: "Germany", taxType: "EU VAT", taxId: "DE318842271", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: true, contacts: [{ name: "Jana Wolff", email: "jana.wolff@ninefold.example", roles: ["Primary"] }] },
+  "490": { stripe: "cus_R8corvid490", revelatorRevenue: 2290, clientRevenue: 15270, phone: "+1 212 555 0148", address: "88 Bowery, 10013", country: "United States of America", taxType: "US EIN", taxId: "87-1140526", ugcRate: 18, youtubeRate: 12.5, misc: 250, newCustomer: false, contacts: [{ name: "Dana Whitlock", email: "dana@corvidlane.com", phone: "+1 212 555 0149", roles: ["Primary"] }, { name: "Rui Tanaka", email: "rui@corvidlane.com", roles: ["Technical"] }] },
+  "483": { stripe: "cus_R8silver483", revelatorRevenue: 1410, clientRevenue: 7050, phone: "+44 161 555 0193", address: "3 Tib St, M4 1LA", country: "United Kingdom", taxType: "GB VAT", taxId: "GB284716093", ugcRate: 25, youtubeRate: 15, misc: 0, newCustomer: false, contacts: [{ name: "Ivo Marsh", email: "rights@silverbirchph.co.uk", roles: ["Primary", "Royalties"] }] },
+  "476": { stripe: "cus_R8marlow476", revelatorRevenue: 530, clientRevenue: 3530, phone: "+1 615 555 0127", country: "United States of America", taxType: "US EIN", taxId: "82-6630194", ugcRate: 22.5, youtubeRate: 18, misc: 0, newCustomer: false, comment: "Left after the September renewal", contacts: [{ name: "Grady Holt", email: "grady@marlowtide.example", roles: ["Primary"] }] },
+  "469": { stripe: "cus_R8opaline469", revelatorRevenue: 4870, clientRevenue: 48700, phone: "+33 1 55 50 21 40", address: "17 rue Oberkampf, 75011", country: "France", taxType: "EU VAT", taxId: "FR41829304776", ugcRate: 12, youtubeRate: 7.5, misc: 500, newCustomer: false, contacts: [{ name: "Clémence Roy", email: "clemence@opaline.audio", roles: ["Primary", "Billing"] }, { name: "Théo Martin", email: "dev@opaline.audio", roles: ["Technical"] }] },
+  "462": { stripe: "cus_R8bracken462", revelatorRevenue: 690, clientRevenue: 3450, phone: "+1 503 555 0164", country: "United States of America", taxType: "US EIN", taxId: "83-4471209", ugcRate: 25, youtubeRate: 17, misc: 0, newCustomer: false, comment: "Contract ended for breach of terms", contacts: [{ name: "Walt Ferris", email: "walt@brackenridge.example", roles: ["Primary"] }] },
+  "455": { stripe: "cus_R8eastgate455", revelatorRevenue: 1150, clientRevenue: 61480, phone: "+49 40 5550 7712", address: "Große Elbstraße 61, 22767", country: "Germany", taxType: "EU VAT", taxId: "DE297731846", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: false, contacts: [{ name: "Katrin Lüders", email: "finance@eastgatemusic.de", roles: ["Primary", "Billing", "Royalties"] }] },
+  "448": { stripe: "cus_R8thistle448", revelatorRevenue: 960, clientRevenue: 5330, phone: "+353 1 555 0136", country: "Ireland", taxType: "EU VAT", taxId: "IE3829104KH", ugcRate: 20, youtubeRate: 15.5, misc: 0, newCustomer: false, contacts: [{ name: "Aoife Brennan", email: "label@thistleandthorn.ie", roles: ["Primary"] }] },
+  "441": { stripe: "cus_R8grain441", revelatorRevenue: 85, clientRevenue: 425, phone: "+1 312 555 0181", country: "United States of America", taxType: "US EIN", ugcRate: 25, youtubeRate: 22, misc: 0, newCustomer: true, contacts: [{ name: "Mo Abernathy", email: "mo@grainfield.example", roles: ["Primary"] }] },
+  "434": { stripe: "cus_R8kestrel434", revelatorRevenue: 745, clientRevenue: 4970, phone: "+1 718 555 0119", country: "United States of America", taxType: "US EIN", taxId: "81-9930412", ugcRate: 17.5, youtubeRate: 12, misc: 0, newCustomer: false, comment: "Moved to another distributor", contacts: [{ name: "Priya Lal", email: "admin@kestrelpoint.com", roles: ["Primary", "Billing"] }] },
+  "427": { stripe: "cus_R8bluefen427", revelatorRevenue: 9340, clientRevenue: 116750, phone: "+46 8 555 102 40", address: "Hornsgatan 54, 118 21", country: "Sweden", taxType: "EU VAT", taxId: "SE559183420101", ugcRate: 10, youtubeRate: 6, misc: 1200, newCustomer: false, contacts: [{ name: "Elin Sjöberg", email: "support@bluefen.dist", roles: ["Primary"] }, { name: "Nils Ek", email: "nils@bluefen.dist", roles: ["Billing"] }, { name: "Saga Lind", email: "api@bluefen.dist", roles: ["Technical"] }] },
+  "420": { stripe: "cus_R8harrow420", revelatorRevenue: 880, clientRevenue: 38920, phone: "+44 20 7946 0402", country: "United Kingdom", taxType: "GB VAT", taxId: "GB271938460", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: false, contacts: [{ name: "Tess Morley", email: "tess.morley@harrowstreet.example", roles: ["Primary", "Royalties"] }] },
+  "413": { stripe: "cus_R8mistral413", revelatorRevenue: 560, clientRevenue: 2800, phone: "+33 4 55 50 77 12", country: "France", taxType: "EU VAT", taxId: "FR22811930475", ugcRate: 22, youtubeRate: 25, misc: 0, newCustomer: false, comment: "Unpaid invoices since June", contacts: [{ name: "Luc Garnier", email: "hello@mistralarcade.fr", roles: ["Primary"] }] },
+  "406": { stripe: "cus_R8cinder406", revelatorRevenue: 1780, clientRevenue: 14830, phone: "+1 604 555 0158", address: "1200 Granville St, V6Z 1M6", country: "Canada", taxType: "CA BN", taxId: "781946320RT0001", ugcRate: 15, youtubeRate: 10, misc: 0, newCustomer: false, contacts: [{ name: "Maeve Duncan", email: "ops@cinderwell.com", roles: ["Primary", "Billing"] }] },
+  "232": { stripe: "cus_P2demo232", revelatorRevenue: 120, clientRevenue: 1600, phone: "+1 212 555 0100", country: "United States of America", taxType: "US EIN", ugcRate: 7.5, youtubeRate: 12, misc: 0, newCustomer: false, comment: "Holds every demo and sandbox tenant", contacts: [{ name: "Ezra Quinn", email: "demo@revelator.example", roles: ["Primary"] }] },
+  "219": { stripe: "cus_P2foxglove219", revelatorRevenue: 1215, clientRevenue: 6075, phone: "+1 512 555 0133", country: "United States of America", taxType: "US EIN", taxId: "80-5521847", ugcRate: 25, youtubeRate: 17.5, misc: 0, newCustomer: false, contacts: [{ name: "June Calloway", email: "june@foxgloveridge.example", roles: ["Primary"] }] },
 };
 
 /** The last twelve complete months, oldest first — October 2025 to September 2026. */
@@ -140,3 +128,267 @@ export const monthlyOf = (lastMonth: number, ended?: Date) =>
   MONTHS.map((month, at) => (ended && month >= ended ? 0 : Math.round(lastMonth * SHAPE[at]!)));
 
 export const customerById = (id: string) => CUSTOMERS.find((one) => one.id === id) ?? CUSTOMERS[0]!;
+
+/** Where a tenant's releases go: to the stores, or nowhere — a demo, or an API partner's test bench. */
+export type Environment = "Production" | "Demo" | "API sandbox";
+/** A parent holds client accounts of its own, its children; a standalone holds none. */
+export type TenantType = "Parent" | "Standalone";
+
+/** A child enterprise — a client account a parent tenant holds. */
+export interface ChildEnterprise {
+  enterpriseId: string;
+  name: string;
+  payeeId: string;
+  created: Date;
+}
+
+/** Someone who can sign in to the tenant. */
+export interface TenantUser {
+  userId: string;
+  name: string;
+  email: string;
+  /** The account the tenant was signed up with — the one its handover email goes to. */
+  owner: boolean;
+}
+
+/** A store a tenant can deliver to: switched on for it, and shown to its users. */
+export interface TenantStore {
+  name: string;
+  active: boolean;
+  displayed: boolean;
+}
+
+/** A tenant — an enterprise signed up under a customer, the workspace its catalogue lives in. */
+export interface Tenant {
+  enterpriseId: string;
+  name: string;
+  /** The customer whose contract the tenant reports and pays against — none where it was never linked. */
+  customerId?: string;
+  type: TenantType;
+  plan: string;
+  environment: Environment;
+  payeeId: string;
+  /** The API partner an API sandbox is connected to. */
+  partnerId?: string;
+  onTrial: boolean;
+  lockedOut: boolean;
+  paymentBlocked: boolean;
+  fusionAuth: boolean;
+  created: Date;
+  currency: string;
+  /** The smallest payout a payee of the tenant is paid, in its currency. */
+  minimumPayment: number;
+  /** The white label record the tenant loads under — none, and the tenant does not load. */
+  whiteLabel?: { id: string; domain: string; title: string; allowSignup: boolean };
+  /** How many of the stores are switched on and shown. */
+  storesLive: number;
+  /** Whether the login was tried as the owner, and the owner told the tenant is ready. */
+  tested: boolean;
+  emailed: boolean;
+  /** Who besides the owner signs in. */
+  team: readonly Omit<TenantUser, "owner" | "userId">[];
+  children: readonly ChildEnterprise[];
+}
+
+/** The stores a production tenant delivers to, and the two a sandbox tries a delivery on. */
+const PRODUCTION_STORES = ["Spotify", "Apple Music", "Amazon Music", "YouTube Music", "TikTok", "Deezer", "TIDAL"];
+const SANDBOX_STORES = ["FTP Sandbox", "AWS Sandbox"];
+
+type Drafted = Pick<Tenant, "enterpriseId" | "name" | "plan" | "created"> & Partial<Tenant>;
+
+/** A tenant as written below: what sets it apart, the rest a live, finished standalone. */
+const t = (drafted: Drafted): Tenant => ({
+  type: "Standalone",
+  environment: "Production",
+  payeeId: String(Number(drafted.enterpriseId) + 311_000),
+  onTrial: false,
+  lockedOut: false,
+  paymentBlocked: false,
+  fusionAuth: false,
+  currency: "USD",
+  minimumPayment: 50,
+  whiteLabel: {
+    id: String(Number(drafted.enterpriseId) % 900 + 100),
+    domain: `${drafted.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.revelator.example`,
+    title: drafted.name,
+    allowSignup: false,
+  },
+  storesLive: drafted.environment && drafted.environment !== "Production" ? 2 : 7,
+  tested: true,
+  emailed: true,
+  team: [],
+  children: [],
+  ...drafted,
+});
+
+const child = (enterpriseId: string, name: string, created: Date): ChildEnterprise => ({
+  enterpriseId,
+  name,
+  payeeId: String(Number(enterpriseId) + 311_000),
+  created,
+});
+
+/** The tenants, newest first — each under its customer, a few still being set up, one never linked. */
+export const TENANTS: readonly Tenant[] = [
+  t({ enterpriseId: "612240", name: "Saltmarsh Tapes", plan: "2 - Starter", created: day(2026, 10, 14), onTrial: true, whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "612034", customerId: "501", name: "Paperkite Sound", plan: "4 - Enterprise", created: day(2026, 10, 6), storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "611980", customerId: "232", name: "Halcyon Pilot", plan: "4 - Enterprise", environment: "Demo", created: day(2026, 10, 1), tested: false, emailed: false }),
+  t({ enterpriseId: "611207", customerId: "497", name: "Ninefold Records", plan: "4 - Enterprise", created: day(2026, 9, 29), currency: "EUR", whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "611150", customerId: "232", name: "Riverstone API Trial", plan: "4 - Enterprise", environment: "API sandbox", created: day(2026, 9, 26), storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "609882", customerId: "490", name: "Corvid Lane Publishing", plan: "3 - Growth", created: day(2026, 9, 15), emailed: false }),
+  t({ enterpriseId: "609881", customerId: "490", name: "Corvid Lane", plan: "3 - Growth", created: day(2026, 9, 8), fusionAuth: true, team: [{ name: "Rui Tanaka", email: "rui@corvidlane.com" }] }),
+  t({ enterpriseId: "608540", customerId: "483", name: "Silverbirch Publishing House", plan: "3 - Growth", created: day(2026, 8, 25), currency: "GBP" }),
+  t({ enterpriseId: "606404", customerId: "469", name: "Opaline Sandbox", plan: "4 - Enterprise", environment: "API sandbox", partnerId: "231", created: day(2026, 8, 3), currency: "EUR" }),
+  t({ enterpriseId: "606403", customerId: "469", name: "Opaline Classics", plan: "3 - Growth", created: day(2026, 7, 20), currency: "EUR" }),
+  t({ enterpriseId: "607113", customerId: "476", name: "Marlow Tide Entertainment", plan: "2 - Starter", created: day(2026, 7, 12), paymentBlocked: true }),
+  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "4 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
+  t({ enterpriseId: "604380", customerId: "455", name: "Eastgate Test", plan: "4 - Enterprise", environment: "Demo", created: day(2026, 6, 10), currency: "EUR" }),
+  t({ enterpriseId: "604379", customerId: "455", name: "Eastgate Kids", plan: "3 - Growth", created: day(2026, 6, 9), currency: "EUR" }),
+  t({ enterpriseId: "605118", customerId: "462", name: "Brackenridge Audio", plan: "2 - Starter", created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true }),
+  t({ enterpriseId: "604378", customerId: "455", name: "Eastgate Classics", plan: "3 - Growth", created: day(2026, 5, 18), currency: "EUR" }),
+  t({ enterpriseId: "604377", customerId: "455", name: "Eastgate Music", plan: "4 - Enterprise", type: "Parent", created: day(2026, 5, 4), currency: "EUR", fusionAuth: true, children: [child("604601", "Nordhafen Beats", day(2026, 5, 28)), child("604602", "Elbe Strings", day(2026, 6, 20)), child("604603", "Kiezklang", day(2026, 8, 2))] }),
+  t({ enterpriseId: "603011", customerId: "448", name: "Thistle & Thorn", plan: "3 - Growth", created: day(2026, 3, 19), currency: "EUR" }),
+  t({ enterpriseId: "602290", customerId: "441", name: "Grainfield Collective", plan: "2 - Starter", created: day(2026, 2, 27), onTrial: true, storesLive: 3, emailed: false }),
+  t({ enterpriseId: "598220", customerId: "427", name: "Bluefen API Sandbox", plan: "4 - Enterprise", environment: "API sandbox", partnerId: "198", created: day(2026, 2, 4), currency: "SEK" }),
+  t({ enterpriseId: "598219", customerId: "427", name: "Bluefen Archive", plan: "3 - Growth", created: day(2026, 2, 3), currency: "SEK" }),
+  t({ enterpriseId: "598218", customerId: "427", name: "Bluefen Jazz", plan: "3 - Growth", created: day(2026, 1, 12), currency: "SEK" }),
+  t({ enterpriseId: "598217", customerId: "427", name: "Bluefen Baltic", plan: "3 - Growth", created: day(2025, 11, 30), currency: "EUR" }),
+  t({ enterpriseId: "598216", customerId: "427", name: "Bluefen Nordic", plan: "4 - Enterprise", created: day(2025, 11, 2), currency: "SEK" }),
+  t({ enterpriseId: "598215", customerId: "427", name: "Bluefen Distribution", plan: "4 - Enterprise", type: "Parent", created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
+  t({ enterpriseId: "600874", customerId: "434", name: "Kestrel Point Recordings", plan: "3 - Growth", created: day(2025, 12, 10), lockedOut: true }),
+  t({ enterpriseId: "595661", customerId: "420", name: "Harrow Street Live", plan: "3 - Growth", created: day(2025, 9, 1), currency: "GBP" }),
+  t({ enterpriseId: "595660", customerId: "420", name: "Harrow Street Sound", plan: "4 - Enterprise", created: day(2025, 7, 9), currency: "GBP" }),
+  t({ enterpriseId: "593007", customerId: "413", name: "Mistral Arcade", plan: "2 - Starter", created: day(2025, 3, 25), currency: "EUR", lockedOut: true, paymentBlocked: true }),
+  t({ enterpriseId: "590114", customerId: "406", name: "Cinderwell Films", plan: "3 - Growth", created: day(2025, 2, 17), currency: "CAD" }),
+  t({ enterpriseId: "590113", customerId: "406", name: "Cinderwell Music", plan: "3 - Growth", created: day(2024, 12, 2), currency: "CAD" }),
+  t({ enterpriseId: "571902", customerId: "219", name: "Foxglove Ridge Records", plan: "3 - Growth", created: day(2023, 9, 11) }),
+];
+
+export const tenantById = (id: string) => TENANTS.find((one) => one.enterpriseId === id) ?? TENANTS[0]!;
+
+/** The tenants signed up under one customer. */
+export const tenantsOf = (customerId: string) => TENANTS.filter((one) => one.customerId === customerId);
+
+/** Demo and API sandboxes deliver nowhere: everything they release stays out of the stores. */
+export const isSandbox = (one: Tenant) => one.environment !== "Production";
+
+/** The customer a tenant reports against, where it was linked to one. */
+export const customerOf = (one: Tenant) => (one.customerId ? customerById(one.customerId) : undefined);
+
+/**
+ * Who signs in to the tenant: its owner first — the customer's primary contact, the one the
+ * handover goes to — then its team. A tenant no customer was linked to has an owner of its own.
+ */
+export function usersOf(one: Tenant): readonly TenantUser[] {
+  const contact = one.customerId ? RECORDS[one.customerId]!.contacts.find((c) => c.roles.includes("Primary")) : undefined;
+  const owner = contact ?? { name: "Wren Okafor", email: "wren@saltmarshtapes.example" };
+  return [{ name: owner.name, email: owner.email }, ...one.team].map((user, at) => ({
+    ...user,
+    userId: `${one.enterpriseId.slice(0, 4)}c${at}e7-${one.enterpriseId.slice(2)}-4a1f`,
+    owner: at === 0,
+  }));
+}
+
+/** The stores the tenant can deliver to — the real ones, or a sandbox's two — the first few switched on. */
+export const storesOf = (one: Tenant): readonly TenantStore[] =>
+  (isSandbox(one) ? SANDBOX_STORES : PRODUCTION_STORES).map((name, at) => ({
+    name,
+    active: at < one.storesLive,
+    displayed: at < one.storesLive,
+  }));
+
+/** A payee of the tenant: its own, and one for each client account a parent holds. */
+export interface TenantPayee {
+  payeeId: string;
+  name: string;
+  enterpriseId: string;
+}
+
+export const payeesOf = (one: Tenant): readonly TenantPayee[] => [
+  { payeeId: one.payeeId, name: one.name, enterpriseId: one.enterpriseId },
+  ...one.children.map((each) => ({ payeeId: each.payeeId, name: each.name, enterpriseId: each.enterpriseId })),
+];
+
+/** One step of getting a tenant live — done or still owed, and the command that does it. */
+export interface SetupStep {
+  key: "customer" | "white-label" | "stores" | "partner" | "login" | "handover";
+  title: string;
+  /** What the step comes to on this tenant — what is linked, or why it is owed. */
+  detail: string;
+  done: boolean;
+  /** Owed only on some tenants, and never what keeps one from loading. */
+  optional?: boolean;
+}
+
+/**
+ * What stands between a signed-up tenant and its handover, in the order it is done. Signing up is
+ * only the first step: the tenant loads once it has a white label, delivers once its stores are on,
+ * and is the customer's once its owner has been told. An API sandbox owes its partner too.
+ */
+export function setupOf(one: Tenant): readonly SetupStep[] {
+  const customer = customerOf(one);
+  const linked = customer?.subscriptions[0];
+  const sandbox = isSandbox(one);
+  const steps: (SetupStep | null)[] = [
+    {
+      key: "customer",
+      title: "Customer and subscription",
+      detail: customer
+        ? `${customer.name} · ${linked ? linked.id : "no subscription yet"}`
+        : "No customer linked: royalty runs and reports need the tenant tied to its contract.",
+      done: Boolean(linked),
+    },
+    {
+      key: "white-label",
+      title: "White label",
+      detail: one.whiteLabel
+        ? `White label ${one.whiteLabel.id} · ${one.whiteLabel.domain}`
+        : "Every tenant needs one, white label client or not: without it the tenant does not load.",
+      done: Boolean(one.whiteLabel),
+    },
+    {
+      key: "stores",
+      title: "Stores",
+      detail: sandbox
+        ? one.storesLive
+          ? "The two sandbox stores are on, so a test delivery can be tried. Nothing reaches a real store."
+          : "Turn on the two sandbox stores to let the owner try a test delivery."
+        : one.storesLive
+          ? `${one.storesLive} of ${PRODUCTION_STORES.length} stores on and shown`
+          : "Every store starts off, so the tenant cannot deliver yet.",
+      done: one.storesLive > 0,
+      optional: sandbox,
+    },
+    one.environment === "API sandbox"
+      ? {
+          key: "partner",
+          title: "API partner",
+          detail: one.partnerId
+            ? `Partner ${one.partnerId}, its API key issued`
+            : "Connect an API partner to turn the tenant into an API sandbox; its key is issued with it.",
+          done: Boolean(one.partnerId),
+        }
+      : null,
+    {
+      key: "login",
+      title: "Test the login",
+      detail: one.whiteLabel
+        ? `Open ${one.whiteLabel.domain} as the owner and check the tenant loads.`
+        : "Can be tried once the tenant has a white label.",
+      done: one.tested,
+    },
+    {
+      key: "handover",
+      title: "Email the owner",
+      detail: "Nothing is sent on sign-up: tell the owner to reset their password from the tenant's domain.",
+      done: one.emailed,
+    },
+  ];
+  return steps.filter((step): step is SetupStep => step !== null);
+}
+
+/** How far the tenant's setup has come — the steps done, out of its steps. */
+export function progressOf(one: Tenant) {
+  const steps = setupOf(one);
+  return { done: steps.filter((step) => step.done).length, of: steps.length };
+}
