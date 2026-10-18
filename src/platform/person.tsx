@@ -154,11 +154,10 @@ export const personPlace = ({ id, facet }: { id: string; facet: PersonFacet }): 
     addressOf: (one) => personHref(person.id, one),
   };
   return {
-    at: "Platform admin",
+    at: "People",
     page: person.name,
     record: nav,
     trail: [
-      { label: "Platform admin", opens: platformHref("organizations") },
       { label: "People", opens: platformHref("people") },
       { label: person.name },
     ],

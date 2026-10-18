@@ -247,11 +247,10 @@ export const organizationPlace = ({ id, facet }: { id: string; facet: Organizati
     addressOf: (one) => organizationHref(org.id, one),
   };
   return {
-    at: "Platform admin",
+    at: "Organizations",
     page: org.name,
     record: nav,
     trail: [
-      { label: "Platform admin", opens: platformHref("organizations") },
       { label: "Organizations", opens: platformHref("organizations") },
       { label: org.name },
     ],

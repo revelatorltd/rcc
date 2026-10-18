@@ -47,7 +47,7 @@ import {
 } from "./route";
 
 /**
- * The four sets of Platform admin, each declared ONCE — the whole set on its page, or one
+ * The four sets an enterprise's access is run from, each declared ONCE — the whole set on its page, or one
  * organization's in its record, where the organization column and filter fall away.
  */
 

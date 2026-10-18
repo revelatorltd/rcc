@@ -117,11 +117,13 @@ Decided by RCC rather than asked: the prototype's form held every field of the p
 (Intercom, Google Analytics, page texts, BCC emails); RCC asks what a tenant's handover needs — its
 domain, how it signs people in, its title and branding, and where it sends people.
 
-## Platform admin
+## Organizations, Tenant groups, Access groups, People
 
 Reference: `Platform Ops.dc.html` — who can see and do what, on which tenants, and why, for one
-enterprise: its organizations, tenant groups, access groups and people. A second destination on the
-rail; its fixtures (`src/platform/mock.ts`) are an invented enterprise of their own.
+enterprise. As in the prototype, each is a destination on the rail, around Accounts: Organizations,
+Accounts, Tenant groups, Access groups, People — one page each, Accounts alone with pages of its own.
+The fixtures (`src/platform/mock.ts`) take Warner Music Group's structure: its organizations, tenant
+groups and access groups are named as the prototype names them; its people and tenants are invented.
 
 | # | Asked for | Prototype | Here, until decided |
 | - | --------- | --------- | ------------------- |

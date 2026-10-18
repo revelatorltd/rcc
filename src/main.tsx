@@ -45,7 +45,7 @@ const PAGE_NAMES: Record<AccountsPage, string> = {
   "white-labels": "White labels",
 };
 
-/** Each Platform admin page, by the name its nav entry gives it. */
+/** Each of the enterprise's access destinations, by the name its rail entry gives it. */
 const PLATFORM_NAMES: Record<PlatformPage, string> = {
   organizations: "Organizations",
   "tenant-groups": "Tenant groups",
@@ -53,7 +53,7 @@ const PLATFORM_NAMES: Record<PlatformPage, string> = {
   people: "People",
 };
 
-/** Where Platform admin puts the reader. */
+/** Where the access destinations put the reader — each its own place on the rail. */
 function platformPlaceOf(route: PlatformRoute): ShellPlace {
   switch (route.name) {
     case "organization":
@@ -65,13 +65,13 @@ function platformPlaceOf(route: PlatformRoute): ShellPlace {
     case "person":
       return personPlace(route);
     case "index":
-      return { at: "Platform admin", page: PLATFORM_NAMES[route.page] };
+      return { at: PLATFORM_NAMES[route.page] };
     default:
-      return { at: "Platform admin" };
+      return { at: "Organizations" };
   }
 }
 
-/** A Platform admin page, or the form covering the shell. */
+/** An access destination's page, or the form covering the shell. */
 function platformPageOf(route: PlatformRoute): { cover?: ReactNode; page?: ReactNode } {
   switch (route.name) {
     case "index":

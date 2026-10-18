@@ -162,7 +162,7 @@ export function NewOrganization() {
               <WizardRowTip>It gives nobody access until an access group uses it.</WizardRowTip>
             </WizardRowTips>
           </WizardRow>
-          <WizardRow title="From Northwind">
+          <WizardRow title={`From ${model.name}`}>
             <WizardRowBody>
               <Field as="choice" name="templates" label={`Copy access group templates and naming from ${model.name}`} options={YES_NO} />
               <Field as="choice" name="dashboard" label={`Copy the default dashboard from ${model.name}`} options={YES_NO} />

@@ -9,7 +9,9 @@ reveals what the system lacks, the system gains it, and the page adopts it. Read
 
 A page is declared: an index is a `CollectionPage`, a record a `DetailPage`. What no declared form
 covers is logged in `gaps.md` and asked — never drawn with HTML, classes or values of the page's
-own. Fixtures are invented: hand-written names, never copied from the prototype or the product.
+own. Fixtures are invented: hand-written names, never copied from the prototype or the product —
+except the enterprise's access (`src/platform/`), whose organizations, tenant groups and access groups
+take Warner Music Group's names as the prototype gives them, by the product owner's choice.
 
 ## The system
 

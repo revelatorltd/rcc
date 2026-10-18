@@ -176,11 +176,10 @@ export const tenantGroupPlace = ({ id, facet }: { id: string; facet: TenantGroup
     addressOf: (one) => tenantGroupHref(group.id, one),
   };
   return {
-    at: "Platform admin",
+    at: "Tenant groups",
     page: group.name,
     record: nav,
     trail: [
-      { label: "Platform admin", opens: platformHref("organizations") },
       { label: "Tenant groups", opens: platformHref("tenant-groups") },
       { label: group.name },
     ],

@@ -13,10 +13,14 @@ import { accountsHref } from "./route";
 const PRODUCT: ShellProduct = {
   // The workspace is Revelator's own, so it wears the organization's mark the system ships.
   workspace: { name: "RCC", mark: ORGANIZATIONS.revelator.art },
+  // THE RAIL, in the order an enterprise's access is read: its organizations, the accounts they hold,
+  // the tenant groups that list them, the access groups that give permissions on those, and the
+  // people who hold them. Only Accounts has pages of its own; the rest are one page each.
   destinations: [
+    { name: "Organizations", mark: "label", opens: platformHref("organizations") },
     {
       name: "Accounts",
-      mark: "members",
+      mark: "storefront",
       opens: accountsHref("customers"),
       pages: [
         {
@@ -32,22 +36,9 @@ const PRODUCT: ShellProduct = {
         },
       ],
     },
-    {
-      // WHO CAN SEE AND DO WHAT, on which tenants, and why — an enterprise's own access, run here.
-      name: "Platform admin",
-      mark: "locker",
-      opens: platformHref("organizations"),
-      pages: [
-        {
-          pages: [
-            { name: "Organizations", opens: platformHref("organizations") },
-            { name: "Tenant groups", opens: platformHref("tenant-groups") },
-            { name: "Access groups", opens: platformHref("access-groups") },
-            { name: "People", opens: platformHref("people") },
-          ],
-        },
-      ],
-    },
+    { name: "Tenant groups", mark: "grid", opens: platformHref("tenant-groups") },
+    { name: "Access groups", mark: "locker", opens: platformHref("access-groups") },
+    { name: "People", mark: "members", opens: platformHref("people") },
   ],
   user: {
     name: "Noa Lindqvist",

@@ -164,11 +164,10 @@ export const accessGroupPlace = ({ id, facet }: { id: string; facet: AccessGroup
     addressOf: (one) => accessGroupHref(group.id, one),
   };
   return {
-    at: "Platform admin",
+    at: "Access groups",
     page: group.name,
     record: nav,
     trail: [
-      { label: "Platform admin", opens: platformHref("organizations") },
       { label: "Access groups", opens: platformHref("access-groups") },
       { label: group.name },
     ],

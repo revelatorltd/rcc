@@ -1,17 +1,18 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * PLATFORM ADMIN — who can see and do what, on which tenants, and why — for one enterprise.
+ * AN ENTERPRISE'S ACCESS — who can see and do what, on which tenants, and why.
  *
- * Invented, hand-written: an enterprise of its own, never the prototype's. Its organizations each
- * hold tenants; a tenant group lists tenants and gives nobody anything; an access group is ONE set of
- * permissions, on the tenants of its tenant groups, for a list of people. Being in an organization
- * gives no data on its own.
+ * Shaped as Warner Music Group's: its organizations, tenant groups and access groups take the names
+ * the Revelator Ops prototype gives them, by the product owner's choice. Its people and tenants are
+ * invented. Each organization holds tenants; a tenant group lists tenants and gives nobody anything;
+ * an access group is ONE set of permissions, on the tenants of its tenant groups, for a list of
+ * people. Being in an organization gives no data on its own.
  */
 export const TODAY = new Date(2026, 9, 16);
 
 /** The enterprise every organization belongs to. */
-export const ENTERPRISE = { name: "Halden Music Group", code: "HMG" };
+export const ENTERPRISE = { name: "Warner Music Group", code: "WMG" };
 
 /* ---------- The permission catalogue ---------- */
 
@@ -134,46 +135,55 @@ export interface Person {
 
 export let ORGANIZATIONS: readonly Organization[] = [
   {
-    id: "nwd",
-    name: "Northwind Distribution",
-    code: "NWD",
+    id: "ada",
+    name: "ADA",
+    code: "ADA",
     description: "Independent distribution, worldwide",
     admins: ["p-noa", "p-ilse"],
-    defaults: { home: "Distribution overview", landing: "Distribution", naming: "<Region> <Function>" },
-    shared: { savedReports: 18, scheduledReports: 5, templates: 5 },
+    defaults: { home: "ADA operations", landing: "Distribution", naming: "<Region> <Function>" },
+    shared: { savedReports: 23, scheduledReports: 6, templates: 5 },
   },
   {
-    id: "emb",
-    name: "Ember Records",
-    code: "EMB",
+    id: "atl",
+    name: "Atlantic",
+    code: "AMG",
     description: "Frontline label group",
     admins: ["p-rafe"],
     defaults: { home: "Label overview", landing: "Catalog", naming: "<Label> <Function>" },
-    shared: { savedReports: 7, scheduledReports: 2, templates: 3 },
+    shared: { savedReports: 9, scheduledReports: 2, templates: 3 },
   },
   {
-    id: "cpl",
-    name: "Copperline",
-    code: "CPL",
-    description: "Frontline label, Austin",
+    id: "wr",
+    name: "Warner Records",
+    code: "WR",
+    description: "Frontline label group, Burbank",
     admins: ["p-june"],
     defaults: { home: "Label overview", landing: "Catalog", naming: "<Label> <Function>" },
-    shared: { savedReports: 4, scheduledReports: 1, templates: 2 },
+    shared: { savedReports: 6, scheduledReports: 2, templates: 3 },
   },
   {
-    id: "swc",
-    name: "Saltwater Catalog",
-    code: "SWC",
+    id: "rhn",
+    name: "Rhino",
+    code: "RHN",
     description: "Catalog, reissues and remasters",
     admins: ["p-otto"],
     defaults: { home: "Label overview", landing: "Catalog", naming: "<Function>" },
-    shared: { savedReports: 3, scheduledReports: 1, templates: 1 },
+    shared: { savedReports: 4, scheduledReports: 1, templates: 2 },
   },
   {
-    id: "knk",
-    name: "Kite & Key",
-    code: "K&K",
-    description: "New label, signed this quarter",
+    id: "300",
+    name: "300 Entertainment",
+    code: "300",
+    description: "Frontline label, New York",
+    admins: ["p-bea"],
+    defaults: { home: "Label overview", landing: "Catalog", naming: "<Function>" },
+    shared: { savedReports: 2, scheduledReports: 0, templates: 1 },
+  },
+  {
+    id: "10k",
+    name: "10K Projects",
+    code: "10K",
+    description: "Frontline label",
     admins: [],
     defaults: { home: "Label overview", landing: "Catalog", naming: "<Function>" },
     shared: { savedReports: 0, scheduledReports: 0, templates: 0 },
@@ -182,43 +192,45 @@ export let ORGANIZATIONS: readonly Organization[] = [
 
 /** Where each segment's tenants are, cycled through as they are named. */
 const SEGMENTS: readonly [org: string, segment: string, count: number, countries: readonly string[]][] = [
-  ["nwd", "Spain", 18, ["Spain"]],
-  ["nwd", "Portugal", 6, ["Portugal"]],
-  ["nwd", "United Kingdom", 20, ["United Kingdom"]],
-  ["nwd", "Germany", 12, ["Germany", "Austria", "Switzerland"]],
-  ["nwd", "France", 9, ["France"]],
-  ["nwd", "Italy", 7, ["Italy"]],
-  ["nwd", "North America", 14, ["United States of America", "Canada"]],
-  ["nwd", "Latin America", 10, ["Mexico", "Brazil", "Argentina", "Colombia"]],
-  ["emb", "Frontline", 10, ["United States of America", "Canada"]],
-  ["emb", "Catalog", 8, ["United States of America"]],
-  ["emb", "Nashville", 5, ["United States of America"]],
-  ["cpl", "Copperline", 9, ["United States of America"]],
-  ["swc", "Saltwater", 6, ["United States of America", "United Kingdom"]],
-  ["knk", "Kite & Key", 4, ["United States of America"]],
+  ["ada", "Spain", 38, ["Spain"]],
+  ["ada", "Portugal", 11, ["Portugal"]],
+  ["ada", "United Kingdom", 52, ["United Kingdom"]],
+  ["ada", "Germany", 29, ["Germany", "Austria", "Switzerland"]],
+  ["ada", "France", 20, ["France"]],
+  ["ada", "Italy", 14, ["Italy"]],
+  ["ada", "United States", 30, ["United States of America", "Canada"]],
+  ["ada", "Latin America", 18, ["Mexico", "Brazil", "Argentina", "Colombia"]],
+  ["atl", "Frontline", 20, ["United States of America", "Canada"]],
+  ["atl", "Catalog", 18, ["United States of America"]],
+  ["atl", "Nashville", 10, ["United States of America"]],
+  ["wr", "Warner Records", 16, ["United States of America"]],
+  ["rhn", "Rhino", 10, ["United States of America", "United Kingdom"]],
+  ["300", "300", 8, ["United States of America"]],
+  ["10k", "10K", 3, ["United States of America"]],
 ];
 
-const FIRST_WORDS = ["Lantern", "Hollow", "Tidal", "Marble", "Juniper", "Cobalt", "Wren", "Bramble", "Ash", "Velvet", "Quarry", "Linden", "Harbor", "Sable", "Ivory", "Foxtail", "Meridian", "Orchard", "Rook", "Saffron", "Thistle", "Umber", "Willow", "Alder", "Basalt", "Cinder", "Drift", "Fennel"];
+const FIRST_WORDS = ["Lantern", "Hollow", "Tidal", "Marble", "Juniper", "Cobalt", "Wren", "Bramble", "Ash", "Velvet", "Quarry", "Linden", "Harbor", "Sable", "Ivory", "Foxtail", "Meridian", "Orchard", "Rook", "Saffron", "Thistle", "Umber", "Willow", "Alder", "Basalt", "Cinder", "Drift", "Fennel", "Garnet", "Heron", "Indigo", "Jasper", "Kestrel", "Larch", "Mosaic", "Nettle", "Opal", "Pewter", "Quill", "Russet"];
 const LAST_WORDS = ["Records", "Sound", "Music", "Tapes", "Audio", "Recordings", "Editions", "House"];
 
+/** A tenant's name — each pairing of the two lists once, so no two tenants share one. */
 let tenantSerial = 0;
 const tenantName = () => {
   const at = tenantSerial++;
-  return `${FIRST_WORDS[(at * 7) % FIRST_WORDS.length]} ${LAST_WORDS[(at * 3 + Math.floor(at / FIRST_WORDS.length)) % LAST_WORDS.length]}`;
+  return `${FIRST_WORDS[(at * 7) % FIRST_WORDS.length]} ${LAST_WORDS[(Math.floor(at / FIRST_WORDS.length) + at) % LAST_WORDS.length]}`;
 };
 
 export let TENANTS: readonly Tenant[] = [
   ...SEGMENTS.flatMap(([orgId, segment, count, countries], segmentAt) =>
     Array.from({ length: count }, (_, at) => ({
-      id: `T-${(30412 + segmentAt * 211 + at * 13).toString()}`,
+      id: `T-${(10482 + segmentAt * 677 + at * 13).toString()}`,
       name: tenantName(),
       orgId,
       segment,
       country: countries[at % countries.length]!,
     })),
   ),
-  { id: "T-41120", name: "Paper Moon Reissues", segment: "Unassigned", country: "United States of America" },
-  { id: "T-41137", name: "Golden Hour Catalog", segment: "Unassigned", country: "United Kingdom" },
+  { id: "T-20114", name: "Paper Moon Reissues", segment: "Unassigned", country: "United States of America" },
+  { id: "T-20131", name: "Golden Hour Catalog", segment: "Unassigned", country: "United Kingdom" },
 ];
 
 const ofSegment = (...segments: string[]) => TENANTS.filter((one) => segments.includes(one.segment)).map((one) => one.id);
@@ -235,40 +247,41 @@ const tg = (id: string, scope: Scope, name: string, description: string, region:
 });
 
 export let TENANT_GROUPS: readonly TenantGroup[] = [
-  tg("tg-es", "nwd", "Northwind Spain Labels", "Labels Northwind operates from Madrid", "Spain", ofSegment("Spain"), "2 days ago · Ilse Varga"),
-  tg("tg-pt", "nwd", "Northwind Portugal Labels", "Labels operated from Lisbon", "Portugal", ofSegment("Portugal")),
-  tg("tg-uk", "nwd", "Northwind UK Labels", "Labels operated from London", "United Kingdom", ofSegment("United Kingdom")),
-  tg("tg-de", "nwd", "Northwind DACH Labels", "Germany, Austria and Switzerland", "DACH", ofSegment("Germany")),
-  tg("tg-fr", "nwd", "Northwind France Labels", "Labels operated from Paris", "France", ofSegment("France")),
-  tg("tg-it", "nwd", "Northwind Italy Labels", "Labels operated from Milan", "Italy", ofSegment("Italy")),
-  tg("tg-iberia", "nwd", "Iberia", "Spain and Portugal, for the Iberian finance team", "Iberia", ofSegment("Spain", "Portugal")),
-  tg("tg-europe", "nwd", "Europe", "Every European label Northwind operates", "Europe", ofSegment("Spain", "Portugal", "United Kingdom", "Germany", "France", "Italy")),
-  tg("tg-latam", "nwd", "Northwind Latin America", "Labels across Mexico, Brazil, Argentina and Colombia", "Latin America", ofSegment("Latin America")),
-  tg("tg-nwd-all", "nwd", "All Northwind", "Every Northwind tenant", "Worldwide", ofOrg("nwd")),
-  tg("tg-emb-front", "emb", "Ember Frontline", "Frontline artists and new releases", "North America", ofSegment("Frontline")),
-  tg("tg-emb-cat", "emb", "Ember Catalog", "Catalog labels", "North America", ofSegment("Catalog")),
-  tg("tg-emb-nash", "emb", "Ember Nashville", "Country and Americana labels", "North America", ofSegment("Nashville")),
-  tg("tg-emb-all", "emb", "All Ember", "Every Ember tenant", "Worldwide", ofOrg("emb")),
-  tg("tg-cpl-all", "cpl", "All Copperline", "Every Copperline tenant", "North America", ofOrg("cpl")),
-  tg("tg-swc-all", "swc", "All Saltwater", "Every Saltwater tenant", "Worldwide", ofOrg("swc")),
-  tg("tg-knk-all", "knk", "All Kite & Key", "Every Kite & Key tenant", "North America", ofOrg("knk")),
-  tg("tg-hmg", ENTERPRISE_SCOPE, "All Halden labels", "Every tenant of every organization", "Worldwide", TENANTS.filter((one) => one.orgId).map((one) => one.id)),
+  tg("tg-es", "ada", "ADA-Spain Labels", "ADA affiliate labels operated from Madrid", "Spain", ofSegment("Spain"), "2 days ago · Ilse Varga"),
+  tg("tg-pt", "ada", "ADA-Portugal Labels", "ADA affiliate labels operated from Lisbon", "Portugal", ofSegment("Portugal")),
+  tg("tg-uk", "ada", "ADA-UK Labels", "ADA affiliate labels operated from London", "UK", ofSegment("United Kingdom")),
+  tg("tg-de", "ada", "ADA-Germany Labels", "Germany, Austria and Switzerland", "Germany", ofSegment("Germany")),
+  tg("tg-fr", "ada", "ADA-France Labels", "ADA affiliate labels operated from Paris", "France", ofSegment("France")),
+  tg("tg-it", "ada", "ADA-Italy Labels", "ADA affiliate labels operated from Milan", "Italy", ofSegment("Italy")),
+  tg("tg-iberia", "ada", "Iberia", "Spain and Portugal together, for the Iberian finance team", "Iberia", ofSegment("Spain", "Portugal")),
+  tg("tg-emea", "ada", "EMEA", "Every European label ADA operates", "EMEA", ofSegment("Spain", "Portugal", "United Kingdom", "Germany", "France", "Italy")),
+  tg("tg-all", "ada", "All ADA", "Every ADA tenant", "Worldwide", ofOrg("ada")),
+  tg("tg-atl-front", "atl", "Atlantic Frontline", "Frontline artists and new releases", "US", ofSegment("Frontline")),
+  tg("tg-atl-cat", "atl", "Atlantic Catalog", "Atlantic's catalog labels", "US", ofSegment("Catalog")),
+  tg("tg-atl-nash", "atl", "Atlantic Nashville", "Country and Americana labels", "US", ofSegment("Nashville")),
+  tg("tg-atl-all", "atl", "All Atlantic", "Every Atlantic tenant", "Worldwide", ofOrg("atl")),
+  tg("tg-wr-all", "wr", "All Warner Records", "Every Warner Records tenant", "US", ofOrg("wr")),
+  tg("tg-rh-all", "rhn", "All Rhino", "Every Rhino tenant", "Worldwide", ofOrg("rhn")),
+  tg("tg-300-all", "300", "All 300", "Every 300 Entertainment tenant", "US", ofOrg("300")),
+  tg("tg-10k", "10k", "10K Projects", "Every 10K Projects tenant", "US", ofOrg("10k")),
+  tg("tg-warner", ENTERPRISE_SCOPE, "All Warner labels", "Every tenant of every organization", "Worldwide", TENANTS.filter((one) => one.orgId).map((one) => one.id)),
 ];
 
-/* People: the named few, then the teams around them. */
+/* People: the named few, then the teams around them. Invented, every one. */
 
 const NAMED: readonly Person[] = [
-  { id: "p-noa", name: "Noa Lindqvist", email: "noa.lindqvist@halden.example", orgs: ["nwd"], lastActive: "Today", enterpriseAdmin: true },
-  { id: "p-ilse", name: "Ilse Varga", email: "ilse.varga@halden.example", orgs: ["nwd"], lastActive: "Yesterday" },
-  { id: "p-rafe", name: "Rafe Okonkwo", email: "rafe.okonkwo@halden.example", orgs: ["emb"], lastActive: "Today" },
-  { id: "p-june", name: "June Marchetti", email: "june.marchetti@halden.example", orgs: ["cpl"], lastActive: "This week" },
-  { id: "p-otto", name: "Otto Lindgren", email: "otto.lindgren@halden.example", orgs: ["swc"], lastActive: "Last week" },
-  { id: "p-sol", name: "Sol Herrera", email: "sol.herrera@halden.example", orgs: ["nwd"], lastActive: "Today" },
-  { id: "p-ines", name: "Inés Calvo", email: "ines.calvo@halden.example", orgs: ["nwd"], lastActive: "2 days ago" },
-  { id: "p-tomas", name: "Tomás Ferreira", email: "tomas.ferreira@halden.example", orgs: ["nwd"], lastActive: "This week" },
-  { id: "p-alba", name: "Alba Montes", email: "alba.montes@halden.example", orgs: ["nwd"], lastActive: "Yesterday" },
-  { id: "p-pia", name: "Pia Strand", email: "pia.strand@ledgerline-audit.example", orgs: ["nwd"], lastActive: "3 weeks ago" },
-  { id: "p-hugh", name: "Hugh Penrose", email: "hugh.penrose@halden.example", orgs: ["nwd"], lastActive: "Today" },
+  { id: "p-noa", name: "Noa Lindqvist", email: "noa.lindqvist@wmg.example", orgs: ["ada"], lastActive: "Today", enterpriseAdmin: true },
+  { id: "p-ilse", name: "Ilse Varga", email: "ilse.varga@wmg.example", orgs: ["ada"], lastActive: "Yesterday" },
+  { id: "p-rafe", name: "Rafe Okonkwo", email: "rafe.okonkwo@wmg.example", orgs: ["atl"], lastActive: "Today" },
+  { id: "p-june", name: "June Marchetti", email: "june.marchetti@wmg.example", orgs: ["wr"], lastActive: "This week" },
+  { id: "p-otto", name: "Otto Lindgren", email: "otto.lindgren@wmg.example", orgs: ["rhn"], lastActive: "Last week" },
+  { id: "p-bea", name: "Bea Holloway", email: "bea.holloway@wmg.example", orgs: ["300"], lastActive: "2 days ago" },
+  { id: "p-sol", name: "Sol Herrera", email: "sol.herrera@wmg.example", orgs: ["ada"], lastActive: "Today" },
+  { id: "p-ines", name: "Inés Calvo", email: "ines.calvo@wmg.example", orgs: ["ada"], lastActive: "2 days ago" },
+  { id: "p-tomas", name: "Tomás Ferreira", email: "tomas.ferreira@wmg.example", orgs: ["ada"], lastActive: "This week" },
+  { id: "p-alba", name: "Alba Montes", email: "alba.montes@wmg.example", orgs: ["ada"], lastActive: "Yesterday" },
+  { id: "p-pia", name: "Pia Strand", email: "pia.strand@ledgerline-audit.example", orgs: ["ada"], lastActive: "3 weeks ago" },
+  { id: "p-hugh", name: "Hugh Penrose", email: "hugh.penrose@wmg.example", orgs: ["ada"], lastActive: "Today" },
 ];
 
 const GIVEN = ["Aria", "Bastian", "Cleo", "Dario", "Esme", "Felix", "Greta", "Hamid", "Iris", "Jonah", "Kaia", "Lior", "Mira", "Nils", "Orla", "Pavel", "Quinn", "Rosa", "Silas", "Tova", "Uma", "Viggo", "Wynn", "Ximena", "Yusuf", "Zora"];
@@ -276,12 +289,13 @@ const FAMILY = ["Abara", "Bergman", "Castell", "Duarte", "Ekdahl", "Fontaine", "
 
 /** The teams around the named few: so many in each organization, a dozen in two. */
 const TEAMS: readonly [orgs: readonly string[], count: number][] = [
-  [["nwd"], 46],
-  [["nwd", "emb"], 8],
-  [["emb"], 14],
-  [["cpl"], 7],
-  [["swc"], 5],
-  [["knk"], 3],
+  [["ada"], 60],
+  [["ada", "atl"], 12],
+  [["atl"], 18],
+  [["wr"], 10],
+  [["rhn"], 6],
+  [["300"], 4],
+  [["10k"], 4],
 ];
 
 const LAST_ACTIVE = ["Today", "Yesterday", "2 days ago", "This week", "Last week", "3 weeks ago", "Last month"];
@@ -290,12 +304,12 @@ export let PEOPLE: readonly Person[] = [
   ...NAMED,
   ...TEAMS.flatMap(([orgs, count], teamAt) =>
     Array.from({ length: count }, (_, at) => {
-      const serial = teamAt * 50 + at;
+      const serial = teamAt * 70 + at;
       const name = `${GIVEN[(serial * 5) % GIVEN.length]} ${FAMILY[(serial * 3 + teamAt) % FAMILY.length]}`;
       return {
         id: `p-${serial}`,
         name,
-        email: `${name.toLowerCase().replace(/[^a-z]+/g, ".")}@halden.example`,
+        email: `${name.toLowerCase().normalize("NFD").replace(/[^a-z ]+/g, "").replace(/ /g, ".")}.${serial}@wmg.example`,
         orgs,
         lastActive: LAST_ACTIVE[serial % LAST_ACTIVE.length]!,
       };
@@ -309,7 +323,7 @@ export const peopleIn = (scope: Scope) =>
 
 /** Members for a seeded group: the named first, then the scope's people in order, `count` in all. */
 const seat = (scope: Scope, count: number, named: readonly string[] = [], ends: Record<string, string> = {}): Member[] => {
-  const pool = [...named, ...peopleIn(scope).map((one) => one.id).filter((id) => !named.includes(id) && !id.startsWith("p-noa"))];
+  const pool = [...named, ...peopleIn(scope).map((one) => one.id).filter((id) => !named.includes(id) && id !== "p-noa")];
   return pool.slice(0, count).map((personId) => ({ personId, ends: ends[personId] ?? "" }));
 };
 
@@ -325,26 +339,27 @@ const ag = (id: string, scope: Scope, name: string, description: string, perms: 
 });
 
 export let ACCESS_GROUPS: readonly AccessGroup[] = [
-  ag("ag-es-roy", "nwd", "Northwind Spain Royalties Operator", "Closes the royalty period for the Spanish labels", { royalties: 2, finance: 1, catalog: 1, analytics: 1 }, ["tg-es"], seat("nwd", 6, ["p-sol", "p-alba", "p-pia"], { "p-pia": "2026-12-31" })),
-  ag("ag-es-dist", "nwd", "Northwind Spain Distribution Operator", "Delivers and takes down Spanish releases", { catalog: 2, distribution: 2, analytics: 1 }, ["tg-es"], seat("nwd", 9, ["p-ines", "p-tomas"])),
-  ag("ag-uk-roy", "nwd", "Northwind UK Royalties Operator", "Closes the royalty period for the UK labels", { royalties: 2, finance: 1, catalog: 1 }, ["tg-uk"], seat("nwd", 8)),
-  ag("ag-uk-dist", "nwd", "Northwind UK Distribution Operator", "Delivers and takes down UK releases", { catalog: 2, distribution: 2, analytics: 1 }, ["tg-uk"], seat("nwd", 12, ["p-sol", "p-hugh"])),
-  ag("ag-uk-cat", "nwd", "Northwind UK Catalog Operator", "Keeps the UK catalog's metadata right", { catalog: 2, rights: 1 }, ["tg-uk"], seat("nwd", 4)),
-  ag("ag-de-ops", "nwd", "Northwind DACH Operations", "Runs the DACH labels end to end", { catalog: 2, distribution: 2, royalties: 2, finance: 1 }, ["tg-de"], seat("nwd", 9)),
-  ag("ag-iberia-fin", "nwd", "Iberia Finance Viewer", "Reads revenue for Spain and Portugal", { finance: 1, royalties: 1 }, ["tg-iberia"], seat("nwd", 3, ["p-alba"])),
-  ag("ag-europe-ana", "nwd", "Europe Analytics Viewer", "Reads streams across Europe", { analytics: 1, insights: 1 }, ["tg-europe"], seat("nwd", 6)),
-  ag("ag-pt-dist", "nwd", "Northwind Portugal Distribution Operator", "Delivers Portuguese releases", { catalog: 2, distribution: 2 }, ["tg-pt"], seat("nwd", 4)),
-  ag("ag-nwd-lead", "nwd", "Northwind Leadership", "Reads everything that matters across Northwind", { catalog: 1, finance: 1, analytics: 1, insights: 1 }, ["tg-nwd-all"], seat("nwd", 4)),
-  ag("ag-emb-dist", "emb", "Ember Frontline Distribution Operator", "Delivers frontline releases", { catalog: 2, distribution: 2, analytics: 1 }, ["tg-emb-front"], seat("emb", 6, ["p-rafe"])),
-  ag("ag-emb-roy", "emb", "Ember Frontline Royalties Operator", "Closes the frontline royalty period", { royalties: 2, finance: 1 }, ["tg-emb-front"], seat("emb", 5)),
-  ag("ag-emb-cat", "emb", "Ember Catalog Operator", "Keeps Ember's catalog and its rights right", { catalog: 2, rights: 2 }, ["tg-emb-cat"], seat("emb", 5)),
-  ag("ag-emb-nash", "emb", "Ember Nashville Operations", "Runs the Nashville labels", { catalog: 2, distribution: 2, royalties: 1 }, ["tg-emb-nash"], seat("emb", 4)),
-  ag("ag-emb-fin", "emb", "Ember Finance Viewer", "Reads Ember's revenue", { finance: 1 }, ["tg-emb-all"], seat("emb", 3)),
-  ag("ag-cpl-dist", "cpl", "Copperline Distribution Operator", "Delivers Copperline releases", { catalog: 2, distribution: 2, analytics: 1 }, ["tg-cpl-all"], seat("cpl", 6, ["p-june"])),
-  ag("ag-swc-cat", "swc", "Saltwater Catalog Operator", "Keeps the reissue catalog right", { catalog: 2, rights: 2, royalties: 1 }, ["tg-swc-all"], seat("swc", 4, ["p-otto"])),
-  ag("ag-hmg-roy", ENTERPRISE_SCOPE, "Group Royalties", "Closes the royalty period across the group", { royalties: 2, finance: 1, analytics: 1 }, ["tg-hmg"], seat(ENTERPRISE_SCOPE, 5, ["p-hugh"])),
-  ag("ag-hmg-fin", ENTERPRISE_SCOPE, "Group Finance Viewer", "Reads revenue across the group", { finance: 1 }, ["tg-hmg"], seat(ENTERPRISE_SCOPE, 7, ["p-ilse"])),
-  ag("ag-hmg-audit", ENTERPRISE_SCOPE, "Group Auditor", "Reads everything but administration, for the year-end audit", { catalog: 1, rights: 1, distribution: 1, royalties: 1, finance: 1, ts: 1, analytics: 1, insights: 1 }, ["tg-hmg"], seat(ENTERPRISE_SCOPE, 2, ["p-pia"], { "p-pia": "2026-12-31" })),
+  ag("ag-es-roy", "ada", "ADA-Spain Royalties Operator", "Closes the royalty period for ADA Spain labels", { royalties: 2, finance: 1, catalog: 1, analytics: 1 }, ["tg-es"], seat("ada", 6, ["p-sol", "p-alba", "p-pia"], { "p-pia": "2026-12-31" })),
+  ag("ag-es-dist", "ada", "ADA-Spain Distro Operator", "Delivers and takes down ADA Spain releases", { catalog: 2, distribution: 2, analytics: 1 }, ["tg-es"], seat("ada", 9, ["p-ines", "p-tomas"])),
+  ag("ag-uk-roy", "ada", "ADA-UK Royalties Operator", "Closes the royalty period for ADA UK labels", { royalties: 2, finance: 1, catalog: 1 }, ["tg-uk"], seat("ada", 8)),
+  ag("ag-uk-dist", "ada", "ADA-UK Distro Operator", "Delivers and takes down ADA UK releases", { catalog: 2, distribution: 2, analytics: 1 }, ["tg-uk"], seat("ada", 12, ["p-sol", "p-hugh"])),
+  ag("ag-uk-cat", "ada", "ADA-UK Catalog Operator", "Keeps the ADA UK catalog's metadata right", { catalog: 2, rights: 1 }, ["tg-uk"], seat("ada", 4)),
+  ag("ag-de-ops", "ada", "ADA-Germany Operations", "Runs the ADA Germany labels end to end", { catalog: 2, distribution: 2, royalties: 2, finance: 1 }, ["tg-de"], seat("ada", 9)),
+  ag("ag-iberia-fin", "ada", "Iberia Finance Viewer", "Reads revenue for Spain and Portugal", { finance: 1, royalties: 1 }, ["tg-iberia"], seat("ada", 3, ["p-alba"])),
+  ag("ag-emea-ana", "ada", "EMEA Analytics Viewer", "Reads streams across EMEA", { analytics: 1, insights: 1 }, ["tg-emea"], seat("ada", 6)),
+  ag("ag-pt-dist", "ada", "ADA-Portugal Distro Operator", "Delivers ADA Portugal releases", { catalog: 2, distribution: 2 }, ["tg-pt"], seat("ada", 4)),
+  ag("ag-ada-lead", "ada", "ADA Leadership", "Reads what matters across ADA", { catalog: 1, finance: 1, analytics: 1, insights: 1 }, ["tg-all"], seat("ada", 4)),
+  ag("ag-atl-dist", "atl", "Frontline Distro Operator", "Delivers Atlantic frontline releases", { catalog: 2, distribution: 2, analytics: 1 }, ["tg-atl-front"], seat("atl", 6, ["p-rafe"])),
+  ag("ag-atl-roy", "atl", "Frontline Royalties Operator", "Closes the Atlantic frontline royalty period", { royalties: 2, finance: 1 }, ["tg-atl-front"], seat("atl", 5)),
+  ag("ag-atl-cat", "atl", "Catalog Operator", "Keeps Atlantic's catalog and its rights right", { catalog: 2, rights: 2 }, ["tg-atl-cat"], seat("atl", 5)),
+  ag("ag-atl-nash", "atl", "Nashville Operations", "Runs the Atlantic Nashville labels", { catalog: 2, distribution: 2, royalties: 1 }, ["tg-atl-nash"], seat("atl", 4)),
+  ag("ag-atl-fin", "atl", "Atlantic Finance Viewer", "Reads Atlantic's revenue", { finance: 1 }, ["tg-atl-all"], seat("atl", 3)),
+  ag("ag-atl-ana", "atl", "Atlantic Analytics Viewer", "Reads streams across Atlantic", { analytics: 1, insights: 1 }, ["tg-atl-all"], seat("atl", 6)),
+  ag("ag-wr-dist", "wr", "Warner Records Distro Operator", "Delivers Warner Records releases", { catalog: 2, distribution: 2, analytics: 1 }, ["tg-wr-all"], seat("wr", 6, ["p-june"])),
+  ag("ag-rh-cat", "rhn", "Rhino Catalog Operator", "Keeps the Rhino reissue catalog right", { catalog: 2, rights: 2, royalties: 1 }, ["tg-rh-all"], seat("rhn", 4, ["p-otto"])),
+  ag("ag-global-roy", ENTERPRISE_SCOPE, "Global Royalties", "Closes the royalty period across every Warner label", { royalties: 2, finance: 1, analytics: 1 }, ["tg-warner"], seat(ENTERPRISE_SCOPE, 5, ["p-hugh"])),
+  ag("ag-group-fin", ENTERPRISE_SCOPE, "Group Finance Viewer", "Reads revenue across every Warner label", { finance: 1 }, ["tg-warner"], seat(ENTERPRISE_SCOPE, 7, ["p-ilse"])),
+  ag("ag-auditor", ENTERPRISE_SCOPE, "Group Auditor", "Reads everything but administration, for the year-end audit", { catalog: 1, rights: 1, distribution: 1, royalties: 1, finance: 1, ts: 1, analytics: 1, insights: 1 }, ["tg-warner"], seat(ENTERPRISE_SCOPE, 2, ["p-pia"], { "p-pia": "2026-12-31" })),
 ];
 
 /* ---------- What is read off them ---------- */
