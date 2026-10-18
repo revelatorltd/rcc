@@ -213,6 +213,8 @@ export interface WhiteLabel {
   showAds?: boolean;
   /** The API partner it is tied to, where it is one's. */
   partnerId?: string;
+  /** The stylesheet it was created with — set once, when it is made. */
+  cssFile?: string;
   /** The plan a user signing up through it starts on. */
   defaultPlanId?: string;
   termsUrl?: string;

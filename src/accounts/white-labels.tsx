@@ -35,6 +35,7 @@ import {
   type WhiteLabel,
   type WhiteLabelRecord,
 } from "./mock";
+import { tenantPicture } from "./tenants";
 
 const YES_NO = [
   { value: "Yes", title: "Yes" },
@@ -91,6 +92,7 @@ export function WhiteLabelFacts({ label, tenant }: { label: WhiteLabel; tenant?:
           { label: "Shows Revelator's branding", value: yes(label.showRevelatorBranding) },
           { label: "Shows ads", value: yes(label.showAds) },
           { label: "Default plan ID", value: label.defaultPlanId, standard: "id" },
+          { label: "CSS file", value: label.cssFile },
         ]}
       />
       <FactCard
@@ -185,6 +187,7 @@ export function WhiteLabelWizard({ id, tenantId, back }: { id?: string; tenantId
         showRevelatorBranding: owed(yes(label?.showRevelatorBranding)),
         showAds: owed(yes(label?.showAds)),
         defaultPlanId: owed(label?.defaultPlanId ?? "3"),
+        cssFile: label?.cssFile ?? unanswered.url,
         termsUrl: label?.termsUrl ?? unanswered.url,
         distributionAgreementUrl: label?.distributionAgreementUrl ?? unanswered.url,
         faqUrl: label?.faqUrl ?? unanswered.url,
@@ -217,6 +220,8 @@ export function WhiteLabelWizard({ id, tenantId, back }: { id?: string; tenantId
           showRevelatorBranding: answers.showRevelatorBranding === "Yes",
           showAds: answers.showAds === "Yes",
           defaultPlanId: answers.defaultPlanId.trim(),
+          // The STYLESHEET is set when it is made, and kept from then on.
+          cssFile: editing ? label.cssFile : text(answers.cssFile),
           termsUrl: text(answers.termsUrl),
           distributionAgreementUrl: text(answers.distributionAgreementUrl),
           faqUrl: text(answers.faqUrl),
@@ -335,6 +340,16 @@ export function WhiteLabelWizard({ id, tenantId, back }: { id?: string; tenantId
               <Field as="choice" name="showAds" label="Shows ads" options={YES_NO} />
             </WizardRowBody>
           </WizardRow>
+          {editing ? null : (
+            <WizardRow title="Stylesheet">
+              <WizardRowBody>
+                <Field as="url" name="cssFile" label="CSS file" />
+              </WizardRowBody>
+              <WizardRowTips>
+                <WizardRowTip>Set once, when the white label is made: it cannot be changed afterwards.</WizardRowTip>
+              </WizardRowTips>
+            </WizardRow>
+          )}
           <WizardRow title="Default plan">
             <WizardRowBody>
               <Field as="identifier" standard="id" name="defaultPlanId" label="Default plan ID" />
@@ -403,13 +418,14 @@ export function WhiteLabelWizard({ id, tenantId, back }: { id?: string; tenantId
  * A COLLECTION PAGE grown by a new white label; one is deleted from its row, asked first.
  */
 export function WhiteLabels() {
+  const rows = whiteLabels();
   return (
     <CollectionPage
       title="White labels"
       actions={[{ label: "New white label", primary: true, creates: true, opens: newWhiteLabelHref() }]}
       more={[{ label: "Export" }]}
       index={{
-        rows: whiteLabels(),
+        rows,
         rowKey: (one) => one.id,
         noun: { one: "white label", many: "white labels" },
         identity: {
@@ -420,21 +436,44 @@ export function WhiteLabels() {
           opens: (one) => whiteLabelHref(one.id),
         },
         sort: { column: "White label ID", direction: "ascending" },
-        searchBy: ["Domain", "White label ID", "Tenant", "Title"],
+        searchBy: ["Domain", "White label ID", "Enterprise", "Enterprise ID", "Domain V2", "Partner ID", "Page title"],
         columns: [
           { name: "White label ID", as: "identifier", standard: "id", value: (one) => one.id },
           {
-            name: "Tenant",
+            // ANOTHER RECORD as a value: the enterprise it loads, wearing its logo.
+            name: "Enterprise",
             as: "entities",
             value: (one) => (one.tenant ? [one.tenant.name] : []),
-            noun: { one: "tenant", many: "tenants" },
+            noun: { one: "enterprise", many: "enterprises" },
             entity: "organization",
+            picture: (named) => {
+              const tenant = TENANTS.find((each) => each.name === named);
+              return tenant ? tenantPicture(tenant) : undefined;
+            },
           },
-          { name: "Title", value: (one) => one.title, cell: (one) => one.title },
+          { name: "Enterprise ID", as: "identifier", standard: "id", value: (one) => one.tenant?.enterpriseId },
+          { name: "On trial", value: (one) => (one.tenant?.onTrial ? 1 : 0), cell: (one) => (one.tenant ? yes(one.tenant.onTrial) : undefined) },
+          { name: "Locked out", value: (one) => (one.tenant?.lockedOut ? 1 : 0), cell: (one) => (one.tenant ? yes(one.tenant.lockedOut) : undefined) },
+          { name: "Domain V2", value: (one) => one.domainV2 ?? "", cell: (one) => one.domainV2 },
+          { name: "Partner ID", as: "identifier", standard: "id", value: (one) => one.partnerId },
+          { name: "Page title", value: (one) => one.title, cell: (one) => one.title },
           { name: "Enabled", value: (one) => (one.enabled ? 1 : 0), cell: (one) => enabledBadge(one.enabled) },
-          { name: "Partner ID", as: "identifier", standard: "id", hidden: true, value: (one) => one.partnerId },
         ],
         filters: [
+          {
+            kind: "anyOf",
+            key: "enterprise",
+            label: "Enterprise",
+            options: [...new Set(rows.flatMap((one) => (one.tenant ? [one.tenant.name] : [])))].sort(),
+            of: (one) => one.tenant?.name ?? "",
+          },
+          {
+            kind: "pasted",
+            key: "ids",
+            label: "White label IDs",
+            placeholder: "Paste white label IDs, one per line or separated by commas",
+            holds: (one, values) => values.includes(one.id),
+          },
           {
             kind: "switches",
             key: "white-label",
@@ -448,7 +487,7 @@ export function WhiteLabels() {
           {
             kind: "switches",
             key: "tenant",
-            label: "Tenant",
+            label: "Enterprise",
             switches: [
               { key: "trial", label: "On trial", holds: (one) => Boolean(one.tenant?.onTrial) },
               { key: "locked", label: "Locked out", holds: (one) => Boolean(one.tenant?.lockedOut) },
