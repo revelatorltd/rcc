@@ -78,6 +78,14 @@ Decided by the system rather than asked: what an enterprise IS — a parent, a s
 account — is the index's readings. Its parent is a value cell naming the record with its mark. Whether
 it is locked out waits on the tenant's standing (gap 12): a switch in the filters, an alert on the record.
 
+## Accounts → Partners
+
+Reference: `ixPartners()`, `vPartner()`, `vPartnerForm()`. The API partners, each with the sandboxes
+connected to it and the users it knows by a partner user id. New API partner is a wizard; Edit a dialog.
+
+Decided by RCC rather than asked: a partner's API key is never shown — its Details say one was issued.
+The prototype's edit form asked for a key and saved nothing.
+
 ## Not built yet
 
-- **Partners, Payees, Users, White labels** — in the nav, inert.
+- **Payees, Users, White labels** — in the nav, inert.
