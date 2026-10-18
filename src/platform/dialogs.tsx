@@ -66,6 +66,9 @@ export const scopedMark = (one: { scope: string; name: string }) => {
   );
 };
 
+/** A country's flag, as a cell naming it asks — the system's own, filed under the country's name. */
+export const countryFlag = (country: string) => flagFor(country) ?? undefined;
+
 /** A tenant group's or an access group's logo — its organization's — found by the name a cell gives. */
 export const tenantGroupLogo = (name: string) => {
   const group = tenantGroups().find((one) => one.name === name);

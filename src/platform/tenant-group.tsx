@@ -16,6 +16,7 @@ import {
   ArchiveTenantGroups,
   RemoveTenants,
   accessGroupLogo,
+  countryFlag,
   groupMark,
   personMark,
   regionMark,
@@ -81,7 +82,15 @@ export function TenantGroupDetail({ id, facet }: { id: string; facet: TenantGrou
           }
           columns={[
             { name: "Tenant ID", as: "identifier", standard: "id", value: (one) => one.id },
-            { name: "Territory", value: (one) => one.country, cell: (one) => one.country },
+            {
+              // A COUNTRY, as every country is drawn where it is a value: its flag and its name.
+              name: "Territory",
+              as: "entities",
+              value: (one) => [one.country],
+              noun: { one: "territory", many: "territories" },
+              entity: "place",
+              picture: countryFlag,
+            },
             {
               name: "Also in",
               as: "entities",

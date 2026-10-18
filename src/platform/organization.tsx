@@ -18,7 +18,7 @@ import {
   type ShellPlace,
 } from "@revelator/pro-ui";
 
-import { AddOrgAdmin, AddPeople, EditDefaults, MoveTenant, RemoveOrgAdmin, groupMark, orgMark, personMark, scopedMark } from "./dialogs";
+import { AddOrgAdmin, AddPeople, EditDefaults, MoveTenant, RemoveOrgAdmin, countryFlag, groupMark, orgMark, personMark, scopedMark } from "./dialogs";
 import { accessGroupIndex, peopleIndex, tenantGroupIndex } from "./indexes";
 import {
   ENTERPRISE,
@@ -144,7 +144,15 @@ export function OrganizationDetail({ id, facet }: { id: string; facet: Organizat
           searchBy={["Tenant", "Tenant ID"]}
           columns={[
             { name: "Tenant ID", as: "identifier", standard: "id", value: (one) => one.id },
-            { name: "Territory", value: (one) => one.country, cell: (one) => one.country },
+            {
+              // A COUNTRY, as every country is drawn where it is a value: its flag and its name.
+              name: "Territory",
+              as: "entities",
+              value: (one) => [one.country],
+              noun: { one: "territory", many: "territories" },
+              entity: "place",
+              picture: countryFlag,
+            },
             {
               name: "Tenant groups",
               as: "entities",
