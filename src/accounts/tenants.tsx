@@ -3,7 +3,7 @@ import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
 import { tenantArt } from "../platform/tenant-art";
 import { signUpTenantHref, tenantHref } from "../route";
-import { PLANS, TENANTS, progressOf, type Environment, type Tenant } from "./mock";
+import { TENANTS, progressOf, type Environment, type Tenant } from "./mock";
 import { ResetBalances } from "./tenant-dialogs";
 
 const ENVIRONMENTS: readonly Environment[] = ["Production", "Demo", "API sandbox"];
@@ -73,7 +73,6 @@ export function Tenants() {
             },
           },
           { name: "Type", value: (one) => one.type, cell: (one) => one.type },
-          { name: "Plan", value: (one) => one.plan, cell: (one) => one.plan },
           { name: "Payee ID", as: "identifier", standard: "id", hidden: true, value: (one) => one.payeeId },
           { name: "Partner ID", as: "identifier", standard: "id", hidden: true, value: (one) => one.partnerId },
           { name: "Created", as: "date", value: (one) => one.created },
@@ -89,7 +88,6 @@ export function Tenants() {
         ],
         filters: [
           { kind: "anyOf", key: "type", label: "Type", options: ["Parent", "Standalone"], of: (one) => one.type },
-          { kind: "anyOf", key: "plan", label: "Plan", options: PLANS, of: (one) => one.plan },
           {
             kind: "switches",
             key: "setup",

@@ -11,8 +11,8 @@ export type AccountsPage = (typeof ACCOUNTS_PAGES)[number];
 
 
 /**
- * A tenant's facets, in the order its nav lists them. Children is a parent's alone: a standalone
- * tenant's nav leaves it out.
+ * A tenant's facets, in the order its nav lists them, each under the heading it is filed by
+ * (TENANT_GROUPS). Clients is a parent's alone: a standalone tenant's nav leaves it out.
  */
 export const TENANT_FACETS = [
   "Overview",
@@ -20,16 +20,30 @@ export const TENANT_FACETS = [
   "Details",
   "Users",
   "Payees",
-  "Integrations",
-  "White label",
-  "Transactions by payor",
-  "DSPs",
-  "Analytics",
+  "Clients",
   "Tenant configuration",
+  "White label",
+  "DSPs",
+  "Integrations",
+  "Analytics",
+  "Transactions by payor",
   "Notes",
-  "Children",
 ] as const;
 export type TenantFacet = (typeof TENANT_FACETS)[number];
+
+/** The headings a tenant's facets are filed under: who it holds, how it is set up, what happened on it. */
+export const TENANT_GROUPS: Partial<Record<TenantFacet, string>> = {
+  Users: "People",
+  Payees: "People",
+  Clients: "People",
+  "Tenant configuration": "Settings",
+  "White label": "Settings",
+  DSPs: "Settings",
+  Integrations: "Settings",
+  Analytics: "Settings",
+  "Transactions by payor": "Activity",
+  Notes: "Activity",
+};
 
 /** The facets of the records the other Accounts pages open, each in the order its nav lists them. */
 export const ENTERPRISE_FACETS = ["Details", "Users", "Payees"] as const;

@@ -1,7 +1,7 @@
 import { CollectionPage } from "@revelator/pro-ui";
 
 import { editEnterpriseHref, enterpriseHref, tenantFormHref } from "../route";
-import { PLANS, TENANTS, enterprises } from "./mock";
+import { TENANTS, enterprises } from "./mock";
 import { enterpriseMark } from "./enterprises";
 import { tenantPicture } from "./tenants";
 
@@ -50,7 +50,6 @@ export function Clients() {
             entity: "organization",
             picture: (named) => pictures.get(named),
           },
-          { name: "Subscription plan", hidden: true, value: (one) => one.plan, cell: (one) => one.plan },
           { name: "On trial", value: (one) => (one.onTrial ? 1 : 0), cell: (one) => yesNo(one.onTrial) },
           { name: "Locked out", value: (one) => (one.lockedOut ? 1 : 0), cell: (one) => yesNo(one.lockedOut) },
           { name: "Payment blocked", value: (one) => (one.paymentBlocked ? 1 : 0), cell: (one) => yesNo(one.paymentBlocked) },
@@ -65,7 +64,6 @@ export function Clients() {
             options: parents.map((one) => one.name),
             of: (one) => one.parent?.name ?? "",
           },
-          { kind: "anyOf", key: "plan", label: "Subscription plan", options: PLANS, of: (one) => one.plan },
           {
             kind: "switches",
             key: "account",

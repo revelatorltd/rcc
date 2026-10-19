@@ -32,7 +32,7 @@ const enterprisesFirstChild = () => payees().find((one) => !one.enterprise.tenan
 /**
  * A client account — a child enterprise a parent tenant holds, as a record.
  *
- * Most of what it is, it takes from its parent: the plan, whether it is held back.
+ * Most of what it is, it takes from its parent: whether it is held back.
  * Its own are its name and its payee. A tenant opens on its own record, which holds far more.
  */
 export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseFacet }) {
@@ -57,7 +57,6 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
             title="Enterprise"
             facts={[
               { label: "Parent enterprise", value: <Link opens={tenantHref(parent.enterpriseId)}>{parent.name}</Link> },
-              { label: "Plan", value: enterprise.plan },
               { label: "Enterprise ID", value: enterprise.enterpriseId, standard: "id" },
               { label: "Payee ID", value: enterprise.payeeId, standard: "id" },
               { label: "Created", as: "date", value: enterprise.created },
@@ -84,7 +83,7 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
         mark: enterpriseMark(enterprise),
         name: enterprise.name,
         kind: "Client account",
-        facts: [{ identifier: enterprise.enterpriseId, standard: "id" }, { text: enterprise.plan }],
+        facts: [{ identifier: enterprise.enterpriseId, standard: "id" }],
         actions: [editCommand(enterprise)],
         more: [{ label: "Open parent", opens: tenantHref(parent.enterpriseId) }],
       }}

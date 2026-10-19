@@ -230,7 +230,7 @@ const TEMPLATE = ["Larkspur Sound", "Quarry Lane", "Ember & Oak", "Tidewater Fol
  */
 export function ImportChildren({ id }: { id: string }) {
   const tenant = tenantById(id);
-  const leave = back(tenant, "Children");
+  const leave = back(tenant, "Clients");
   const [file, setFile] = useState<File | null>(null);
   return (
     <Wizard

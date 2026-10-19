@@ -28,6 +28,7 @@ import { dspFor } from "@revelator/pro-ui/assets";
 
 import {
   TENANT_FACETS,
+  TENANT_GROUPS,
   accountsHref,
   editEnterpriseHref,
   enterpriseHref,
@@ -181,9 +182,9 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
       },
       body: <TenantWhiteLabel tenant={tenant} />,
     },
-    Children: {
-      header: { name: "Children", actions: [{ label: "Import client accounts", opens: tenantFormHref(tenant.enterpriseId, "import") }] },
-      body: <TenantChildren tenant={tenant} />,
+    Clients: {
+      header: { name: "Clients", actions: [{ label: "Import client accounts", opens: tenantFormHref(tenant.enterpriseId, "import") }] },
+      body: <TenantClients tenant={tenant} />,
     },
   };
   const shown = FACETS[facet];
@@ -213,7 +214,6 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
           // The ENTERPRISE ID alone: a second id chip beside it could not say whose it is
           // (gaps.md) — the payee's is read in the Details.
           { identifier: tenant.enterpriseId, standard: "id" },
-          { text: tenant.plan },
           // WHERE ITS RELEASES GO: it changes what every store and step below it means.
           { text: tenant.environment },
         ],
@@ -253,7 +253,6 @@ function TenantOverview({ tenant }: { tenant: Tenant }) {
           opens={tenantHref(tenant.enterpriseId, "Details")}
           facts={[
             { label: "Type", value: tenant.type },
-            { label: "Plan", value: tenant.plan },
             { label: "Environment", value: tenant.environment },
           ]}
         />
@@ -302,9 +301,9 @@ function TenantOverview({ tenant }: { tenant: Tenant }) {
         </TitledCard>
         {tenant.type === "Parent" ? (
           <FacetCard
-            title="Children"
+            title="Clients"
             count={tenant.children.length}
-            opens={tenantHref(tenant.enterpriseId, "Children")}
+            opens={tenantHref(tenant.enterpriseId, "Clients")}
             figures={[{ label: "Payees", as: "count", value: payeesOf(tenant).length }]}
           />
         ) : null}
@@ -406,7 +405,6 @@ function TenantDetails({ tenant }: { tenant: Tenant }) {
         title="Enterprise"
         facts={[
           { label: "Type", value: tenant.type },
-          { label: "Plan", value: tenant.plan },
           { label: "Environment", value: tenant.environment },
           { label: "Enterprise ID", value: tenant.enterpriseId, standard: "id" },
           { label: "Payee ID", value: tenant.payeeId, standard: "id" },
@@ -533,7 +531,7 @@ function TenantWhiteLabel({ tenant }: { tenant: Tenant }) {
 }
 
 /** The client accounts a parent tenant holds, newest first. */
-function TenantChildren({ tenant }: { tenant: Tenant }) {
+function TenantClients({ tenant }: { tenant: Tenant }) {
   return (
     <RecordIndex
       rows={tenant.children}
@@ -557,12 +555,13 @@ function TenantChildren({ tenant }: { tenant: Tenant }) {
   );
 }
 
-/** The tenant's facets — Children a parent's alone — and the way back to the tenants. */
+/** The tenant's facets, under their headings — Clients a parent's alone — and the way back to the tenants. */
 function tenantNav({ id, facet }: { id: string; facet: TenantFacet }): RecordNavProps<TenantFacet> {
   const tenant = tenantById(id);
   return {
     back: { index: "Tenants", opens: accountsHref("tenants") },
-    facets: TENANT_FACETS.filter((one) => one !== "Children" || tenant.type === "Parent"),
+    facets: TENANT_FACETS.filter((one) => one !== "Clients" || tenant.type === "Parent"),
+    groups: TENANT_GROUPS,
     at: facet,
     addressOf: (one) => tenantHref(id, one),
   };

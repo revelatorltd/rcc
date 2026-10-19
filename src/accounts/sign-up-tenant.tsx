@@ -15,10 +15,9 @@ import {
 } from "@revelator/pro-ui";
 
 import { accountsHref, go, tenantHref } from "../route";
-import { PLANS, addTenant, nextEnterpriseId, signedUp, TODAY } from "./mock";
+import { addTenant, nextEnterpriseId, signedUp, TODAY } from "./mock";
 
 
-const choices = (values: readonly string[]) => values.map((value) => ({ value, title: value }));
 
 /** A subdomain, as the organization's name gives one — lower case, letters and figures, at most 30. */
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 30);
@@ -41,14 +40,13 @@ export function SignUpTenant() {
       noun={{ one: "tenant", many: "tenants" }}
       note="Creates the enterprise, its payee and the account owner. The tenant still needs a white label before it loads; its setup walks you through the rest."
       onExit={leave}
-      subject={(answers) => ({ kind: "organization", name: answers.org ?? "", meta: [answers.plan ?? "", answers.setup ?? ""] })}
+      subject={(answers) => ({ kind: "organization", name: answers.org ?? "", meta: [answers.setup ?? ""] })}
       draft={{
         sandbox: owed<string>("No"),
         firstName: owed.text,
         lastName: owed.text,
         ownerEmail: owed.email,
         org: owed.text,
-        plan: owed<string>("1 - Free"),
         setup: owed<string>("Standalone"),
         country: unanswered.country,
         subdomain: unanswered.text,
@@ -63,7 +61,6 @@ export function SignUpTenant() {
             enterpriseId,
             name: answers.org.trim(),
             taxCountry: typeof answers.country === "string" && answers.country ? answers.country : undefined,
-            plan: answers.plan,
             environment: answers.sandbox === "Yes" ? "Demo" : "Production",
             type: answers.setup === "Parent" ? "Parent" : "Standalone",
             created: TODAY,
@@ -124,7 +121,6 @@ export function SignUpTenant() {
           <WizardRow title="Organization">
             <WizardRowBody>
               <Field as="text" name="org" label="Organization name" />
-              <Field as="choice" name="plan" label="Subscription plan" noun={{ one: "plan", many: "plans" }} options={choices(PLANS)} />
             </WizardRowBody>
           </WizardRow>
           <WizardRow title="Account setup">

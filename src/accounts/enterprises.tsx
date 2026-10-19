@@ -2,7 +2,7 @@ import { Avatar, CollectionPage } from "@revelator/pro-ui";
 
 import { tenantArt } from "../platform/tenant-art";
 import { editEnterpriseHref, enterpriseHref, tenantHref } from "../route";
-import { PLANS, enterprises, type Enterprise } from "./mock";
+import { enterprises, type Enterprise } from "./mock";
 import { tenantMark, tenantPicture } from "./tenants";
 
 const TYPES: readonly Enterprise["type"][] = ["Parent", "Standalone", "Child"];
@@ -72,7 +72,6 @@ export function Enterprises() {
             noun: { one: "parent enterprise", many: "parent enterprises" },
             entity: "organization",
           },
-          { name: "Subscription plan", value: (one) => one.plan, cell: (one) => one.plan },
           { name: "Is parent", value: (one) => (one.type === "Parent" ? 1 : 0), cell: (one) => (one.type === "Parent" ? "Yes" : "No") },
           { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
           { name: "Partner ID", as: "identifier", standard: "id", hidden: true, value: (one) => one.partnerId },
@@ -86,7 +85,6 @@ export function Enterprises() {
           { name: "Client accounts", holds: (one) => one.type === "Child" },
         ],
         filters: [
-          { kind: "anyOf", key: "plan", label: "Subscription plan", options: PLANS, of: (one) => one.plan },
           {
             kind: "switches",
             key: "account",

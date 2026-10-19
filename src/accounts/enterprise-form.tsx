@@ -16,7 +16,6 @@ import { enterpriseHref, go, tenantHref } from "../route";
 import {
   FILESTACK,
   PARTNERS,
-  PLANS,
   TENANTS,
   enterpriseById,
   enterprises,
@@ -56,7 +55,7 @@ const ARTISTS = ["Juno Vale", "The Marram", "Ottoline Reyes", "Sable Harbour", "
 
 /**
  * An enterprise, edited the way RCC edits it — every enterprise on the one form, a tenant or a client
- * account: what it is and who may sign in, its partner and plan, what its users may release, how it is
+ * account: what it is and who may sign in, its partner and currency, what its users may release, how it is
  * paid and delivers, its ISRCs, the rest of its switches, who its emails come from, what a client
  * account it makes may do, and how long its analytics are kept.
  *
@@ -76,14 +75,13 @@ export function EditEnterprise({ id }: { id: string }) {
       noun={{ one: "enterprise", many: "enterprises" }}
       note={`Enterprise ID ${enterprise.enterpriseId} · payee ID ${enterprise.payeeId} · created ${enterprise.created.toLocaleDateString("en-US")}`}
       onExit={leave}
-      subject={(answers) => ({ kind: "organization", name: answers.name ?? enterprise.name, meta: [answers.plan ?? enterprise.plan] })}
+      subject={(answers) => ({ kind: "organization", name: answers.name ?? enterprise.name, meta: [answers.currency ?? enterprise.currency] })}
       draft={{
         name: owed(enterprise.name),
         onTrial: owed(yes(enterprise.onTrial)),
         lockedOut: owed(yes(enterprise.lockedOut)),
         paymentBlocked: owed(yes(enterprise.paymentBlocked)),
         partner: enterprise.partnerId ?? unanswered.record,
-        plan: owed<string>(enterprise.plan),
         currency: owed<string>(enterprise.currency),
         allowRingtones: owed(maybe(settings.allowRingtones)),
         allowVideos: owed(maybe(settings.allowVideos)),
@@ -141,7 +139,6 @@ export function EditEnterprise({ id }: { id: string }) {
           enterprise.enterpriseId,
           {
             name: answers.name.trim(),
-            plan: answers.plan,
             onTrial: on(answers.onTrial),
             lockedOut: on(answers.lockedOut),
             paymentBlocked: on(answers.paymentBlocked),
@@ -236,9 +233,8 @@ export function EditEnterprise({ id }: { id: string }) {
               <WizardRowTip>Left blank, no partner is associated with it. Pick one to associate it, and save.</WizardRowTip>
             </WizardRowTips>
           </WizardRow>
-          <WizardRow title="Plan">
+          <WizardRow title="Currency">
             <WizardRowBody>
-              <Field as="choice" name="plan" label="Subscription plan" noun={{ one: "plan", many: "plans" }} options={choices(PLANS)} />
               <Field
                 as="choice"
                 name="currency"
