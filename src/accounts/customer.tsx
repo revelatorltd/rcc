@@ -398,7 +398,7 @@ export const customerPlace = ({ id, facet }: { id: string; facet: CustomerFacet 
     page: customer.name,
     record: customerNav({ id, facet }),
     trail: [
-      { label: "Accounts", opens: accountsHref("customers") },
+      { label: "Accounts", opens: accountsHref("tenants") },
       { label: "Customers", opens: accountsHref("customers") },
       { label: customer.name },
     ],

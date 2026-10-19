@@ -76,7 +76,7 @@ export const whiteLabelPlace = ({ id, facet }: { id: string; facet: WhiteLabelFa
     page: label.domain,
     record: nav,
     trail: [
-      { label: "Accounts", opens: accountsHref("customers") },
+      { label: "Accounts", opens: accountsHref("tenants") },
       { label: "White labels", opens: accountsHref("white-labels") },
       { label: label.domain },
     ],

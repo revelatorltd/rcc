@@ -21,17 +21,23 @@ const PRODUCT: ShellProduct = {
     {
       name: "Accounts",
       mark: "storefront",
-      opens: accountsHref("customers"),
+      opens: accountsHref("tenants"),
       pages: [
         {
           pages: [
-            { name: "Customers", opens: accountsHref("customers") },
             { name: "Tenants", opens: accountsHref("tenants") },
-            { name: "Enterprises", opens: accountsHref("enterprises") },
             { name: "Partners", opens: accountsHref("partners") },
             { name: "Payees", opens: accountsHref("payees") },
             { name: "Users", opens: accountsHref("users") },
             { name: "White labels", opens: accountsHref("white-labels") },
+          ],
+        },
+        // ON THEIR WAY OUT: still opened, listed apart so nobody starts new work there.
+        {
+          label: "Deprecated",
+          pages: [
+            { name: "Customers", opens: accountsHref("customers") },
+            { name: "Enterprises", opens: accountsHref("enterprises") },
           ],
         },
       ],

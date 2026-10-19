@@ -138,7 +138,7 @@ export const userPlace = ({ id, facet }: { id: string; facet: UserFacet }): Shel
     page: user.name,
     record: nav,
     trail: [
-      { label: "Accounts", opens: accountsHref("customers") },
+      { label: "Accounts", opens: accountsHref("tenants") },
       { label: "Users", opens: accountsHref("users") },
       { label: user.name },
     ],

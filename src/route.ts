@@ -118,7 +118,7 @@ function read(hash: string): Route {
   if (!section || PLATFORM_PAGES.some((one) => one === section))
     return { name: "platform", route: readPlatform([section || "organizations", written, id, facet]) };
   const page = ACCOUNTS_PAGES.find((one) => one === written);
-  if (section !== "accounts" || !page) return { name: "accounts", page: "customers" };
+  if (section !== "accounts" || !page) return { name: "accounts", page: "tenants" };
   if (!id) return { name: "accounts", page };
 
   // The forms first: their addresses would otherwise read as a record's facet.

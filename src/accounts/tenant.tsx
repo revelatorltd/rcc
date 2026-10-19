@@ -592,7 +592,7 @@ export const tenantPlace = ({ id, facet }: { id: string; facet: TenantFacet }): 
     page: tenant.name,
     record: tenantNav({ id, facet }),
     trail: [
-      { label: "Accounts", opens: accountsHref("customers") },
+      { label: "Accounts", opens: accountsHref("tenants") },
       { label: "Tenants", opens: accountsHref("tenants") },
       { label: tenant.name },
     ],

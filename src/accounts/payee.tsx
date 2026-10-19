@@ -136,7 +136,7 @@ export const payeePlace = ({ id, facet }: { id: string; facet: PayeeFacet }): Sh
     page: payee.name,
     record: nav,
     trail: [
-      { label: "Accounts", opens: accountsHref("customers") },
+      { label: "Accounts", opens: accountsHref("tenants") },
       { label: "Payees", opens: accountsHref("payees") },
       { label: payee.name },
     ],

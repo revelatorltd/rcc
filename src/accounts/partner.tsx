@@ -119,7 +119,7 @@ export const partnerPlace = ({ id, facet }: { id: string; facet: PartnerFacet })
     page: partner.name,
     record: nav,
     trail: [
-      { label: "Accounts", opens: accountsHref("customers") },
+      { label: "Accounts", opens: accountsHref("tenants") },
       { label: "Partners", opens: accountsHref("partners") },
       { label: partner.name },
     ],

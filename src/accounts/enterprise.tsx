@@ -112,7 +112,7 @@ export const enterprisePlace = ({ id, facet }: { id: string; facet: EnterpriseFa
     page: enterprise.name,
     record: nav,
     trail: [
-      { label: "Accounts", opens: accountsHref("customers") },
+      { label: "Accounts", opens: accountsHref("tenants") },
       { label: "Enterprises", opens: accountsHref("enterprises") },
       { label: enterprise.name },
     ],
