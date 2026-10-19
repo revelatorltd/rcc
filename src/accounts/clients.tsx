@@ -50,7 +50,7 @@ export function Clients() {
             entity: "organization",
             picture: (named) => pictures.get(named),
           },
-          { name: "Subscription plan", value: (one) => one.plan, cell: (one) => one.plan },
+          { name: "Subscription plan", hidden: true, value: (one) => one.plan, cell: (one) => one.plan },
           { name: "On trial", value: (one) => (one.onTrial ? 1 : 0), cell: (one) => yesNo(one.onTrial) },
           { name: "Locked out", value: (one) => (one.lockedOut ? 1 : 0), cell: (one) => yesNo(one.lockedOut) },
           { name: "Payment blocked", value: (one) => (one.paymentBlocked ? 1 : 0), cell: (one) => yesNo(one.paymentBlocked) },
