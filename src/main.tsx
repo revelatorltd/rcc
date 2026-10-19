@@ -9,6 +9,7 @@ import { AddSubscription } from "./accounts/add-subscription";
 import { CustomerWizard } from "./accounts/customer-form";
 import { Customers } from "./accounts/customers";
 import { EnterpriseDetail, enterprisePlace } from "./accounts/enterprise";
+import { Clients } from "./accounts/clients";
 import { Enterprises } from "./accounts/enterprises";
 import { PartnerDetail, partnerPlace } from "./accounts/partner";
 import { NewPartner, Partners } from "./accounts/partners";
@@ -39,6 +40,7 @@ import { Frame } from "./shell";
 const PAGE_NAMES: Record<AccountsPage, string> = {
   customers: "Customers",
   tenants: "Tenants",
+  clients: "Clients",
   enterprises: "Enterprises",
   partners: "Partners",
   payees: "Payees",
@@ -165,6 +167,7 @@ function pageOf(route: Route) {
   if (route.name === "user") return <UserDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "white-label") return <WhiteLabelDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "accounts" && route.page === "tenants") return <Tenants />;
+  if (route.name === "accounts" && route.page === "clients") return <Clients />;
   if (route.name === "accounts" && route.page === "enterprises") return <Enterprises />;
   if (route.name === "accounts" && route.page === "partners") return <Partners />;
   if (route.name === "accounts" && route.page === "payees") return <Payees />;

@@ -6,7 +6,7 @@ import { PLATFORM_PAGES, readPlatform, type PlatformRoute } from "./platform/rou
  * Where the reader is, read off the address bar — a hash, as the replica reads it, so nothing
  * beside the system has to be explained when the result is read.
  */
-export const ACCOUNTS_PAGES = ["customers", "tenants", "enterprises", "partners", "payees", "users", "white-labels"] as const;
+export const ACCOUNTS_PAGES = ["customers", "tenants", "clients", "enterprises", "partners", "payees", "users", "white-labels"] as const;
 export type AccountsPage = (typeof ACCOUNTS_PAGES)[number];
 
 /** A customer's facets, in the order its nav lists them — the one it opens on first. */
@@ -85,7 +85,8 @@ const recordHref = (page: AccountsPage, first: string) => (id: string, facet: st
 
 export const customerHref: (id: string, facet?: CustomerFacet) => string = recordHref("customers", "Overview");
 export const tenantHref: (id: string, facet?: TenantFacet) => string = recordHref("tenants", "Overview");
-export const enterpriseHref: (id: string, facet?: EnterpriseFacet) => string = recordHref("enterprises", "Details");
+/** A client account, filed under the clients — the address the Enterprises page once gave it still opens it. */
+export const enterpriseHref: (id: string, facet?: EnterpriseFacet) => string = recordHref("clients", "Details");
 export const partnerHref: (id: string, facet?: PartnerFacet) => string = recordHref("partners", "Details");
 export const payeeHref: (id: string, facet?: PayeeFacet) => string = recordHref("payees", "Details");
 export const userHref: (id: string, facet?: UserFacet) => string = recordHref("users", "Details");
@@ -139,6 +140,7 @@ function read(hash: string): Route {
       return { name: "customer", id, facet: facetOf(CUSTOMER_FACETS, facet) };
     case "tenants":
       return { name: "tenant", id, facet: facetOf(TENANT_FACETS, facet) };
+    case "clients":
     case "enterprises":
       return { name: "enterprise", id, facet: facetOf(ENTERPRISE_FACETS, facet) };
     case "partners":

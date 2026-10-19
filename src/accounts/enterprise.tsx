@@ -102,7 +102,7 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
 export const enterprisePlace = ({ id, facet }: { id: string; facet: EnterpriseFacet }): ShellPlace => {
   const enterprise = childOf(id);
   const nav: RecordNavProps<EnterpriseFacet> = {
-    back: { index: "Enterprises", opens: accountsHref("enterprises") },
+    back: { index: "Clients", opens: accountsHref("clients") },
     facets: ENTERPRISE_FACETS,
     at: facet,
     addressOf: (one) => enterpriseHref(enterprise.enterpriseId, one),
@@ -113,7 +113,7 @@ export const enterprisePlace = ({ id, facet }: { id: string; facet: EnterpriseFa
     record: nav,
     trail: [
       { label: "Accounts", opens: accountsHref("tenants") },
-      { label: "Enterprises", opens: accountsHref("enterprises") },
+      { label: "Clients", opens: accountsHref("clients") },
       { label: enterprise.name },
     ],
   };
