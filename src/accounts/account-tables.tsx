@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { Avatar, RecordIndex } from "@revelator/pro-ui";
+import { Avatar, Badge, RecordIndex } from "@revelator/pro-ui";
 
 import { editUserHref, payeeHref, userHref } from "../route";
 import { enterprisePicture } from "./enterprises";
 import { USER_ACCESS, accounts, type Payee, type Tenant, type TenantUser } from "./mock";
-import { payeeMark } from "./payees";
+import { PAYEE_STATUSES, payeeMark } from "./payees";
 import { ManageAccess, RemoveAccess, SetOwner } from "./tenant-dialogs";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
@@ -103,6 +103,12 @@ export function EnterprisePayees({ rows }: { rows: readonly Payee[] }) {
       searchBy={["Payee", "Payee ID", "Enterprise ID", "Enterprise", "Contact ID", "Contact", "Email", "Payor IDs"]}
       columns={[
         { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
+        {
+          name: "Status",
+          value: (one) => PAYEE_STATUSES.indexOf(one.status),
+          cell: (one) => <Badge status={`payee:${one.status}`} />,
+          readings: ["All"],
+        },
         { name: "Enterprise ID", as: "identifier", standard: "id", value: (one) => one.enterprise.enterpriseId },
         {
           name: "Enterprise",
@@ -127,6 +133,10 @@ export function EnterprisePayees({ rows }: { rows: readonly Payee[] }) {
           noun: { one: "parent enterprise", many: "parent enterprises" },
           entity: "organization",
         },
+      ]}
+      readings={[
+        { name: "All", holds: () => true },
+        ...PAYEE_STATUSES.map((status) => ({ name: status, holds: (one: Payee) => one.status === status })),
       ]}
       empty={{ holder: "this enterprise", line: true }}
     />

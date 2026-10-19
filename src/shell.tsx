@@ -26,8 +26,6 @@ const PRODUCT: ShellProduct = {
         {
           pages: [
             { name: "Tenants", opens: accountsHref("tenants") },
-            { name: "Partners", opens: accountsHref("partners") },
-            { name: "Payees", opens: accountsHref("payees") },
             { name: "Users", opens: accountsHref("users") },
           ],
         },
@@ -38,6 +36,8 @@ const PRODUCT: ShellProduct = {
             { name: "Customers", opens: accountsHref("customers") },
             { name: "Enterprises", opens: accountsHref("enterprises") },
             { name: "White labels", opens: accountsHref("white-labels") },
+            { name: "Partners", opens: accountsHref("partners") },
+            { name: "Payees", opens: accountsHref("payees") },
           ],
         },
       ],
