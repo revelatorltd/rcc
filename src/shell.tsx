@@ -29,7 +29,6 @@ const PRODUCT: ShellProduct = {
             { name: "Partners", opens: accountsHref("partners") },
             { name: "Payees", opens: accountsHref("payees") },
             { name: "Users", opens: accountsHref("users") },
-            { name: "White labels", opens: accountsHref("white-labels") },
           ],
         },
         // ON THEIR WAY OUT: still opened, listed apart so nobody starts new work there.
@@ -38,6 +37,7 @@ const PRODUCT: ShellProduct = {
           pages: [
             { name: "Customers", opens: accountsHref("customers") },
             { name: "Enterprises", opens: accountsHref("enterprises") },
+            { name: "White labels", opens: accountsHref("white-labels") },
           ],
         },
       ],
