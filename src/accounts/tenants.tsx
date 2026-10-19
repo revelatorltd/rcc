@@ -3,23 +3,15 @@ import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
 import { tenantArt } from "../platform/tenant-art";
 import { signUpTenantHref, tenantHref } from "../route";
-import { CUSTOMERS, PLANS, TENANTS, customerOf, progressOf, type Environment, type Tenant } from "./mock";
+import { PLANS, TENANTS, progressOf, type Environment, type Tenant } from "./mock";
 import { ResetBalances } from "./tenant-dialogs";
 
 const ENVIRONMENTS: readonly Environment[] = ["Production", "Demo", "API sandbox"];
 
-/** A customer's own mark, found by the name the cell is given. */
-const markOf = (name: string) => {
-  const organization = CUSTOMERS.find((one) => one.name === name)?.organization;
-  return organization ? ORGANIZATIONS[organization].art : undefined;
-};
-
 /**
  * A tenant, as the mark it is known by — square, because a tenant is a workspace and not a person;
- * its CUSTOMER'S logo, the one the customer wears on Customers, so a tenant reads as its customer's
- * wherever it stands. One with no customer, or a customer with no logo of its own, wears the logo
- * invented from its name. ONE function, so the row a reader pressed and the band they landed on
- * wear the same mark.
+ * its organization's logo where the system ships one, otherwise the logo invented from its name.
+ * ONE function, so the row a reader pressed and the band they landed on wear the same mark.
  */
 export const tenantMark = (one: Tenant) => (
   <Avatar kind="organization" name={one.name}>
@@ -27,14 +19,11 @@ export const tenantMark = (one: Tenant) => (
   </Avatar>
 );
 
-/** A tenant's logo, as an image address: its customer's, else one invented from its name. */
-export const tenantPicture = (one: Tenant) => {
-  const organization = customerOf(one)?.organization;
-  return organization ? ORGANIZATIONS[organization].art : tenantArt(one.name);
-};
+/** A tenant's logo, as an image address: its organization's, else one invented from its name. */
+export const tenantPicture = (one: Tenant) => (one.organization ? ORGANIZATIONS[one.organization].art : tenantArt(one.name));
 
 /**
- * The tenants — every enterprise signed up under a customer that holds a catalogue of its own: the
+ * The tenants — every enterprise signed up in RCC that holds a catalogue of its own: the
  * parents and the standalones. A parent's client accounts are its children, read on the parent.
  *
  * A COLLECTION PAGE: the set's name, what grows it, and the one index. Where a tenant delivers is
@@ -69,19 +58,6 @@ export function Tenants() {
             cell: (one) => one.environment,
             // Every row of a single environment's reading would say the same word.
             readings: ["All"],
-          },
-          {
-            // ANOTHER RECORD as a value: the customer named with its mark. Not a link — a row
-            // leads to one place, the tenant — so the customer is reached from the tenant's band.
-            name: "Customer",
-            as: "entities",
-            value: (one) => {
-              const customer = customerOf(one);
-              return customer ? [customer.name] : [];
-            },
-            noun: { one: "customer", many: "customers" },
-            entity: "organization",
-            picture: markOf,
           },
           {
             // A SHARE of a whole read down the column — how far each tenant's setup has come —
@@ -120,7 +96,6 @@ export function Tenants() {
             label: "Setup",
             switches: [
               { key: "unfinished", label: "Setup unfinished", holds: (one) => progressOf(one).done < progressOf(one).of },
-              { key: "customer", label: "No customer", holds: (one) => !one.customerId },
             ],
           },
           {

@@ -6,12 +6,9 @@ import { PLATFORM_PAGES, readPlatform, type PlatformRoute } from "./platform/rou
  * Where the reader is, read off the address bar — a hash, as the replica reads it, so nothing
  * beside the system has to be explained when the result is read.
  */
-export const ACCOUNTS_PAGES = ["customers", "tenants", "clients", "enterprises", "partners", "payees", "users", "white-labels"] as const;
+export const ACCOUNTS_PAGES = ["tenants", "clients", "enterprises", "partners", "payees", "users", "white-labels"] as const;
 export type AccountsPage = (typeof ACCOUNTS_PAGES)[number];
 
-/** A customer's facets, in the order its nav lists them — the one it opens on first. */
-export const CUSTOMER_FACETS = ["Overview", "Details", "Subscriptions", "Contacts", "Tenants"] as const;
-export type CustomerFacet = (typeof CUSTOMER_FACETS)[number];
 
 /**
  * A tenant's facets, in the order its nav lists them. Children is a parent's alone: a standalone
@@ -47,26 +44,21 @@ export type UserFacet = (typeof USER_FACETS)[number];
 export type WhiteLabelFacet = (typeof WHITE_LABEL_FACETS)[number];
 
 /**
- * The forms that cover the shell — a wizard each — by what they do. A customer's and a tenant's are
- * read off the record's address; signing up a tenant off the tenants', with the customer it is for.
+ * The forms that cover the shell — a wizard each — by what they do. A tenant's are read off the
+ * record's address; signing up a tenant off the tenants'.
  */
-export const CUSTOMER_FORMS = ["edit", "add-subscription"] as const;
-export const TENANT_FORMS = ["edit", "configure", "convert", "new-white-label", "edit-white-label", "new-partner", "import"] as const;
-export type CustomerForm = (typeof CUSTOMER_FORMS)[number];
+export const TENANT_FORMS = ["edit", "configure", "new-white-label", "edit-white-label", "new-partner", "import"] as const;
 export type TenantForm = (typeof TENANT_FORMS)[number];
 
 export type Route =
   | { name: "accounts"; page: AccountsPage }
-  | { name: "customer"; id: string; facet: CustomerFacet }
   | { name: "tenant"; id: string; facet: TenantFacet }
   | { name: "enterprise"; id: string; facet: EnterpriseFacet }
   | { name: "partner"; id: string; facet: PartnerFacet }
   | { name: "payee"; id: string; facet: PayeeFacet }
   | { name: "user"; id: string; facet: UserFacet }
   | { name: "white-label"; id: string; facet: WhiteLabelFacet }
-  | { name: "new-customer" }
-  | { name: "sign-up-tenant"; customerId?: string }
-  | { name: "customer-form"; id: string; form: CustomerForm }
+  | { name: "sign-up-tenant" }
   | { name: "tenant-form"; id: string; form: TenantForm }
   | { name: "new-partner" }
   | { name: "edit-user"; id: string }
@@ -83,7 +75,6 @@ const slug = (facet: string) => facet.toLowerCase().replace(/ /g, "-");
 const recordHref = (page: AccountsPage, first: string) => (id: string, facet: string = first) =>
   facet === first ? `#/accounts/${page}/${id}` : `#/accounts/${page}/${id}/${slug(facet)}`;
 
-export const customerHref: (id: string, facet?: CustomerFacet) => string = recordHref("customers", "Overview");
 export const tenantHref: (id: string, facet?: TenantFacet) => string = recordHref("tenants", "Overview");
 /** A client account, filed under the clients — the address the Enterprises page once gave it still opens it. */
 export const enterpriseHref: (id: string, facet?: EnterpriseFacet) => string = recordHref("clients", "Details");
@@ -92,10 +83,7 @@ export const payeeHref: (id: string, facet?: PayeeFacet) => string = recordHref(
 export const userHref: (id: string, facet?: UserFacet) => string = recordHref("users", "Details");
 export const whiteLabelHref: (id: string, facet?: WhiteLabelFacet) => string = recordHref("white-labels", "Details");
 
-export const newCustomerHref = () => "#/accounts/customers/new";
-export const signUpTenantHref = (customerId?: string) =>
-  customerId ? `#/accounts/tenants/new/${customerId}` : "#/accounts/tenants/new";
-export const customerFormHref = (id: string, form: CustomerForm) => `#/accounts/customers/${id}/${form}`;
+export const signUpTenantHref = () => "#/accounts/tenants/new";
 export const tenantFormHref = (id: string, form: TenantForm) => `#/accounts/tenants/${id}/${form}`;
 export const newPartnerHref = () => "#/accounts/partners/new";
 export const editUserHref = (id: string) => `#/accounts/users/${id}/edit`;
@@ -123,21 +111,16 @@ function read(hash: string): Route {
   if (!id) return { name: "accounts", page };
 
   // The forms first: their addresses would otherwise read as a record's facet.
-  if (page === "customers" && id === "new") return { name: "new-customer" };
-  if (page === "tenants" && id === "new") return { name: "sign-up-tenant", customerId: facet };
+  if (page === "tenants" && id === "new") return { name: "sign-up-tenant" };
   if (page === "partners" && id === "new") return { name: "new-partner" };
   if (page === "white-labels" && id === "new") return { name: "new-white-label" };
   if (page === "users" && facet === "edit") return { name: "edit-user", id };
   if (page === "enterprises" && facet === "edit") return { name: "edit-enterprise", id };
   if (page === "white-labels" && facet === "edit") return { name: "edit-white-label", id };
-  const customerForm = CUSTOMER_FORMS.find((one) => one === facet);
-  if (page === "customers" && customerForm) return { name: "customer-form", id, form: customerForm };
   const tenantForm = TENANT_FORMS.find((one) => one === facet);
   if (page === "tenants" && tenantForm) return { name: "tenant-form", id, form: tenantForm };
 
   switch (page) {
-    case "customers":
-      return { name: "customer", id, facet: facetOf(CUSTOMER_FACETS, facet) };
     case "tenants":
       return { name: "tenant", id, facet: facetOf(TENANT_FACETS, facet) };
     case "clients":

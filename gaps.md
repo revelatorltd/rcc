@@ -3,29 +3,31 @@
 What RCC's pages asked of the design system and did not find. A page never draws a gap: it is
 logged here, decided in `../ui-components`, and the page adopts the decision.
 
-Reference: the RCC prototype (`Platform Ops Accounts.dc.html`, Accounts → Customers).
+Reference: the RCC prototype (`Platform Ops Accounts.dc.html`).
 
-## Accounts → Customers
+**Customers and subscriptions were removed from the platform on 2026-10-19**, and RCC with them: the
+Customers pages, their forms, and a tenant's link to a customer and subscription. The gaps asked
+only for them are withdrawn below (struck through); the rest were first met there and still stand
+for any index or record.
+
+## Accounts → Customers (removed)
 
 | # | Asked for | Prototype | Here, until decided |
 | - | --------- | --------- | ------------------- |
-| 2 | A customer's **subscription state** — linked, or none yet | Linked / Needs subscription badge | not drawn; filterable (No subscription) |
+| 2 | ~~A customer's **subscription state** — linked, or none yet~~ | ~~Linked / Needs subscription badge~~ | withdrawn: customers removed |
 | 3 | A **second line** under a record's name (its email) | email under the name | an Email column |
-| 4 | **Type** (Client, Warner entity, Demo) | badge | text: a category, not a state |
-| 5 | A **quick filter beside the search** (All statuses) | select in the toolbar | the index's readings — see below |
+| 4 | ~~**Type** (Client, Warner entity, Demo)~~ | ~~badge~~ | withdrawn: customers removed |
+| 5 | A **quick filter beside the search** (All statuses) | select in the toolbar | the index's readings |
 | 6 | The **product chrome** — app switcher, notifications | in the top bar | absent |
 | 7 | **Export as an icon-only control** beside the action (Download as CSV) | download icon in the toolbar | Export in the header's overflow, as the page header says |
 
-Decided by the system rather than asked: status is the index's **readings** (All, Active, Onboarding,
-Churned, Terminated), the form for a set that divides into parts a reader moves between.
-
-## Accounts → Customers → a customer
+## Accounts → Customers → a customer (removed)
 
 | # | Asked for | Prototype | Here, until decided |
 | - | --------- | --------- | ------------------- |
-| 8 | The customer's subscription state on the band | Subscription linked badge | not drawn (gap 2) |
+| 8 | ~~The customer's subscription state on the band~~ | ~~Subscription linked badge~~ | withdrawn: customers removed |
 | 9 | A **long name** in the record header — cut at 335 of 960 px at 1440 wide, beside the mark and three controls | full name | truncated (Bluefen Distri…) |
-| 11 | Subscription coupon, note and creation date | columns | not held by the fixtures yet |
+| 11 | ~~Subscription coupon, note and creation date~~ | ~~columns~~ | withdrawn: customers removed |
 
 ## Accounts → Tenants
 
@@ -36,9 +38,7 @@ Reference: `ixTenants()` in the prototype.
 | 12 | A **tenant's standing** as a status family: Setting up (underway), Live (settled), On trial (noted), Payment blocked (attention), Locked out (failed) | three badge columns (Trial, Locked out, Payment blocked) and badges on the band | not drawn on the row or band; switches under Account in the filters, and an alert in the record's Details |
 
 Decided by the system rather than asked: **where a tenant delivers** (Production, Demo, API sandbox) is the
-index's readings. Its **customer** is a value cell naming the record with its mark, not a link: a row
-leads to one place, so the customer is reached from the tenant. **Setup** is a progress cell, a
-share read down the column with its figure.
+index's readings. **Setup** is a progress cell, a share read down the column with its figure.
 
 ## Accounts → Tenants → a tenant
 
@@ -51,17 +51,17 @@ share read down the column with its figure.
 | 30 | A **field for a count** (a retention in days) — the field genres hold money, percent and minutes-and-seconds, none a whole number of something | Trends / Revenue / V3 Trends Retention Days: free number inputs | Edit analytics offers each retention as a choice of standard spans (90, 365, 730 days…); a span off that list cannot be entered. Max artists on the enterprise form is a text field meanwhile, left blank for no limit |
 | 31 | **The identifier chip shows that it copies** — on hover, the copy icon animates in beside the value, so a reader knows pressing it puts the ID on the clipboard (asked for every ID chip: user, tenant, enterprise, payee IDs, in tables and on a record's band) | — | the chip already copies when pressed and names its whole value in a tooltip; nothing on it says it copies. No icon is drawn on the page |
 
-## Forms (customers and tenants)
+## Forms (tenants)
 
 Reference: `vCustNew`, `vSubNew`, `vSignup`, `vCfgEdit`, `vEntEdit`, `vAddUser`, `vImport`,
 `vPartnerForm` and the white label form in the prototype.
 
 | # | Asked for | Prototype | Here, until decided |
 | - | --------- | --------- | ------------------- |
-| 16 | A **field whose options follow another answer**: the tax ID types of the country picked, the subscriptions of the customer picked, a Warner entity's rates held at 0 | the select refills, or disables, as the answer above it changes | every tax ID type is offered, and one left blank follows the country; only customers with a subscription are offered, and the commit links the one that fits; a Warner entity's rates are saved as 0 whatever was typed |
+| 16 | A **field whose options follow another answer**: a Warner entity's rates held at 0 (the customer's tax ID types and subscriptions went with customers) | the select refills, or disables, as the answer above it changes | a Warner entity's rates are typed as 0 |
 | 17 | A **yes-or-no answer** in a declared form | a checkbox (Is sandbox, Trial?, Locked out?) | a choice of Yes and No; where the answer names something, a choice of what (Production, Demo, API sandbox) |
 | 18 | **Word of what a commit did** — a toast | a toast after every save | none: each form returns to the page that shows what it added |
-| 19 | A wizard that **opens another and comes back** to its draft (sign-up → new customer or subscription → sign-up) | the sign-up's draft is set aside and restored | a tip sends the reader to the customer first; the sign-up offers only customers that can take a tenant |
+| 19 | ~~A wizard that **opens another and comes back** to its draft (sign-up → new customer or subscription → sign-up)~~ | ~~the sign-up's draft is set aside and restored~~ | withdrawn: sign-up no longer opens a customer |
 
 Decided by RCC rather than asked:
 

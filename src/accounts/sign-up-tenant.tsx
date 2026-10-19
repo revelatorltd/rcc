@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Field,
   Input,
-  Link,
   Wizard,
   WizardRow,
   WizardRowBody,
@@ -14,13 +13,10 @@ import {
   owed,
   unanswered,
 } from "@revelator/pro-ui";
-import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
-import { accountsHref, customerHref, go, newCustomerHref, tenantHref } from "../route";
-import { PLANS, addTenant, CUSTOMERS, customerById, nextEnterpriseId, RECORDS, signedUp, TODAY } from "./mock";
+import { accountsHref, go, tenantHref } from "../route";
+import { PLANS, addTenant, nextEnterpriseId, signedUp, TODAY } from "./mock";
 
-/** The customer every demo and API sandbox is signed up under. */
-const DEMO_CUSTOMER = "232";
 
 const choices = (values: readonly string[]) => values.map((value) => ({ value, title: value }));
 
@@ -29,20 +25,14 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "").sli
 
 /**
  * A tenant signed up — its enterprise, its payee and its owner, in one commit — asking what RCC's
- * Sign up new tenant asks, in its order: the customer and the subscription it is signed up on,
- * the account owner, the account, and its distribution contract.
+ * Sign up new tenant asks, in its order, now that customers and subscriptions are gone from the
+ * platform: whether it is a sandbox, the account owner, the account, and its distribution contract.
  *
- * A WIZARD on one flow. Only a customer with a subscription can take a tenant, so only those are
- * offered, and only the picked customer's subscription is taken. The tenant still needs a white label
- * before it loads: it opens on its Setup, which walks the rest.
- *
- * Opened from the tenants, or from a customer, which it then begins with.
+ * A WIZARD on one flow. The tenant still needs a white label before it loads: it opens on its
+ * Setup, which walks the rest.
  */
-export function SignUpTenant({ customerId }: { customerId?: string }) {
-  const given = customerId ? customerById(customerId) : undefined;
-  const record = given ? RECORDS[given.id] : undefined;
-  const leave = () => go(given ? customerHref(given.id, "Tenants") : accountsHref("tenants"));
-  const offered = given && given.subscriptions.length > 0 ? [given] : CUSTOMERS.filter((one) => one.subscriptions.length > 0);
+export function SignUpTenant() {
+  const leave = () => go(accountsHref("tenants"));
   // The PASSWORD is never kept: it is handed to the product as it is typed, and is not an answer.
   const [password, setPassword] = useState("");
   return (
@@ -53,32 +43,26 @@ export function SignUpTenant({ customerId }: { customerId?: string }) {
       onExit={leave}
       subject={(answers) => ({ kind: "organization", name: answers.org ?? "", meta: [answers.plan ?? "", answers.setup ?? ""] })}
       draft={{
-        customer: owed(given && given.subscriptions.length > 0 ? given.id : ""),
-        sandbox: owed<string>(given?.id === DEMO_CUSTOMER ? "Yes" : "No"),
-        subscription: owed(given?.subscriptions.length === 1 ? `${given.id}:${given.subscriptions[0]!.id}` : ""),
+        sandbox: owed<string>("No"),
         firstName: owed.text,
         lastName: owed.text,
         ownerEmail: owed.email,
-        org: owed(given && given.id !== DEMO_CUSTOMER ? given.name : ""),
+        org: owed.text,
         plan: owed<string>("1 - Free"),
         setup: owed<string>("Standalone"),
         country: unanswered.country,
         subdomain: unanswered.text,
-        ugc: record ? owed(record.ugcRate) : owed.percent,
-        dsp: given ? owed(given.dspRate) : owed.percent,
-        youtube: record ? owed(record.youtubeRate) : owed.percent,
+        ugc: owed.percent,
+        dsp: owed.percent,
+        youtube: owed.percent,
       }}
-      // The SUBSCRIPTION is the picked customer's own.
-      ready={(answers) => !answers.subscription || answers.subscription.startsWith(`${answers.customer}:`)}
       onCommit={(answers) => {
-        const customer = customerById(answers.customer);
         const enterpriseId = nextEnterpriseId();
         addTenant(
           signedUp({
             enterpriseId,
             name: answers.org.trim(),
-            customerId: customer.id,
-            subscriptionId: answers.subscription.slice(customer.id.length + 1),
+            taxCountry: typeof answers.country === "string" && answers.country ? answers.country : undefined,
             plan: answers.plan,
             environment: answers.sandbox === "Yes" ? "Demo" : "Production",
             type: answers.setup === "Parent" ? "Parent" : "Standalone",
@@ -93,33 +77,8 @@ export function SignUpTenant({ customerId }: { customerId?: string }) {
       }}
     >
       <WizardSection>
-        <WizardSectionHeader title="Customer and subscription" />
+        <WizardSectionHeader title="Environment" />
         <WizardSectionBody>
-          <WizardRow title="Customer">
-            <WizardRowBody>
-              <Field
-                as="record"
-                name="customer"
-                label="Customer"
-                entity="organization"
-                noun={{ one: "customer", many: "customers" }}
-                standard="id"
-                options={offered.map((one) => ({
-                  value: one.id,
-                  title: one.name,
-                  code: one.id,
-                  art: one.organization ? ORGANIZATIONS[one.organization].art : undefined,
-                }))}
-                help="Its contract fills the rates below."
-              />
-            </WizardRowBody>
-            <WizardRowTips>
-              <WizardRowTip>
-                Only a customer with a subscription is offered. Not there yet? <Link opens={newCustomerHref()}>Create new customer</Link>, and
-                add its subscription, before its first tenant.
-              </WizardRowTip>
-            </WizardRowTips>
-          </WizardRow>
           <WizardRow title="Sandbox">
             <WizardRowBody>
               <Field
@@ -128,30 +87,12 @@ export function SignUpTenant({ customerId }: { customerId?: string }) {
                 label="Is sandbox"
                 options={[
                   { value: "No", title: "No", description: "A live client: its releases reach the stores." },
-                  { value: "Yes", title: "Yes", description: "A demo or an API partner's test bench, under the demo account. Nothing it releases goes live." },
+                  { value: "Yes", title: "Yes", description: "A demo or an API partner's test bench. Nothing it releases goes live." },
                 ]}
               />
             </WizardRowBody>
-          </WizardRow>
-          <WizardRow title="Subscription">
-            <WizardRowBody>
-              <Field
-                as="record"
-                name="subscription"
-                label="Subscription"
-                entity="document"
-                noun={{ one: "subscription", many: "subscriptions" }}
-                options={offered.flatMap((one) =>
-                  one.subscriptions.map((each) => ({
-                    value: `${one.id}:${each.id}`,
-                    title: each.id,
-                    code: [one.name, each.product, each.sandbox ? "Sandbox" : undefined].filter(Boolean).join(" · "),
-                  })),
-                )}
-              />
-            </WizardRowBody>
             <WizardRowTips>
-              <WizardRowTip>The picked customer's own. A sandbox tenant goes on its sandbox subscription.</WizardRowTip>
+              <WizardRowTip>A tenant is no longer linked to a customer or a subscription: its contract is the rates below.</WizardRowTip>
             </WizardRowTips>
           </WizardRow>
         </WizardSectionBody>
@@ -206,7 +147,7 @@ export function SignUpTenant({ customerId }: { customerId?: string }) {
             </WizardRowBody>
             <WizardRowTips>
               <WizardRowTip>
-                The customer's domain until they connect their own. For a demo, decide now whether it will convert as it is — the
+                The client's domain until they connect their own. For a demo, decide now whether it will convert as it is — the
                 real name — or stay a demo, and say so in it.
               </WizardRowTip>
             </WizardRowTips>
@@ -219,14 +160,14 @@ export function SignUpTenant({ customerId }: { customerId?: string }) {
         <WizardSectionBody>
           <WizardRow title="Rates">
             <WizardRowBody>
-              <Field as="percent" name="ugc" label="UGC rate" help="Portion of UGC distribution revenue we keep; the remainder goes to the customer." />
-              <Field as="percent" name="dsp" label="DSP rate" help="Portion of DSP distribution revenue we keep; the remainder goes to the customer." />
+              <Field as="percent" name="ugc" label="UGC rate" help="Portion of UGC distribution revenue we keep; the remainder goes to the client." />
+              <Field as="percent" name="dsp" label="DSP rate" help="Portion of DSP distribution revenue we keep; the remainder goes to the client." />
               <Field as="percent" name="youtube" label="YouTube channel rate" />
             </WizardRowBody>
             <WizardRowTips>
               <WizardRowTip>
-                Filled from the customer's contract; a Warner entity keeps 0. A demo's rates mean nothing — its releases never go
-                live — so keeping the demo account's saves editing them if it converts.
+                What Revelator keeps, from the client's contract; a Warner entity keeps 0. A demo's rates mean nothing — its
+                releases never go live — but set them as the client's if it may convert.
               </WizardRowTip>
             </WizardRowTips>
           </WizardRow>

@@ -13,14 +13,13 @@ import {
 import {
   ENTERPRISE_FACETS,
   accountsHref,
-  customerHref,
   enterpriseHref,
   tenantHref,
   type EnterpriseFacet,
 } from "../route";
 import { EnterprisePayees, EnterpriseUsers } from "./account-tables";
 import { editCommand, enterpriseMark } from "./enterprises";
-import { customerOf, enterpriseById, payees, usersOf, type Enterprise } from "./mock";
+import { enterpriseById, payees, usersOf, type Enterprise } from "./mock";
 
 /** The enterprise the address names — a client account; anything else lands on the first one. */
 const childOf = (id: string): Enterprise => {
@@ -33,13 +32,12 @@ const enterprisesFirstChild = () => payees().find((one) => !one.enterprise.tenan
 /**
  * A client account — a child enterprise a parent tenant holds, as a record.
  *
- * Most of what it is, it takes from its parent: the plan, the customer, whether it is held back.
+ * Most of what it is, it takes from its parent: the plan, whether it is held back.
  * Its own are its name and its payee. A tenant opens on its own record, which holds far more.
  */
 export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseFacet }) {
   const enterprise = childOf(id);
   const parent = enterprise.parent!;
-  const customer = customerOf(parent);
 
   const FACETS: Record<EnterpriseFacet, { header?: DetailFacet; body: ReactNode }> = {
     Details: {
@@ -59,7 +57,6 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
             title="Enterprise"
             facts={[
               { label: "Parent enterprise", value: <Link opens={tenantHref(parent.enterpriseId)}>{parent.name}</Link> },
-              { label: "Customer", value: customer ? <Link opens={customerHref(customer.id)}>{customer.name}</Link> : undefined },
               { label: "Plan", value: enterprise.plan },
               { label: "Enterprise ID", value: enterprise.enterpriseId, standard: "id" },
               { label: "Payee ID", value: enterprise.payeeId, standard: "id" },

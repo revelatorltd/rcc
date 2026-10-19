@@ -8,7 +8,7 @@ import { tenantMark, tenantPicture } from "./tenants";
 const TYPES: readonly Enterprise["type"][] = ["Parent", "Standalone", "Child"];
 
 /**
- * An enterprise, as the mark it is known by: a tenant wears its customer's logo (`tenantMark`); a
+ * An enterprise, as the mark it is known by: a tenant wears its own logo (`tenantMark`); a
  * client account, a label of its own, the logo invented from its name.
  */
 export const enterpriseMark = (one: Enterprise) =>

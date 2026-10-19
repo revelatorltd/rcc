@@ -28,6 +28,21 @@ export function ResetBalances({ tenant, ...held }: HeldBy & { tenant: Tenant }) 
   );
 }
 
+/**
+ * A demo or an API sandbox moved to production — asked first: it loses its sandbox DSPs and its API
+ * partner's bench, and delivers to the real DSPs once they are turned on.
+ */
+export function ConvertToProduction({ tenant, ...held }: HeldBy & { tenant: Tenant }) {
+  return (
+    <ConfirmationDialog
+      {...held}
+      asks={`${tenant.name} becomes a production tenant: its sandbox DSPs and its API partner are removed, and it delivers once its DSPs are turned on.`}
+      confirm="Convert"
+      onCommit={() => updateTenant(tenant.enterpriseId, { environment: "Production", stores: undefined, storesLive: 0, partnerId: undefined })}
+    />
+  );
+}
+
 /** Every way a user reaches a tenant, as a field offers them. */
 const ACCESS_OPTIONS = USER_ACCESS.map((one) => ({ value: one, title: one }));
 

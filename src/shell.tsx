@@ -34,7 +34,6 @@ const PRODUCT: ShellProduct = {
         {
           label: "Deprecated",
           pages: [
-            { name: "Customers", opens: accountsHref("customers") },
             { name: "Enterprises", opens: accountsHref("enterprises") },
             { name: "White labels", opens: accountsHref("white-labels") },
             { name: "Partners", opens: accountsHref("partners") },

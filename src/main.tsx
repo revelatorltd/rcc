@@ -4,10 +4,6 @@ import { createRoot } from "react-dom/client";
 import "@revelator/pro-ui/styles.css";
 import { TodayProvider, type ShellPlace } from "@revelator/pro-ui";
 
-import { CustomerDetail, customerPlace } from "./accounts/customer";
-import { AddSubscription } from "./accounts/add-subscription";
-import { CustomerWizard } from "./accounts/customer-form";
-import { Customers } from "./accounts/customers";
 import { EnterpriseDetail, enterprisePlace } from "./accounts/enterprise";
 import { Clients } from "./accounts/clients";
 import { Enterprises } from "./accounts/enterprises";
@@ -38,7 +34,6 @@ import { Frame } from "./shell";
 
 /** Each Accounts page, by the name its nav entry gives it. */
 const PAGE_NAMES: Record<AccountsPage, string> = {
-  customers: "Customers",
   tenants: "Tenants",
   clients: "Clients",
   enterprises: "Enterprises",
@@ -107,7 +102,6 @@ function platformPageOf(route: PlatformRoute): { cover?: ReactNode; page?: React
 /** Where the address puts the reader, for the frame the app draws around every page. */
 function placeOf(route: Route): ShellPlace {
   if (route.name === "platform") return platformPlaceOf(route.route);
-  if (route.name === "customer") return customerPlace(route);
   if (route.name === "tenant") return tenantPlace(route);
   if (route.name === "enterprise") return enterprisePlace(route);
   if (route.name === "partner") return partnerPlace(route);
@@ -115,7 +109,7 @@ function placeOf(route: Route): ShellPlace {
   if (route.name === "user") return userPlace(route);
   if (route.name === "white-label") return whiteLabelPlace(route);
   if (route.name === "accounts") return { at: "Accounts", page: PAGE_NAMES[route.page] };
-  return { at: "Accounts", page: "Customers" };
+  return { at: "Accounts", page: "Tenants" };
 }
 
 /**
@@ -124,24 +118,20 @@ function placeOf(route: Route): ShellPlace {
  */
 function coverOf(route: Route): ReactNode {
   if (route.name === "platform") return platformPageOf(route.route).cover ?? null;
-  if (route.name === "new-customer") return <CustomerWizard key="new" />;
   if (route.name === "new-partner") return <NewPartner key="new" />;
   if (route.name === "edit-user") return <EditUser key={route.id} id={route.id} />;
   if (route.name === "edit-enterprise") return <EditEnterprise key={route.id} id={route.id} />;
   if (route.name === "new-white-label") return <WhiteLabelWizard key="new" back={accountsHref("white-labels")} />;
   if (route.name === "edit-white-label")
     return <WhiteLabelWizard key={route.id} id={route.id} back={whiteLabelHref(route.id)} />;
-  if (route.name === "customer-form" && route.form === "edit") return <CustomerWizard key={route.id} customerId={route.id} />;
-  if (route.name === "customer-form") return <AddSubscription key={route.id} customerId={route.id} />;
-  if (route.name === "sign-up-tenant") return <SignUpTenant key={route.customerId ?? "any"} customerId={route.customerId} />;
+  if (route.name === "sign-up-tenant") return <SignUpTenant />;
   if (route.name === "tenant-form") {
     const key = `${route.id}/${route.form}`;
     switch (route.form) {
       case "edit":
         return <EditEnterprise key={key} id={route.id} />;
       case "configure":
-      case "convert":
-        return <TenantConfiguration key={key} id={route.id} convert={route.form === "convert"} />;
+        return <TenantConfiguration key={key} id={route.id} />;
       case "new-white-label":
       case "edit-white-label":
         return <WhiteLabelForm key={key} id={route.id} />;
@@ -158,22 +148,19 @@ function pageOf(route: Route) {
   if (route.name === "platform") return platformPageOf(route.route).page;
   // KEYED by the record AND its facet: a second record opens fresh, and so does each facet — an index
   // keeps the narrowing it began with, and one facet's filters are not the next one's.
-  if (route.name === "customer")
-    return <CustomerDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "tenant") return <TenantDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "enterprise") return <EnterpriseDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "partner") return <PartnerDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "payee") return <PayeeDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "user") return <UserDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "white-label") return <WhiteLabelDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
-  if (route.name === "accounts" && route.page === "tenants") return <Tenants />;
   if (route.name === "accounts" && route.page === "clients") return <Clients />;
   if (route.name === "accounts" && route.page === "enterprises") return <Enterprises />;
   if (route.name === "accounts" && route.page === "partners") return <Partners />;
   if (route.name === "accounts" && route.page === "payees") return <Payees />;
   if (route.name === "accounts" && route.page === "users") return <Users />;
   if (route.name === "accounts" && route.page === "white-labels") return <WhiteLabels />;
-  return <Customers />;
+  return <Tenants />;
 }
 
 function App() {

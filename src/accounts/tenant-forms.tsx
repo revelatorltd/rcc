@@ -15,11 +15,9 @@ import {
   owed,
   unanswered,
 } from "@revelator/pro-ui";
-import { ORGANIZATIONS } from "@revelator/pro-ui/assets";
 
 import { go, tenantHref, type TenantFacet } from "../route";
 import {
-  CUSTOMERS,
   TODAY,
   addPartner,
   configDefaultsOf,
@@ -40,44 +38,26 @@ const MAYBE = choices(["Yes", "No", "Not set"]);
 const maybe = (value: boolean | null) => (value === null ? "Not set" : yes(value));
 const unmaybe = (value: string) => (value === "Not set" ? null : value === "Yes");
 
-/** The customer every demo and API sandbox is signed up under. */
-const DEMO_CUSTOMER = "232";
-
-/** Every customer, as a record a field offers — its mark and its id. */
-const customerOptions = () =>
-  CUSTOMERS.map((one) => ({
-    value: one.id,
-    title: one.name,
-    code: one.id,
-    art: one.organization ? ORGANIZATIONS[one.organization].art : undefined,
-  }));
-
 /** Back to the tenant, on the facet the form grows. */
 const back = (tenant: Tenant, facet: TenantFacet) => () => go(tenantHref(tenant.enterpriseId, facet));
 
 /**
- * The tenant's configuration — the customer it reports and pays against, and where it delivers.
- *
- * The same form CONVERTS a demo or a sandbox to production: it swaps the demo account for the real
- * customer, whose subscription and contract then apply, and the tenant delivers to the stores.
- * Linking a tenant no customer was tied to is this form too.
+ * The tenant's configuration — where it delivers, how it signs in, and what it may do. A tenant is no
+ * longer linked to a customer: what it pays against is its own distribution contract.
  */
-export function TenantConfiguration({ id, convert }: { id: string; convert: boolean }) {
+export function TenantConfiguration({ id }: { id: string }) {
   const tenant = tenantById(id);
   const config = configDefaultsOf(tenant);
-  // LINKING a tenant no customer was tied to is a setup step, and returns to the setup; changing
-  // the entry returns to it.
-  const leave = back(tenant, convert || !tenant.customerId ? "Setup" : "Tenant configuration");
+  const leave = back(tenant, "Tenant configuration");
   return (
     <Wizard
-      {...(convert ? { verb: "Convert" } : { editing: true as const })}
-      noun={{ one: convert ? "tenant to production" : "tenant configuration", many: "tenant configurations" }}
+      editing
+      noun={{ one: "tenant configuration", many: "tenant configurations" }}
       note={`${tenant.name} · enterprise ID ${tenant.enterpriseId}`}
       onExit={leave}
       subject={{ kind: "organization", name: tenant.name, meta: [tenant.environment] }}
       draft={{
-        customer: owed(convert && tenant.customerId === DEMO_CUSTOMER ? "" : (tenant.customerId ?? "")),
-        environment: owed(convert ? "Production" : tenant.environment),
+        environment: owed(tenant.environment),
         authTenantId: owed(config.authTenantId),
         authClientId: owed(config.authClientId),
         domain: config.domain ?? unanswered.text,
@@ -89,13 +69,10 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
         withholdingTax: owed(yes(config.withholdingTax)),
         noTransactionalEmails: owed(yes(config.noTransactionalEmails)),
       }}
-      // CONVERTING keeps no tenant under the demo account: the real customer is the point of it.
-      ready={(answers) => !convert || answers.customer !== DEMO_CUSTOMER}
       onCommit={(answers) => {
         const text = (value: unknown) => (typeof value === "string" && value.trim()) || undefined;
         const domain = text(answers.domain);
         updateTenant(tenant.enterpriseId, {
-          customerId: answers.customer,
           environment: answers.environment as Environment,
           domain,
           config: {
@@ -111,8 +88,6 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
             withholdingTax: answers.withholdingTax === "Yes",
             noTransactionalEmails: answers.noTransactionalEmails === "Yes",
           },
-          // A tenant moved to production loses its sandbox stores and its API partner's bench.
-          ...(convert ? { stores: undefined, storesLive: 0, partnerId: undefined } : {}),
         });
         leave();
       }}
@@ -120,40 +95,16 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
       <WizardSection>
         <WizardSectionHeader title="Tenant configuration" />
         <WizardSectionBody>
-          <WizardRow title="Customer">
+          <WizardRow title="Where it delivers">
             <WizardRowBody>
-              <Field
-                as="record"
-                name="customer"
-                label="Customer"
-                entity="organization"
-                noun={{ one: "customer", many: "customers" }}
-                standard="id"
-                options={customerOptions()}
-              />
+              <Field as="choice" name="environment" label="Environment" options={choices(["Production", "Demo", "API sandbox"])} />
             </WizardRowBody>
             <WizardRowTips>
-              <WizardRowTip>
-                {convert
-                  ? "Swap the demo account for the real customer: its subscription and contract then apply."
-                  : "The contract holder this tenant reports and pays against."}
-              </WizardRowTip>
+              <WizardRowTip>Is sandbox tenant: a demo or an API sandbox delivers nowhere. Convert it to production once the client is ready to go live.</WizardRowTip>
             </WizardRowTips>
           </WizardRow>
-          {convert ? null : (
-            <WizardRow title="Where it delivers">
-              <WizardRowBody>
-                <Field as="choice" name="environment" label="Environment" options={choices(["Production", "Demo", "API sandbox"])} />
-              </WizardRowBody>
-              <WizardRowTips>
-                <WizardRowTip>Is sandbox tenant: a demo or an API sandbox delivers nowhere. Convert it to production once the customer is ready.</WizardRowTip>
-              </WizardRowTips>
-            </WizardRow>
-          )}
         </WizardSectionBody>
       </WizardSection>
-      {convert ? null : (
-        <>
           <WizardSection>
             <WizardSectionHeader title="Sign-in" />
             <WizardSectionBody>
@@ -208,8 +159,6 @@ export function TenantConfiguration({ id, convert }: { id: string; convert: bool
               </WizardRow>
             </WizardSectionBody>
           </WizardSection>
-        </>
-      )}
     </Wizard>
   );
 }

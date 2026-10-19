@@ -10,7 +10,6 @@ import {
   EmptyState,
   FacetCard,
   FactCard,
-  Link,
   Metadata,
   Progress,
   RecordIndex,
@@ -30,7 +29,6 @@ import { dspFor } from "@revelator/pro-ui/assets";
 import {
   TENANT_FACETS,
   accountsHref,
-  customerHref,
   editEnterpriseHref,
   enterpriseHref,
   partnerHref,
@@ -39,7 +37,6 @@ import {
   type TenantFacet,
 } from "../route";
 import {
-  customerOf,
   isSandbox,
   payees,
   payeesOf,
@@ -54,7 +51,7 @@ import {
   type Tenant,
   type TenantStore,
 } from "./mock";
-import { AddUser, InviteUser, ResetBalances } from "./tenant-dialogs";
+import { AddUser, ConvertToProduction, InviteUser, ResetBalances } from "./tenant-dialogs";
 import {
   AddNote,
   ConnectProvider,
@@ -77,12 +74,7 @@ const yesNo = (value: boolean) => (value ? "Yes" : "No");
  * the stores waits on a form RCC has not built yet, and is offered without an address.
  */
 function commandOf(one: Tenant, step: SetupStep): Command {
-  const customer = customerOf(one);
   switch (step.key) {
-    case "customer":
-      if (!customer) return { label: "Link customer", opens: tenantFormHref(one.enterpriseId, "configure") };
-      // Linked but owed: the customer's subscription is added on the customer.
-      return { label: "Open customer", opens: customerHref(customer.id, step.done ? "Overview" : "Subscriptions") };
     case "white-label":
       return one.whiteLabel
         ? { label: "Open white label", opens: tenantHref(one.enterpriseId, "White label") }
@@ -204,7 +196,7 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
   const more: Command[] = [
     { label: "Edit enterprise", opens: editEnterpriseHref(tenant.enterpriseId) },
     { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
-    ...(isSandbox(tenant) ? [{ label: "Convert to production", opens: tenantFormHref(tenant.enterpriseId, "convert") }] : []),
+    ...(isSandbox(tenant) ? [{ label: "Convert to production", dialog: <ConvertToProduction tenant={tenant} /> }] : []),
     { label: "Billing" },
     { label: "Reset balances", destructive: true, dialog: <ResetBalances tenant={tenant} /> },
   ];
@@ -245,7 +237,6 @@ function TenantOverview({ tenant }: { tenant: Tenant }) {
   const stores = storesOf(tenant);
   const on = stores.filter((one) => one.active).length;
   const users = usersOf(tenant);
-  const customer = customerOf(tenant);
   return (
     <DetailOverview>
       <DetailOverviewGrid>
@@ -261,8 +252,8 @@ function TenantOverview({ tenant }: { tenant: Tenant }) {
           title="Details"
           opens={tenantHref(tenant.enterpriseId, "Details")}
           facts={[
-            { label: "Customer", value: customer?.name },
             { label: "Type", value: tenant.type },
+            { label: "Plan", value: tenant.plan },
             { label: "Environment", value: tenant.environment },
           ]}
         />
@@ -382,7 +373,7 @@ function TenantSetup({ tenant }: { tenant: Tenant }) {
       </TitledCard>
       {isSandbox(tenant) ? (
         <Alert intent="info" title={tenant.environment === "Demo" ? "Demo tenant" : "API sandbox"}>
-          Nothing it releases reaches a store. Convert it to production once the customer is ready.
+          Nothing it releases reaches a store. Convert it to production once the client is ready to go live.
         </Alert>
       ) : null}
     </Metadata>
@@ -394,7 +385,6 @@ function TenantSetup({ tenant }: { tenant: Tenant }) {
  * and how its payees are paid.
  */
 function TenantDetails({ tenant }: { tenant: Tenant }) {
-  const customer = customerOf(tenant);
   return (
     <Metadata>
       {tenant.lockedOut ? (
@@ -409,16 +399,12 @@ function TenantDetails({ tenant }: { tenant: Tenant }) {
       ) : null}
       {isSandbox(tenant) ? (
         <Alert intent="info" title={tenant.environment === "Demo" ? "Demo tenant" : "API sandbox"}>
-          Nothing it releases reaches a store. Convert it to production once the customer is ready.
+          Nothing it releases reaches a store. Convert it to production once the client is ready to go live.
         </Alert>
       ) : null}
       <FactCard
         title="Enterprise"
         facts={[
-          {
-            label: "Customer",
-            value: customer ? <Link opens={customerHref(customer.id)}>{customer.name}</Link> : undefined,
-          },
           { label: "Type", value: tenant.type },
           { label: "Plan", value: tenant.plan },
           { label: "Environment", value: tenant.environment },
@@ -429,17 +415,15 @@ function TenantDetails({ tenant }: { tenant: Tenant }) {
           { label: "Created", as: "date", value: tenant.created },
         ]}
       />
-      {/* ITS OWN RATES where it was signed up here; otherwise the customer's contract applies. */}
-      {tenant.rates ? (
-        <FactCard
-          title="Distribution contract"
-          facts={[
-            { label: "DSP rate", as: "percent", value: tenant.rates.dsp },
-            { label: "UGC rate", as: "percent", value: tenant.rates.ugc },
-            { label: "YouTube channel rate", as: "percent", value: tenant.rates.youtube },
-          ]}
-        />
-      ) : null}
+      <FactCard
+        title="Distribution contract"
+        facts={[
+          { label: "DSP rate", as: "percent", value: tenant.rates.dsp },
+          { label: "UGC rate", as: "percent", value: tenant.rates.ugc },
+          { label: "YouTube channel rate", as: "percent", value: tenant.rates.youtube },
+          { label: "Tax domicile country", value: tenant.taxCountry },
+        ]}
+      />
       <FactCard
         title="Account"
         facts={[

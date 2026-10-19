@@ -2,23 +2,18 @@ import { useMemo } from "react";
 import {
   Avatar,
   Badge,
-  Button,
   ConfirmationDialog,
-  EmptyState,
   FactCard,
   Field,
   FormDialog,
-  Link,
   Metadata,
   RecordIndex,
-  Slot,
-  TitledCard,
   owed,
   type HeldBy,
 } from "@revelator/pro-ui";
 import { dspFor } from "@revelator/pro-ui/assets";
 
-import { customerHref, payeeHref, tenantFormHref } from "../route";
+import { payeeHref } from "../route";
 import {
   addNote,
   analyticsOf,
@@ -259,34 +254,15 @@ export function MigrateToWhiteLabel({ tenant, ...held }: HeldBy & { tenant: Tena
   );
 }
 
-/**
- * The tenant's entry in the supply chain's tenant configuration — what it may do, switched. None
- * until a customer is linked, which is what writes it.
- */
+/** The tenant's entry in the supply chain's tenant configuration — what it may do, switched. */
 export function TenantConfigurationFacet({ tenant }: { tenant: Tenant }) {
   const config = configOf(tenant);
-  if (!config)
-    return (
-      <TitledCard title="Tenant configuration">
-        <Slot layout="empty">
-          <EmptyState title="No tenant configuration yet" detail="Linking the tenant to its customer writes its entry.">
-            <Button asChild>
-              <a href={tenantFormHref(tenant.enterpriseId, "configure")}>Link customer</a>
-            </Button>
-          </EmptyState>
-        </Slot>
-      </TitledCard>
-    );
   return (
     <Metadata>
       <FactCard
         title="Identity"
         facts={[
           { label: "Enterprise ID", value: tenant.enterpriseId, standard: "id" },
-          {
-            label: "Customer ID",
-            value: tenant.customerId ? <Link opens={customerHref(tenant.customerId)}>{tenant.customerId}</Link> : undefined,
-          },
           { label: "Domain", value: config.domain },
           { label: "Auth tenant ID", value: config.authTenantId, standard: "id" },
           { label: "Auth client ID", value: config.authClientId, standard: "id" },

@@ -13,133 +13,6 @@ const day = (year: number, month: number, date: number) => new Date(year, month 
 /** The subscription plans, as the product numbers them. */
 export const PLANS = ["1 - Free", "2 - Artist", "3 - Growth", "4 - Scale", "5 - Enterprise", "7 - Launch", "8 - Trends"] as const;
 
-/** Where the customer stands with Revelator. */
-export type CustomerStatus = "Active" | "Onboarding" | "Churned" | "Terminated";
-/** Who holds the contract: a client of Revelator's, an entity of Warner's, or Revelator's own demo. */
-export type CustomerType = "Client" | "Warner entity" | "Demo";
-
-export interface Subscription {
-  id: string;
-  /** A sandbox subscription carries demo and test tenants, never a live catalogue. */
-  sandbox: boolean;
-  product: "Enterprise" | "Revelator Pro" | "API";
-  /** The discount Stripe applies to it, where one was given. */
-  coupon?: string;
-  /** What it is for, where the product does not say it — demo tenants, a Warner imprint. */
-  note?: string;
-  /** The day it was linked in RCC, where it was linked here. */
-  linked?: Date;
-}
-
-export interface Customer {
-  id: string;
-  name: string;
-  /** The organization whose mark the customer wears, where it has one — the demo account has none. */
-  organization?: OrganizationSlug;
-  email?: string;
-  status: CustomerStatus;
-  type: CustomerType;
-  subscriptions: readonly Subscription[];
-  /** The share of DSP revenue Revelator keeps, in percent. */
-  dspRate: number;
-  created: Date;
-  /** The day the contract ended — the customer left, or Revelator ended it — after which it earns nothing. */
-  ended?: Date;
-}
-
-const enterprise = (id: string): Subscription => ({ id, sandbox: false, product: "Enterprise" });
-
-export let CUSTOMERS: readonly Customer[] = [
-  { id: "512", name: "Lowtide Assembly", organization: "lowtide-assembly", email: "office@lowtide-assembly.co", status: "Onboarding", type: "Client", subscriptions: [], dspRate: 12, created: day(2026, 10, 15) },
-  { id: "509", name: "Verdant Static", organization: "verdant-static", email: "accounts@verdantstatic.io", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rverdant509")], dspRate: 5, created: day(2026, 10, 13) },
-  { id: "506", name: "Atlas Harbor Music", organization: "atlas-harbor-music", email: "label@atlasharbor.nl", status: "Onboarding", type: "Warner entity", subscriptions: [], dspRate: 0, created: day(2026, 10, 11) },
-  { id: "501", name: "Paperkite Sound", organization: "paperkite-sound", email: "hi@paperkite.fm", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rpaperkite501")], dspRate: 3, created: day(2026, 10, 2) },
-  { id: "497", name: "Ninefold Records", organization: "ninefold-records", status: "Onboarding", type: "Warner entity", subscriptions: [enterprise("sub_1Rninefold497")], dspRate: 0, created: day(2026, 9, 24) },
-  { id: "490", name: "Corvid Lane", organization: "corvid-lane", email: "team@corvidlane.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcorvid490")], dspRate: 15, created: day(2026, 9, 3) },
-  { id: "483", name: "Silverbirch Publishing House", organization: "silverbirch-publishing-house", email: "rights@silverbirchph.co.uk", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rsilver483")], dspRate: 20, created: day(2026, 8, 19) },
-  { id: "476", name: "Marlow Tide Entertainment", organization: "marlow-tide-entertainment", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rmarlow476")], dspRate: 20, created: day(2026, 7, 7), ended: day(2026, 9, 1) },
-  { id: "469", name: "Opaline", organization: "opaline", email: "ops@opaline.audio", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Ropaline469"), { id: "sub_1Ropaline469api", sandbox: false, product: "API" }], dspRate: 10, created: day(2026, 6, 28) },
-  { id: "462", name: "Brackenridge Audio", organization: "brackenridge-audio", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rbracken462")], dspRate: 20, created: day(2026, 5, 16), ended: day(2026, 8, 1) },
-  { id: "455", name: "Eastgate Music Partners", organization: "eastgate-music-partners", email: "finance@eastgatemusic.de", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Reastgate455")], dspRate: 0, created: day(2026, 4, 30) },
-  { id: "448", name: "Thistle & Thorn", organization: "thistle-and-thorn", email: "label@thistleandthorn.ie", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rthistle448")], dspRate: 18, created: day(2026, 3, 12) },
-  { id: "441", name: "Grainfield Collective", organization: "grainfield-collective", status: "Onboarding", type: "Client", subscriptions: [enterprise("sub_1Rgrain441")], dspRate: 20, created: day(2026, 2, 21) },
-  { id: "434", name: "Kestrel Point Recordings", organization: "kestrel-point-recordings", email: "admin@kestrelpoint.com", status: "Churned", type: "Client", subscriptions: [enterprise("sub_1Rkestrel434")], dspRate: 15, created: day(2025, 12, 4), ended: day(2026, 6, 1) },
-  { id: "427", name: "Bluefen Distribution", organization: "bluefen-distribution", email: "support@bluefen.dist", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rbluefen427"), { id: "sub_1Rbluefen427api", sandbox: false, product: "API" }], dspRate: 8, created: day(2025, 10, 9) },
-  { id: "420", name: "Harrow Street Sound", organization: "harrow-street-sound", status: "Active", type: "Warner entity", subscriptions: [enterprise("sub_1Rharrow420")], dspRate: 0, created: day(2025, 7, 1) },
-  { id: "413", name: "Mistral Arcade", organization: "mistral-arcade", email: "hello@mistralarcade.fr", status: "Terminated", type: "Client", subscriptions: [enterprise("sub_1Rmistral413")], dspRate: 20, created: day(2025, 3, 18), ended: day(2026, 7, 1) },
-  { id: "406", name: "Cinderwell Music", organization: "cinderwell-music", email: "ops@cinderwell.com", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Rcinder406")], dspRate: 12, created: day(2024, 11, 26) },
-  { id: "232", name: "RCC Demo Account", email: "demo@revelator.example", status: "Active", type: "Demo", subscriptions: [{ id: "sub_1PdemoPro", sandbox: true, product: "Revelator Pro" }, { id: "sub_1PdemoAPI", sandbox: true, product: "API" }], dspRate: 15, created: day(2024, 3, 12) },
-  { id: "219", name: "Foxglove Ridge Records", organization: "foxglove-ridge-records", status: "Active", type: "Client", subscriptions: [enterprise("sub_1Pfoxglove219")], dspRate: 20, created: day(2023, 9, 5) },
-];
-
-/** Someone at the customer Revelator writes to, and what they are written to about. */
-export interface Contact {
-  name: string;
-  email: string;
-  phone?: string;
-  roles: readonly ("Primary" | "Billing" | "Royalties" | "Technical" | "Legal")[];
-}
-
-/** What a customer's record holds beyond its row: the company, the contract and its people. Its tenants are their own set (TENANTS). */
-export interface CustomerRecord {
-  stripe: string;
-  phone: string;
-  address?: string;
-  country: string;
-  taxType: string;
-  taxId?: string;
-  /** The share of UGC and YouTube channel revenue Revelator keeps, in percent. */
-  ugcRate: number;
-  youtubeRate: number;
-  /** A monthly charge outside the rates, in dollars. */
-  misc: number;
-  newCustomer: boolean;
-  comment?: string;
-  /** What the last complete month came to, in dollars: Revelator's share, and the client's own. */
-  revelatorRevenue: number;
-  clientRevenue: number;
-  contacts: readonly Contact[];
-}
-
-
-export let RECORDS: Readonly<Record<string, CustomerRecord>> = {
-  "512": { stripe: "cus_R8lowtide512", revelatorRevenue: 320, clientRevenue: 2670, phone: "+61 2 5550 1188", address: "44 Kent St, 2000", country: "Australia", taxType: "AU ABN", taxId: "51 824 753 556", ugcRate: 15, youtubeRate: 10, misc: 0, newCustomer: true, comment: "Signed at the Sydney showcase", contacts: [{ name: "Harriet Vale", email: "harriet@lowtide-assembly.co", roles: ["Primary", "Billing"] }] },
-  "509": { stripe: "cus_R8verdant509", revelatorRevenue: 410, clientRevenue: 8200, phone: "+1 415 555 0172", address: "210 Valencia St, 94103", country: "United States of America", taxType: "US EIN", taxId: "84-2219073", ugcRate: 8, youtubeRate: 6.5, misc: 0, newCustomer: true, contacts: [{ name: "Omar Reyes", email: "omar@verdantstatic.io", phone: "+1 415 555 0173", roles: ["Primary"] }, { name: "Lena Brandt", email: "billing@verdantstatic.io", roles: ["Billing"] }] },
-  "506": { stripe: "cus_R8atlas506", revelatorRevenue: 260, clientRevenue: 9480, phone: "+31 20 555 0161", address: "Prinsengracht 412, 1016 JA", country: "Netherlands", taxType: "EU VAT", taxId: "NL862204517B01", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: true, comment: "Warner Benelux imprint", contacts: [{ name: "Sanne Kuipers", email: "sanne@atlasharbor.nl", roles: ["Primary", "Royalties"] }] },
-  "501": { stripe: "cus_R8paperkite501", revelatorRevenue: 184, clientRevenue: 6130, phone: "+44 20 7946 0518", address: "9 Hoxton Sq, N1 6NU", country: "United Kingdom", taxType: "GB VAT", taxId: "GB318274650", ugcRate: 5, youtubeRate: 4, misc: 0, newCustomer: true, comment: "Referred by a distribution partner", contacts: [{ name: "Felix Ashby", email: "felix@paperkite.fm", roles: ["Primary", "Billing"] }] },
-  "497": { stripe: "cus_R8ninefold497", revelatorRevenue: 350, clientRevenue: 12740, phone: "+49 30 5557 2210", country: "Germany", taxType: "EU VAT", taxId: "DE318842271", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: true, contacts: [{ name: "Jana Wolff", email: "jana.wolff@ninefold.example", roles: ["Primary"] }] },
-  "490": { stripe: "cus_R8corvid490", revelatorRevenue: 2290, clientRevenue: 15270, phone: "+1 212 555 0148", address: "88 Bowery, 10013", country: "United States of America", taxType: "US EIN", taxId: "87-1140526", ugcRate: 18, youtubeRate: 12.5, misc: 250, newCustomer: false, contacts: [{ name: "Dana Whitlock", email: "dana@corvidlane.com", phone: "+1 212 555 0149", roles: ["Primary"] }, { name: "Rui Tanaka", email: "rui@corvidlane.com", roles: ["Technical"] }] },
-  "483": { stripe: "cus_R8silver483", revelatorRevenue: 1410, clientRevenue: 7050, phone: "+44 161 555 0193", address: "3 Tib St, M4 1LA", country: "United Kingdom", taxType: "GB VAT", taxId: "GB284716093", ugcRate: 25, youtubeRate: 15, misc: 0, newCustomer: false, contacts: [{ name: "Ivo Marsh", email: "rights@silverbirchph.co.uk", roles: ["Primary", "Royalties"] }] },
-  "476": { stripe: "cus_R8marlow476", revelatorRevenue: 530, clientRevenue: 3530, phone: "+1 615 555 0127", country: "United States of America", taxType: "US EIN", taxId: "82-6630194", ugcRate: 22.5, youtubeRate: 18, misc: 0, newCustomer: false, comment: "Left after the September renewal", contacts: [{ name: "Grady Holt", email: "grady@marlowtide.example", roles: ["Primary"] }] },
-  "469": { stripe: "cus_R8opaline469", revelatorRevenue: 4870, clientRevenue: 48700, phone: "+33 1 55 50 21 40", address: "17 rue Oberkampf, 75011", country: "France", taxType: "EU VAT", taxId: "FR41829304776", ugcRate: 12, youtubeRate: 7.5, misc: 500, newCustomer: false, contacts: [{ name: "Clémence Roy", email: "clemence@opaline.audio", roles: ["Primary", "Billing"] }, { name: "Théo Martin", email: "dev@opaline.audio", roles: ["Technical"] }] },
-  "462": { stripe: "cus_R8bracken462", revelatorRevenue: 690, clientRevenue: 3450, phone: "+1 503 555 0164", country: "United States of America", taxType: "US EIN", taxId: "83-4471209", ugcRate: 25, youtubeRate: 17, misc: 0, newCustomer: false, comment: "Contract ended for breach of terms", contacts: [{ name: "Walt Ferris", email: "walt@brackenridge.example", roles: ["Primary"] }] },
-  "455": { stripe: "cus_R8eastgate455", revelatorRevenue: 1150, clientRevenue: 61480, phone: "+49 40 5550 7712", address: "Große Elbstraße 61, 22767", country: "Germany", taxType: "EU VAT", taxId: "DE297731846", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: false, contacts: [{ name: "Katrin Lüders", email: "finance@eastgatemusic.de", roles: ["Primary", "Billing", "Royalties"] }] },
-  "448": { stripe: "cus_R8thistle448", revelatorRevenue: 960, clientRevenue: 5330, phone: "+353 1 555 0136", country: "Ireland", taxType: "EU VAT", taxId: "IE3829104KH", ugcRate: 20, youtubeRate: 15.5, misc: 0, newCustomer: false, contacts: [{ name: "Aoife Brennan", email: "label@thistleandthorn.ie", roles: ["Primary"] }] },
-  "441": { stripe: "cus_R8grain441", revelatorRevenue: 85, clientRevenue: 425, phone: "+1 312 555 0181", country: "United States of America", taxType: "US EIN", ugcRate: 25, youtubeRate: 22, misc: 0, newCustomer: true, contacts: [{ name: "Mo Abernathy", email: "mo@grainfield.example", roles: ["Primary"] }] },
-  "434": { stripe: "cus_R8kestrel434", revelatorRevenue: 745, clientRevenue: 4970, phone: "+1 718 555 0119", country: "United States of America", taxType: "US EIN", taxId: "81-9930412", ugcRate: 17.5, youtubeRate: 12, misc: 0, newCustomer: false, comment: "Moved to another distributor", contacts: [{ name: "Priya Lal", email: "admin@kestrelpoint.com", roles: ["Primary", "Billing"] }] },
-  "427": { stripe: "cus_R8bluefen427", revelatorRevenue: 9340, clientRevenue: 116750, phone: "+46 8 555 102 40", address: "Hornsgatan 54, 118 21", country: "Sweden", taxType: "EU VAT", taxId: "SE559183420101", ugcRate: 10, youtubeRate: 6, misc: 1200, newCustomer: false, contacts: [{ name: "Elin Sjöberg", email: "support@bluefen.dist", roles: ["Primary"] }, { name: "Nils Ek", email: "nils@bluefen.dist", roles: ["Billing"] }, { name: "Saga Lind", email: "api@bluefen.dist", roles: ["Technical"] }] },
-  "420": { stripe: "cus_R8harrow420", revelatorRevenue: 880, clientRevenue: 38920, phone: "+44 20 7946 0402", country: "United Kingdom", taxType: "GB VAT", taxId: "GB271938460", ugcRate: 0, youtubeRate: 0, misc: 0, newCustomer: false, contacts: [{ name: "Tess Morley", email: "tess.morley@harrowstreet.example", roles: ["Primary", "Royalties"] }] },
-  "413": { stripe: "cus_R8mistral413", revelatorRevenue: 560, clientRevenue: 2800, phone: "+33 4 55 50 77 12", country: "France", taxType: "EU VAT", taxId: "FR22811930475", ugcRate: 22, youtubeRate: 25, misc: 0, newCustomer: false, comment: "Unpaid invoices since June", contacts: [{ name: "Luc Garnier", email: "hello@mistralarcade.fr", roles: ["Primary"] }] },
-  "406": { stripe: "cus_R8cinder406", revelatorRevenue: 1780, clientRevenue: 14830, phone: "+1 604 555 0158", address: "1200 Granville St, V6Z 1M6", country: "Canada", taxType: "CA BN", taxId: "781946320RT0001", ugcRate: 15, youtubeRate: 10, misc: 0, newCustomer: false, contacts: [{ name: "Maeve Duncan", email: "ops@cinderwell.com", roles: ["Primary", "Billing"] }] },
-  "232": { stripe: "cus_P2demo232", revelatorRevenue: 120, clientRevenue: 1600, phone: "+1 212 555 0100", country: "United States of America", taxType: "US EIN", ugcRate: 7.5, youtubeRate: 12, misc: 0, newCustomer: false, comment: "Holds every demo and sandbox tenant", contacts: [{ name: "Ezra Quinn", email: "demo@revelator.example", roles: ["Primary"] }] },
-  "219": { stripe: "cus_P2foxglove219", revelatorRevenue: 1215, clientRevenue: 6075, phone: "+1 512 555 0133", country: "United States of America", taxType: "US EIN", taxId: "80-5521847", ugcRate: 25, youtubeRate: 17.5, misc: 0, newCustomer: false, contacts: [{ name: "June Calloway", email: "june@foxgloveridge.example", roles: ["Primary"] }] },
-};
-
-/** The last twelve complete months, oldest first — October 2025 to September 2026. */
-export const MONTHS = Array.from({ length: 12 }, (_, at) => new Date(2025, 9 + at, 1));
-
-/**
- * How a customer's month moves around its last one — a hand-drawn shape, the same for every
- * customer, scaled to what each earned. Invented, so every customer reads a full year — except
- * one whose contract has ended, churned or terminated, which earns nothing from the month it ended.
- */
-const SHAPE = [0.62, 0.66, 0.71, 0.69, 0.74, 0.8, 0.78, 0.85, 0.9, 0.88, 0.95, 1];
-
-export const monthlyOf = (lastMonth: number, ended?: Date) =>
-  MONTHS.map((month, at) => (ended && month >= ended ? 0 : Math.round(lastMonth * SHAPE[at]!)));
-
-export const customerById = (id: string) => CUSTOMERS.find((one) => one.id === id) ?? CUSTOMERS[0]!;
-
 /** Where a tenant's releases go: to the stores, or nowhere — a demo, or an API partner's test bench. */
 export type Environment = "Production" | "Demo" | "API sandbox";
 /** A parent holds client accounts of its own, its children; a standalone holds none. */
@@ -243,14 +116,14 @@ export interface WhiteLabel {
 /** Revelator's own auth, which every white label signs in through unless the client runs its own. */
 export const REVELATOR_AUTH = "https://auth.revelator.pro/";
 
-/** A tenant — an enterprise signed up under a customer, the workspace its catalogue lives in. */
+/** A tenant — an enterprise signed up in RCC, the workspace its catalogue lives in. */
 export interface Tenant {
   enterpriseId: string;
   name: string;
-  /** The customer whose contract the tenant reports and pays against — none where it was never linked. */
-  customerId?: string;
-  /** The customer's subscription it was signed up on — its first, where none was picked. */
-  subscriptionId?: string;
+  /** The organization whose logo it wears, where the system ships one; otherwise one invented from its name. */
+  organization?: OrganizationSlug;
+  /** The country its own payee is taxed in. */
+  taxCountry?: string;
   type: TenantType;
   plan: string;
   environment: Environment;
@@ -269,10 +142,10 @@ export interface Tenant {
   domain?: string;
   /** The white label record the tenant loads under — none, and the tenant does not load. */
   whiteLabel?: WhiteLabel;
-  /** Who it was signed up for, where it was signed up here; otherwise the customer's primary contact. */
-  owner?: { name: string; email: string };
-  /** What Revelator keeps of the tenant's revenue, in percent — the customer's, where it was not set apart. */
-  rates?: { dsp: number; ugc: number; youtube: number };
+  /** Who it was signed up for — the account its handover goes to. */
+  owner: { name: string; email: string };
+  /** What Revelator keeps of the tenant's revenue, in percent: its distribution contract. */
+  rates: { dsp: number; ugc: number; youtube: number };
   /** How many of the stores are switched on and shown. */
   storesLive: number;
   /** Each store as it was switched by hand, once one has been — replacing the count above. */
@@ -345,7 +218,7 @@ export interface PayorTransaction {
 const PRODUCTION_STORES = ["Spotify", "Apple Music", "Amazon Music", "YouTube Music", "TikTok", "Deezer", "TIDAL"];
 const SANDBOX_STORES = ["FTP Sandbox", "AWS Sandbox"];
 
-type Drafted = Pick<Tenant, "enterpriseId" | "name" | "plan" | "created"> & Partial<Tenant>;
+type Drafted = Pick<Tenant, "enterpriseId" | "name" | "plan" | "created" | "owner" | "rates"> & Partial<Tenant>;
 
 /** A tenant's white label as it is first written: its domain twice, Revelator's auth, plan 3. */
 const whiteLabelFor = (enterpriseId: string, name: string, patch: Partial<WhiteLabel> = {}): WhiteLabel => {
@@ -392,60 +265,50 @@ const child = (enterpriseId: string, name: string, created: Date): ChildEnterpri
   created,
 });
 
-/** The tenants, newest first — each under its customer, a few still being set up, one never linked. */
+/** The tenants, newest first — a few still being set up. */
 export let TENANTS: readonly Tenant[] = [
-  t({ enterpriseId: "612240", name: "Saltmarsh Tapes", plan: "2 - Artist", created: day(2026, 10, 14), onTrial: true, whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
-  t({ enterpriseId: "612034", customerId: "501", name: "Paperkite Sound", plan: "5 - Enterprise", created: day(2026, 10, 6), storesLive: 0, tested: false, emailed: false }),
-  t({ enterpriseId: "611980", customerId: "232", name: "Halcyon Pilot", plan: "5 - Enterprise", environment: "Demo", created: day(2026, 10, 1), tested: false, emailed: false }),
-  t({ enterpriseId: "611207", customerId: "497", name: "Ninefold Records", plan: "5 - Enterprise", created: day(2026, 9, 29), currency: "EUR", whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
-  t({ enterpriseId: "611150", customerId: "232", name: "Riverstone API Trial", plan: "5 - Enterprise", environment: "API sandbox", created: day(2026, 9, 26), storesLive: 0, tested: false, emailed: false }),
-  t({ enterpriseId: "609882", customerId: "490", name: "Corvid Lane Publishing", plan: "3 - Growth", created: day(2026, 9, 15), emailed: false }),
-  t({ enterpriseId: "609881", customerId: "490", name: "Corvid Lane", plan: "3 - Growth", created: day(2026, 9, 8), whiteLabel: whiteLabelFor("609881", "Corvid Lane", { enableIntercom: true, intercomAppId: "cv7k2lq9", showRevelatorBranding: true, customDashboardLinkUrl: "https://corvidlane.example/artists", customDashboardLinkText: "Artist portal", customLogoutUrl: "https://corvidlane.example" }), fusionAuth: true, team: [{ name: "Rui Tanaka", email: "rui@corvidlane.com" }], integrations: [{ providerId: "PP-77310428", provider: "PayPal", connected: true }], notes: [{ id: "n-3", created: day(2026, 9, 22), author: "Ines Calder", content: "Asked for a second admin for their publishing arm. Pointed them to Corvid Lane Publishing instead." }] }),
-  t({ enterpriseId: "608540", customerId: "483", name: "Silverbirch Publishing House", plan: "3 - Growth", created: day(2026, 8, 25), currency: "GBP" }),
-  t({ enterpriseId: "606404", customerId: "469", name: "Opaline Sandbox", plan: "5 - Enterprise", environment: "API sandbox", partnerId: "231", created: day(2026, 8, 3), currency: "EUR" }),
-  t({ enterpriseId: "606403", customerId: "469", name: "Opaline Classics", plan: "3 - Growth", created: day(2026, 7, 20), currency: "EUR" }),
-  t({ enterpriseId: "607113", customerId: "476", name: "Marlow Tide Entertainment", plan: "2 - Artist", created: day(2026, 7, 12), paymentBlocked: true }),
-  t({ enterpriseId: "606402", customerId: "469", name: "Opaline", plan: "5 - Enterprise", type: "Parent", created: day(2026, 7, 2), currency: "EUR", whiteLabel: whiteLabelFor("606402", "Opaline", { domain: "app.opaline.example", domainV2: "app.opaline.example", authBaseUrl: "https://auth.opaline.example/", title: "Opaline | Distribution musicale", enabled: true, defaultPlanId: "7", loginHeader: "Bienvenue", loginSubheader: "Connectez-vous pour gérer vos sorties, votre catalogue et vos résultats.", signupHeader: "Inscrivez-vous pour distribuer votre musique et suivre son évolution.", signupSubheader: "Créez votre compte Opaline", faqUrl: "https://opaline.example/faq", helpUrl: "https://opaline.example/aide", distributionAgreementUrl: "https://opaline.example/contrat", googleAnalyticsSiteId: "G-OP4L1N3X", bccEmails: "ops@opaline.example" }), fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }, { name: "Lucie Garnier", email: "lucie@maisonbrune.example", access: "Label Portal", enterpriseId: "606511" }, { name: "Malo Fournier", email: "malo.fournier@opalinejeunesse.example", access: "Payee Portal", legacy: true, enterpriseId: "606510" }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
-  t({ enterpriseId: "604380", customerId: "455", name: "Eastgate Test", plan: "5 - Enterprise", environment: "Demo", created: day(2026, 6, 10), currency: "EUR" }),
-  t({ enterpriseId: "604379", customerId: "455", name: "Eastgate Kids", plan: "3 - Growth", created: day(2026, 6, 9), currency: "EUR" }),
-  t({ enterpriseId: "605118", customerId: "462", name: "Brackenridge Audio", plan: "2 - Artist", created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true, config: { noTransactionalEmails: true }, notes: [{ id: "n-5", created: day(2026, 9, 30), author: "Ines Calder", content: "Locked out and payment blocked over the unpaid June invoice. Unlock only once Finance confirms." }] }),
-  t({ enterpriseId: "604378", customerId: "455", name: "Eastgate Classics", plan: "3 - Growth", created: day(2026, 5, 18), currency: "EUR" }),
-  t({ enterpriseId: "604377", customerId: "455", name: "Eastgate Music", plan: "5 - Enterprise", type: "Parent", created: day(2026, 5, 4), currency: "EUR", fusionAuth: true, integrations: [{ providerId: "PP-61200937", provider: "PayPal", connected: true }, { providerId: "acct_1Q8eastgate", provider: "Stripe", connected: false }], config: { masterChannel: true, featureFm: true, physicalReleases: true }, children: [child("604601", "Nordhafen Beats", day(2026, 5, 28)), child("604602", "Elbe Strings", day(2026, 6, 20)), child("604603", "Kiezklang", day(2026, 8, 2))] }),
-  t({ enterpriseId: "603011", customerId: "448", name: "Thistle & Thorn", plan: "3 - Growth", created: day(2026, 3, 19), currency: "EUR" }),
-  t({ enterpriseId: "602290", customerId: "441", name: "Grainfield Collective", plan: "2 - Artist", created: day(2026, 2, 27), onTrial: true, storesLive: 3, emailed: false }),
-  t({ enterpriseId: "598220", customerId: "427", name: "Bluefen API Sandbox", plan: "5 - Enterprise", environment: "API sandbox", partnerId: "198", created: day(2026, 2, 4), currency: "SEK" }),
-  t({ enterpriseId: "598219", customerId: "427", name: "Bluefen Archive", plan: "3 - Growth", created: day(2026, 2, 3), currency: "SEK" }),
-  t({ enterpriseId: "598218", customerId: "427", name: "Bluefen Jazz", plan: "3 - Growth", created: day(2026, 1, 12), currency: "SEK" }),
-  t({ enterpriseId: "598217", customerId: "427", name: "Bluefen Baltic", plan: "3 - Growth", created: day(2025, 11, 30), currency: "EUR" }),
-  t({ enterpriseId: "598216", customerId: "427", name: "Bluefen Nordic", plan: "5 - Enterprise", created: day(2025, 11, 2), currency: "SEK" }),
-  t({ enterpriseId: "598215", customerId: "427", name: "Bluefen Distribution", plan: "5 - Enterprise", type: "Parent", created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, integrations: [{ providerId: "TIP-0038816", provider: "Tipalti", connected: true }], config: { minAudioLength: false, physicalReleases: true }, notes: [{ id: "n-4", created: day(2026, 4, 2), author: "Dario Mendel", content: "Payouts to Gotland Folk held in March while the payee re-verified its bank. Released 1 April." }], team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }, { name: "Astrid Holm", email: "astrid.holm@gotlandfolk.example", access: "Artist Portal", enterpriseId: "598302" }, { name: "Oskar Vik", email: "oskar@fjallsound.example", access: "Payee Portal", enterpriseId: "598301" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
-  t({ enterpriseId: "600874", customerId: "434", name: "Kestrel Point Recordings", plan: "3 - Growth", created: day(2025, 12, 10), lockedOut: true }),
-  t({ enterpriseId: "595661", customerId: "420", name: "Harrow Street Live", plan: "3 - Growth", created: day(2025, 9, 1), currency: "GBP" }),
-  t({ enterpriseId: "595660", customerId: "420", name: "Harrow Street Sound", plan: "5 - Enterprise", created: day(2025, 7, 9), currency: "GBP" }),
-  t({ enterpriseId: "593007", customerId: "413", name: "Mistral Arcade", plan: "2 - Artist", created: day(2025, 3, 25), currency: "EUR", lockedOut: true, paymentBlocked: true }),
-  t({ enterpriseId: "590114", customerId: "406", name: "Cinderwell Films", plan: "3 - Growth", created: day(2025, 2, 17), currency: "CAD" }),
-  t({ enterpriseId: "590113", customerId: "406", name: "Cinderwell Music", plan: "3 - Growth", created: day(2024, 12, 2), currency: "CAD" }),
-  t({ enterpriseId: "571902", customerId: "219", name: "Foxglove Ridge Records", plan: "3 - Growth", created: day(2023, 9, 11) }),
+  t({ enterpriseId: "612240", name: "Saltmarsh Tapes", plan: "2 - Artist", owner: { name: "Wren Okafor", email: "wren@saltmarshtapes.example" }, rates: { dsp: 20, ugc: 25, youtube: 20 }, created: day(2026, 10, 14), onTrial: true, whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "612034", name: "Paperkite Sound", plan: "5 - Enterprise", owner: { name: "Felix Ashby", email: "felix@paperkite.fm" }, organization: "paperkite-sound", taxCountry: "United Kingdom", rates: { dsp: 3, ugc: 5, youtube: 4 }, created: day(2026, 10, 6), storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "611980", name: "Halcyon Pilot", plan: "5 - Enterprise", environment: "Demo", owner: { name: "Ezra Quinn", email: "demo@revelator.example" }, taxCountry: "United States of America", rates: { dsp: 15, ugc: 7.5, youtube: 12 }, created: day(2026, 10, 1), tested: false, emailed: false }),
+  t({ enterpriseId: "611207", name: "Ninefold Records", plan: "5 - Enterprise", owner: { name: "Jana Wolff", email: "jana.wolff@ninefold.example" }, organization: "ninefold-records", taxCountry: "Germany", rates: { dsp: 0, ugc: 0, youtube: 0 }, created: day(2026, 9, 29), currency: "EUR", whiteLabel: undefined, storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "611150", name: "Riverstone API Trial", plan: "5 - Enterprise", environment: "API sandbox", owner: { name: "Ezra Quinn", email: "demo@revelator.example" }, taxCountry: "United States of America", rates: { dsp: 15, ugc: 7.5, youtube: 12 }, created: day(2026, 9, 26), storesLive: 0, tested: false, emailed: false }),
+  t({ enterpriseId: "609882", name: "Corvid Lane Publishing", plan: "3 - Growth", owner: { name: "Dana Whitlock", email: "dana@corvidlane.com" }, organization: "corvid-lane", taxCountry: "United States of America", rates: { dsp: 15, ugc: 18, youtube: 12.5 }, created: day(2026, 9, 15), emailed: false }),
+  t({ enterpriseId: "609881", name: "Corvid Lane", plan: "3 - Growth", owner: { name: "Dana Whitlock", email: "dana@corvidlane.com" }, organization: "corvid-lane", taxCountry: "United States of America", rates: { dsp: 15, ugc: 18, youtube: 12.5 }, created: day(2026, 9, 8), whiteLabel: whiteLabelFor("609881", "Corvid Lane", { enableIntercom: true, intercomAppId: "cv7k2lq9", showRevelatorBranding: true, customDashboardLinkUrl: "https://corvidlane.example/artists", customDashboardLinkText: "Artist portal", customLogoutUrl: "https://corvidlane.example" }), fusionAuth: true, team: [{ name: "Rui Tanaka", email: "rui@corvidlane.com" }], integrations: [{ providerId: "PP-77310428", provider: "PayPal", connected: true }], notes: [{ id: "n-3", created: day(2026, 9, 22), author: "Ines Calder", content: "Asked for a second admin for their publishing arm. Pointed them to Corvid Lane Publishing instead." }] }),
+  t({ enterpriseId: "608540", name: "Silverbirch Publishing House", plan: "3 - Growth", owner: { name: "Ivo Marsh", email: "rights@silverbirchph.co.uk" }, organization: "silverbirch-publishing-house", taxCountry: "United Kingdom", rates: { dsp: 20, ugc: 25, youtube: 15 }, created: day(2026, 8, 25), currency: "GBP" }),
+  t({ enterpriseId: "606404", name: "Opaline Sandbox", plan: "5 - Enterprise", environment: "API sandbox", partnerId: "231", owner: { name: "Clémence Roy", email: "clemence@opaline.audio" }, organization: "opaline", taxCountry: "France", rates: { dsp: 10, ugc: 12, youtube: 7.5 }, created: day(2026, 8, 3), currency: "EUR" }),
+  t({ enterpriseId: "606403", name: "Opaline Classics", plan: "3 - Growth", owner: { name: "Clémence Roy", email: "clemence@opaline.audio" }, organization: "opaline", taxCountry: "France", rates: { dsp: 10, ugc: 12, youtube: 7.5 }, created: day(2026, 7, 20), currency: "EUR" }),
+  t({ enterpriseId: "607113", name: "Marlow Tide Entertainment", plan: "2 - Artist", owner: { name: "Grady Holt", email: "grady@marlowtide.example" }, organization: "marlow-tide-entertainment", taxCountry: "United States of America", rates: { dsp: 20, ugc: 22.5, youtube: 18 }, created: day(2026, 7, 12), paymentBlocked: true }),
+  t({ enterpriseId: "606402", name: "Opaline", plan: "5 - Enterprise", type: "Parent", owner: { name: "Clémence Roy", email: "clemence@opaline.audio" }, organization: "opaline", taxCountry: "France", rates: { dsp: 10, ugc: 12, youtube: 7.5 }, created: day(2026, 7, 2), currency: "EUR", whiteLabel: whiteLabelFor("606402", "Opaline", { domain: "app.opaline.example", domainV2: "app.opaline.example", authBaseUrl: "https://auth.opaline.example/", title: "Opaline | Distribution musicale", enabled: true, defaultPlanId: "7", loginHeader: "Bienvenue", loginSubheader: "Connectez-vous pour gérer vos sorties, votre catalogue et vos résultats.", signupHeader: "Inscrivez-vous pour distribuer votre musique et suivre son évolution.", signupSubheader: "Créez votre compte Opaline", faqUrl: "https://opaline.example/faq", helpUrl: "https://opaline.example/aide", distributionAgreementUrl: "https://opaline.example/contrat", googleAnalyticsSiteId: "G-OP4L1N3X", bccEmails: "ops@opaline.example" }), fusionAuth: true, team: [{ name: "Théo Martin", email: "dev@opaline.audio" }, { name: "Lucie Garnier", email: "lucie@maisonbrune.example", access: "Label Portal", enterpriseId: "606511" }, { name: "Malo Fournier", email: "malo.fournier@opalinejeunesse.example", access: "Payee Portal", legacy: true, enterpriseId: "606510" }], integrations: [{ providerId: "TIP-0042719", provider: "Tipalti", connected: true }], config: { marketplacePage: true, withholdingTax: true, paymentBatcher: "Tipalti" }, notes: [{ id: "n-1", created: day(2026, 8, 18), author: "Ines Calder", content: "Client accounts import in batches of 50: the template times out above that." }, { id: "n-2", created: day(2026, 7, 9), author: "Dario Mendel", content: "Revenue history kept for three years, per their contract. Do not shorten it." }], children: [child("606510", "Opaline Jeunesse", day(2026, 7, 30)), child("606511", "Maison Brune", day(2026, 8, 14))] }),
+  t({ enterpriseId: "604380", name: "Eastgate Test", plan: "5 - Enterprise", environment: "Demo", owner: { name: "Katrin Lüders", email: "finance@eastgatemusic.de" }, organization: "eastgate-music-partners", taxCountry: "Germany", rates: { dsp: 0, ugc: 0, youtube: 0 }, created: day(2026, 6, 10), currency: "EUR" }),
+  t({ enterpriseId: "604379", name: "Eastgate Kids", plan: "3 - Growth", owner: { name: "Katrin Lüders", email: "finance@eastgatemusic.de" }, organization: "eastgate-music-partners", taxCountry: "Germany", rates: { dsp: 0, ugc: 0, youtube: 0 }, created: day(2026, 6, 9), currency: "EUR" }),
+  t({ enterpriseId: "605118", name: "Brackenridge Audio", plan: "2 - Artist", owner: { name: "Walt Ferris", email: "walt@brackenridge.example" }, organization: "brackenridge-audio", taxCountry: "United States of America", rates: { dsp: 20, ugc: 25, youtube: 17 }, created: day(2026, 5, 22), lockedOut: true, paymentBlocked: true, config: { noTransactionalEmails: true }, notes: [{ id: "n-5", created: day(2026, 9, 30), author: "Ines Calder", content: "Locked out and payment blocked over the unpaid June invoice. Unlock only once Finance confirms." }] }),
+  t({ enterpriseId: "604378", name: "Eastgate Classics", plan: "3 - Growth", owner: { name: "Katrin Lüders", email: "finance@eastgatemusic.de" }, organization: "eastgate-music-partners", taxCountry: "Germany", rates: { dsp: 0, ugc: 0, youtube: 0 }, created: day(2026, 5, 18), currency: "EUR" }),
+  t({ enterpriseId: "604377", name: "Eastgate Music", plan: "5 - Enterprise", type: "Parent", owner: { name: "Katrin Lüders", email: "finance@eastgatemusic.de" }, organization: "eastgate-music-partners", taxCountry: "Germany", rates: { dsp: 0, ugc: 0, youtube: 0 }, created: day(2026, 5, 4), currency: "EUR", fusionAuth: true, integrations: [{ providerId: "PP-61200937", provider: "PayPal", connected: true }, { providerId: "acct_1Q8eastgate", provider: "Stripe", connected: false }], config: { masterChannel: true, featureFm: true, physicalReleases: true }, children: [child("604601", "Nordhafen Beats", day(2026, 5, 28)), child("604602", "Elbe Strings", day(2026, 6, 20)), child("604603", "Kiezklang", day(2026, 8, 2))] }),
+  t({ enterpriseId: "603011", name: "Thistle & Thorn", plan: "3 - Growth", owner: { name: "Aoife Brennan", email: "label@thistleandthorn.ie" }, organization: "thistle-and-thorn", taxCountry: "Ireland", rates: { dsp: 18, ugc: 20, youtube: 15.5 }, created: day(2026, 3, 19), currency: "EUR" }),
+  t({ enterpriseId: "602290", name: "Grainfield Collective", plan: "2 - Artist", owner: { name: "Mo Abernathy", email: "mo@grainfield.example" }, organization: "grainfield-collective", taxCountry: "United States of America", rates: { dsp: 20, ugc: 25, youtube: 22 }, created: day(2026, 2, 27), onTrial: true, storesLive: 3, emailed: false }),
+  t({ enterpriseId: "598220", name: "Bluefen API Sandbox", plan: "5 - Enterprise", environment: "API sandbox", partnerId: "198", owner: { name: "Elin Sjöberg", email: "support@bluefen.dist" }, organization: "bluefen-distribution", taxCountry: "Sweden", rates: { dsp: 8, ugc: 10, youtube: 6 }, created: day(2026, 2, 4), currency: "SEK" }),
+  t({ enterpriseId: "598219", name: "Bluefen Archive", plan: "3 - Growth", owner: { name: "Elin Sjöberg", email: "support@bluefen.dist" }, organization: "bluefen-distribution", taxCountry: "Sweden", rates: { dsp: 8, ugc: 10, youtube: 6 }, created: day(2026, 2, 3), currency: "SEK" }),
+  t({ enterpriseId: "598218", name: "Bluefen Jazz", plan: "3 - Growth", owner: { name: "Elin Sjöberg", email: "support@bluefen.dist" }, organization: "bluefen-distribution", taxCountry: "Sweden", rates: { dsp: 8, ugc: 10, youtube: 6 }, created: day(2026, 1, 12), currency: "SEK" }),
+  t({ enterpriseId: "598217", name: "Bluefen Baltic", plan: "3 - Growth", owner: { name: "Elin Sjöberg", email: "support@bluefen.dist" }, organization: "bluefen-distribution", taxCountry: "Sweden", rates: { dsp: 8, ugc: 10, youtube: 6 }, created: day(2025, 11, 30), currency: "EUR" }),
+  t({ enterpriseId: "598216", name: "Bluefen Nordic", plan: "5 - Enterprise", owner: { name: "Elin Sjöberg", email: "support@bluefen.dist" }, organization: "bluefen-distribution", taxCountry: "Sweden", rates: { dsp: 8, ugc: 10, youtube: 6 }, created: day(2025, 11, 2), currency: "SEK" }),
+  t({ enterpriseId: "598215", name: "Bluefen Distribution", plan: "5 - Enterprise", type: "Parent", owner: { name: "Elin Sjöberg", email: "support@bluefen.dist" }, organization: "bluefen-distribution", taxCountry: "Sweden", rates: { dsp: 8, ugc: 10, youtube: 6 }, created: day(2025, 10, 14), currency: "SEK", fusionAuth: true, integrations: [{ providerId: "TIP-0038816", provider: "Tipalti", connected: true }], config: { minAudioLength: false, physicalReleases: true }, notes: [{ id: "n-4", created: day(2026, 4, 2), author: "Dario Mendel", content: "Payouts to Gotland Folk held in March while the payee re-verified its bank. Released 1 April." }], team: [{ name: "Nils Ek", email: "nils@bluefen.dist" }, { name: "Saga Lind", email: "api@bluefen.dist" }, { name: "Astrid Holm", email: "astrid.holm@gotlandfolk.example", access: "Artist Portal", enterpriseId: "598302" }, { name: "Oskar Vik", email: "oskar@fjallsound.example", access: "Payee Portal", enterpriseId: "598301" }], children: [child("598301", "Fjällsound", day(2025, 12, 1)), child("598302", "Gotland Folk", day(2026, 3, 9))] }),
+  t({ enterpriseId: "600874", name: "Kestrel Point Recordings", plan: "3 - Growth", owner: { name: "Priya Lal", email: "admin@kestrelpoint.com" }, organization: "kestrel-point-recordings", taxCountry: "United States of America", rates: { dsp: 15, ugc: 17.5, youtube: 12 }, created: day(2025, 12, 10), lockedOut: true }),
+  t({ enterpriseId: "595661", name: "Harrow Street Live", plan: "3 - Growth", owner: { name: "Tess Morley", email: "tess.morley@harrowstreet.example" }, organization: "harrow-street-sound", taxCountry: "United Kingdom", rates: { dsp: 0, ugc: 0, youtube: 0 }, created: day(2025, 9, 1), currency: "GBP" }),
+  t({ enterpriseId: "595660", name: "Harrow Street Sound", plan: "5 - Enterprise", owner: { name: "Tess Morley", email: "tess.morley@harrowstreet.example" }, organization: "harrow-street-sound", taxCountry: "United Kingdom", rates: { dsp: 0, ugc: 0, youtube: 0 }, created: day(2025, 7, 9), currency: "GBP" }),
+  t({ enterpriseId: "593007", name: "Mistral Arcade", plan: "2 - Artist", owner: { name: "Luc Garnier", email: "hello@mistralarcade.fr" }, organization: "mistral-arcade", taxCountry: "France", rates: { dsp: 20, ugc: 22, youtube: 25 }, created: day(2025, 3, 25), currency: "EUR", lockedOut: true, paymentBlocked: true }),
+  t({ enterpriseId: "590114", name: "Cinderwell Films", plan: "3 - Growth", owner: { name: "Maeve Duncan", email: "ops@cinderwell.com" }, organization: "cinderwell-music", taxCountry: "Canada", rates: { dsp: 12, ugc: 15, youtube: 10 }, created: day(2025, 2, 17), currency: "CAD" }),
+  t({ enterpriseId: "590113", name: "Cinderwell Music", plan: "3 - Growth", owner: { name: "Maeve Duncan", email: "ops@cinderwell.com" }, organization: "cinderwell-music", taxCountry: "Canada", rates: { dsp: 12, ugc: 15, youtube: 10 }, created: day(2024, 12, 2), currency: "CAD" }),
+  t({ enterpriseId: "571902", name: "Foxglove Ridge Records", plan: "3 - Growth", owner: { name: "June Calloway", email: "june@foxgloveridge.example" }, organization: "foxglove-ridge-records", taxCountry: "United States of America", rates: { dsp: 20, ugc: 25, youtube: 17.5 }, created: day(2023, 9, 11) }),
 ];
 
 export const tenantById = (id: string) => TENANTS.find((one) => one.enterpriseId === id) ?? TENANTS[0]!;
 
-/** The tenants signed up under one customer. */
-export const tenantsOf = (customerId: string) => TENANTS.filter((one) => one.customerId === customerId);
-
 /** Demo and API sandboxes deliver nowhere: everything they release stays out of the stores. */
 export const isSandbox = (one: Tenant) => one.environment !== "Production";
 
-/** The customer a tenant reports against, where it was linked to one. */
-export const customerOf = (one: Tenant) => (one.customerId ? customerById(one.customerId) : undefined);
-
-/**
- * Who signs in to the tenant: its owner first — the customer's primary contact, the one the
- * handover goes to — then its team. A tenant no customer was linked to has an owner of its own.
- */
+/** Who signs in to the tenant: its owner first — the one the handover goes to — then its team. */
 export function usersOf(one: Tenant): readonly TenantUser[] {
-  const contact = one.customerId ? RECORDS[one.customerId]!.contacts.find((c) => c.roles.includes("Primary")) : undefined;
-  const owner = one.owner ?? contact ?? { name: "Wren Okafor", email: "wren@saltmarshtapes.example" };
+  const owner = one.owner;
   const tenantId = configDefaultsOf(one).authTenantId;
   return [{ name: owner.name, email: owner.email } as TeamMember, ...one.team].map(({ legacy, access, ...user }, at) => ({
     ...user,
@@ -507,11 +370,8 @@ export const analyticsOf = (one: Tenant): TenantAnalytics => {
   return { enabled: settings.analyticsEnabled, trendsDays: settings.trendsDays, revenueDays: settings.revenueDays, v3TrendsDays: settings.v3TrendsDays };
 };
 
-/**
- * A tenant's entry in the supply chain's tenant configuration — none until a customer is linked,
- * which is what writes it.
- */
-export const configOf = (one: Tenant): TenantConfig | undefined => (one.customerId ? configDefaultsOf(one) : undefined);
+/** A tenant's entry in the supply chain's tenant configuration — written when it is signed up. */
+export const configOf = (one: Tenant): TenantConfig => configDefaultsOf(one);
 
 /** What a tenant's entry holds, or would hold once written — the defaults, then what was set. */
 export const configDefaultsOf = (one: Tenant): TenantConfig => ({
@@ -563,7 +423,7 @@ export const transactionsOf = (one: Tenant): readonly PayorTransaction[] => {
 
 /** One step of getting a tenant live — done or still owed, and the command that does it. */
 export interface SetupStep {
-  key: "customer" | "white-label" | "stores" | "partner" | "login" | "handover";
+  key: "white-label" | "stores" | "partner" | "login" | "handover";
   title: string;
   /** What the step comes to on this tenant — what is linked, or why it is owed. */
   detail: string;
@@ -575,21 +435,11 @@ export interface SetupStep {
 /**
  * What stands between a signed-up tenant and its handover, in the order it is done. Signing up is
  * only the first step: the tenant loads once it has a white label, delivers once its stores are on,
- * and is the customer's once its owner has been told. An API sandbox owes its partner too.
+ * and is its owner's once they have been told. An API sandbox owes its partner too.
  */
 export function setupOf(one: Tenant): readonly SetupStep[] {
-  const customer = customerOf(one);
-  const linked = customer?.subscriptions.find((each) => each.id === one.subscriptionId) ?? customer?.subscriptions[0];
   const sandbox = isSandbox(one);
   const steps: (SetupStep | null)[] = [
-    {
-      key: "customer",
-      title: "Customer and subscription",
-      detail: customer
-        ? formatMeta([customer.name, linked ? linked.id : "no subscription yet"])!
-        : "No customer linked: royalty runs and reports need the tenant tied to its contract.",
-      done: Boolean(linked),
-    },
     {
       key: "white-label",
       title: "White label",
@@ -671,37 +521,6 @@ export const useFixtures = () => useSyncExternalStore(subscribe, () => version);
 
 /** The next number after the highest one a set holds — ids are issued in order. */
 const after = (ids: readonly string[], step: number) => String(Math.max(...ids.map(Number)) + step);
-
-/** A customer, with its record, added in front of the set — the newest first. */
-export function addCustomer(customer: Omit<Customer, "id" | "created">, record: CustomerRecord): string {
-  const id = after(CUSTOMERS.map((one) => one.id), 3);
-  CUSTOMERS = [{ ...customer, id, created: TODAY }, ...CUSTOMERS];
-  RECORDS = { ...RECORDS, [id]: record };
-  changed();
-  return id;
-}
-
-/** A customer and its record, changed where the patches say. */
-export function updateCustomer(id: string, customer: Partial<Customer>, record: Partial<CustomerRecord> = {}) {
-  CUSTOMERS = CUSTOMERS.map((one) => (one.id === id ? { ...one, ...customer } : one));
-  RECORDS = { ...RECORDS, [id]: { ...RECORDS[id]!, ...record } };
-  changed();
-}
-
-/** A subscription linked to a customer — and a customer still onboarding stays so until a tenant is live. */
-export function addSubscription(customerId: string, subscription: Subscription) {
-  CUSTOMERS = CUSTOMERS.map((one) =>
-    one.id === customerId ? { ...one, subscriptions: [...one.subscriptions, subscription] } : one,
-  );
-  changed();
-}
-
-/** Someone at the customer added to whom Revelator writes. */
-export function addContact(customerId: string, contact: Contact) {
-  const record = RECORDS[customerId]!;
-  RECORDS = { ...RECORDS, [customerId]: { ...record, contacts: [...record.contacts, contact] } };
-  changed();
-}
 
 /** The enterprise id the next tenant signed up is issued. */
 export const nextEnterpriseId = () =>
@@ -1089,7 +908,6 @@ export function payees(): readonly Payee[] {
     const tenant = enterprise.tenant ?? enterprise.parent!;
     const owner = usersOf(tenant)[0]!;
     const own = enterprise.tenant !== undefined;
-    const record = tenant.customerId ? RECORDS[tenant.customerId] : undefined;
     const provider = integrationsOf(tenant).find((one) => one.connected);
     const status: PayeeStatus = enterprise.lockedOut
       ? "Account Locked"
@@ -1109,7 +927,7 @@ export function payees(): readonly Payee[] {
       email: own ? owner.email : `royalties@${enterprise.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.example`,
       currency: tenant.currency,
       minimumPayment: tenant.minimumPayment,
-      taxCountry: own ? record?.country : undefined,
+      taxCountry: own ? tenant.taxCountry : undefined,
       settingsAllowed: own,
       autoSendStatements: own,
       contactId: String(3_600_000 + Number(enterprise.payeeId) % 400_000),
