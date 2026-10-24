@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Alert,
   Avatar,
@@ -39,6 +39,8 @@ import {
 } from "../route";
 import {
   isSandbox,
+  activity,
+  enterprises,
   payees,
   payeesOf,
   progressOf,
@@ -65,6 +67,7 @@ import {
   TenantTransactions,
 } from "./tenant-facets";
 import { EnterprisePayees, EnterpriseUsers } from "./account-tables";
+import { ActivityIndex, Impersonate, activityOf, activityPanel, impersonateClient } from "./activity";
 import { tenantMark } from "./tenants";
 import { WhiteLabelFacts } from "./white-labels";
 
@@ -88,9 +91,9 @@ function commandOf(one: Tenant, step: SetupStep): Command {
         ? { label: "Open partner", opens: partnerHref(one.partnerId) }
         : { label: "Create API partner", opens: tenantFormHref(one.enterpriseId, "new-partner") };
     case "login":
-      // Signing in as the owner leaves RCC, which this rebuild does not model: the step is marked
-      // tried, as the prototype marks it.
-      return { label: "Impersonate owner", opens: () => updateTenant(one.enterpriseId, { tested: true }) };
+      // A sign-in as the owner, asked first and logged: the Setup opens its dialog (TenantSetup), and
+      // the step is marked tried once it is signed.
+      return { label: "Impersonate owner" };
     case "handover":
       return {
         label: "Copy handover email",
@@ -133,7 +136,20 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
   // EACH FACET leads with the one command its page is for — the band holds none of its own, so a
   // facet never wears another's.
   const FACETS: Record<TenantFacet, { header?: DetailFacet; body: ReactNode }> = {
-    Overview: { body: <TenantOverview tenant={tenant} /> },
+    Overview: {
+      // SUPPORT'S way in: what the owner sees, signed in as them — asked why, and logged.
+      header: {
+        name: "Overview",
+        actions: [
+          {
+            label: "Impersonate owner",
+            primary: true,
+            dialog: <Impersonate tenant={tenant} as={tenant.owner.name} resource={{ type: "Tenant", id: tenant.enterpriseId, name: tenant.name }} />,
+          },
+        ],
+      },
+      body: <TenantOverview tenant={tenant} />,
+    },
     // Each step carries its own command in its row: the header adds none.
     Setup: { header: { name: "Setup" }, body: <TenantSetup tenant={tenant} /> },
     Details: {
@@ -210,6 +226,11 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
       header: { name: "Notes", actions: [{ label: "Add note", creates: true, primary: true, dialog: <AddNote tenant={tenant} /> }] },
       body: <TenantNotes tenant={tenant} />,
     },
+    // Everything done in the tenant — to it, its clients, payees and users — newest first.
+    "Activity log": {
+      header: { name: "Activity log", more: [{ label: "Download" }] },
+      body: <ActivityIndex rows={activity().filter((one) => one.tenantId === tenant.enterpriseId)} scoped />,
+    },
   };
   const shown = FACETS[facet];
 
@@ -236,6 +257,8 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
           { text: tenant.environment },
         ],
         more,
+        // THE TENANT'S OWN history, behind the timeline control.
+        activity: activityPanel(activityOf("Tenant", tenant.enterpriseId)),
       }}
       facet={shown.header}
     >
@@ -339,8 +362,18 @@ function TenantSetup({ tenant }: { tenant: Tenant }) {
   const steps = setupOf(tenant);
   const { done, of } = progressOf(tenant);
   const owed = owedOf(tenant);
+  const [signing, setSigning] = useState(false);
   return (
     <Metadata>
+      <Impersonate
+        tenant={tenant}
+        as={tenant.owner.name}
+        resource={{ type: "Tenant", id: tenant.enterpriseId, name: tenant.name }}
+        onSigned={() => updateTenant(tenant.enterpriseId, { tested: true })}
+        open={signing}
+        onOpenChange={setSigning}
+        trigger={null}
+      />
       {/* ONE CARD, the list a reader works down: how far it has come over the steps, each done or
           owed, its command at its end — the owed one standing out, the rest quiet. */}
       <TitledCard title={done === of ? "Ready to hand over" : "Get this tenant live"} count={of - done}>
@@ -363,8 +396,8 @@ function TenantSetup({ tenant }: { tenant: Tenant }) {
                     <Button
                       size="sm"
                       variant={primary ? "primary" : "secondary"}
-                      onClick={typeof command.opens === "function" ? command.opens : undefined}
-                      disabled={!command.opens}
+                      onClick={step.key === "login" ? () => setSigning(true) : typeof command.opens === "function" ? command.opens : undefined}
+                      disabled={!command.opens && step.key !== "login"}
                     >
                       {command.label}
                     </Button>
@@ -549,11 +582,12 @@ function TenantWhiteLabel({ tenant }: { tenant: Tenant }) {
 
 /** The client accounts a parent tenant holds, newest first. */
 function TenantClients({ tenant }: { tenant: Tenant }) {
+  const rows = useMemo(() => enterprises().filter((one) => one.parent?.enterpriseId === tenant.enterpriseId), [tenant]);
   return (
     <RecordIndex
-      rows={tenant.children}
+      rows={rows}
       rowKey={(one) => one.enterpriseId}
-      noun={{ one: "child enterprise", many: "child enterprises" }}
+      noun={{ one: "client account", many: "client accounts" }}
       identity={{
         title: "Name",
         name: (one) => one.name,
@@ -566,6 +600,7 @@ function TenantClients({ tenant }: { tenant: Tenant }) {
         { name: "Payee ID", as: "identifier", standard: "id", value: (one) => one.payeeId },
         { name: "Created", as: "date", value: (one) => one.created },
       ]}
+      commands={(one) => [{ label: "Open", opens: enterpriseHref(one.enterpriseId) }, impersonateClient(one)]}
       chooser={false}
       empty={{ holder: "this tenant", line: true }}
     />

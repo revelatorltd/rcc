@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Avatar, Badge, RecordIndex } from "@revelator/pro-ui";
 
 import { editUserHref, payeeHref, userHref } from "../route";
+import { Impersonate, impersonatePayee } from "./activity";
 import { enterprisePicture } from "./enterprises";
 import { USER_ACCESS, accounts, type Payee, type Tenant, type TenantUser } from "./mock";
 import { PAYEE_STATUSES, payeeMark } from "./payees";
@@ -62,9 +63,8 @@ export function EnterpriseUsers({ tenant, users, ownable = true }: { tenant: Ten
       ]}
       commands={(one) => [
         { label: "Edit", opens: editUserHref(one.userId) },
-        // Signing in as them leaves RCC, which this rebuild does not model.
-        { label: "Impersonate in V2" },
-        { label: "Impersonate in API" },
+        // A sign-in as them — asked why, and logged.
+        { label: "Impersonate", dialog: <Impersonate tenant={tenant} as={one.name} resource={{ type: "User", id: one.userId, name: one.name }} /> },
         one.owner
           ? { label: "Manage access", unavailable: "The owner is always one of the team." }
           : { label: "Manage access", dialog: <ManageAccess tenant={tenant} user={one} /> },
@@ -138,6 +138,7 @@ export function EnterprisePayees({ rows }: { rows: readonly Payee[] }) {
         { name: "All", holds: () => true },
         ...PAYEE_STATUSES.map((status) => ({ name: status, holds: (one: Payee) => one.status === status })),
       ]}
+      commands={(one) => [{ label: "Open", opens: payeeHref(one.payeeId) }, impersonatePayee(one)]}
       empty={{ holder: "this enterprise", line: true }}
     />
   );

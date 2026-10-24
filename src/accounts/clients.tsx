@@ -3,6 +3,7 @@ import { CollectionPage } from "@revelator/pro-ui";
 import { editEnterpriseHref, enterpriseHref, tenantFormHref } from "../route";
 import { TENANTS, enterprises } from "./mock";
 import { enterpriseMark } from "./enterprises";
+import { impersonateClient } from "./activity";
 import { tenantPicture } from "./tenants";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
@@ -80,6 +81,7 @@ export function Clients() {
         commands: (one) => [
           { label: "Open", opens: enterpriseHref(one.enterpriseId) },
           { label: "Edit enterprise", opens: editEnterpriseHref(one.enterpriseId) },
+          impersonateClient(one),
         ],
       }}
     />

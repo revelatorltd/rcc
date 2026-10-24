@@ -12,6 +12,7 @@ import {
 import { PAYEE_FACETS, accountsHref, enterpriseHref, payeeHref, tenantHref, type PayeeFacet } from "../route";
 import { payeeById, payees, usersOf } from "./mock";
 import { EnterpriseUsers } from "./account-tables";
+import { activityOf, activityPanel, impersonatePayee } from "./activity";
 import { EditSettingsChanges, EditTaxCountry, countryChip, payeeMark } from "./payees";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
@@ -112,8 +113,10 @@ export function PayeeDetail({ id, facet }: { id: string; facet: PayeeFacet }) {
         more: [
           { label: "Edit settings changes", dialog: <EditSettingsChanges payee={payee} /> },
           { label: "Open enterprise", opens: enterpriseOpens },
+          impersonatePayee(payee),
           { label: "Transactions" },
         ],
+        activity: activityPanel(activityOf("Payee", payee.payeeId)),
       }}
       facet={shown.header}
     >

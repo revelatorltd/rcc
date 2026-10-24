@@ -6,7 +6,7 @@ import { PLATFORM_PAGES, readPlatform, type PlatformRoute } from "./platform/rou
  * Where the reader is, read off the address bar — a hash, as the replica reads it, so nothing
  * beside the system has to be explained when the result is read.
  */
-export const ACCOUNTS_PAGES = ["tenants", "clients", "enterprises", "partners", "payees", "users", "white-labels"] as const;
+export const ACCOUNTS_PAGES = ["activity", "tenants", "clients", "enterprises", "partners", "payees", "users", "white-labels"] as const;
 export type AccountsPage = (typeof ACCOUNTS_PAGES)[number];
 
 
@@ -28,6 +28,7 @@ export const TENANT_FACETS = [
   "Analytics",
   "Transactions by payor",
   "Notes",
+  "Activity log",
 ] as const;
 export type TenantFacet = (typeof TENANT_FACETS)[number];
 
@@ -43,6 +44,7 @@ export const TENANT_GROUPS: Partial<Record<TenantFacet, string>> = {
   Analytics: "Settings",
   "Transactions by payor": "Activity",
   Notes: "Activity",
+  "Activity log": "Activity",
 };
 
 /** The facets of the records the other Accounts pages open, each in the order its nav lists them. */
@@ -135,6 +137,8 @@ function read(hash: string): Route {
   if (page === "tenants" && tenantForm) return { name: "tenant-form", id, form: tenantForm };
 
   switch (page) {
+    case "activity":
+      return { name: "accounts", page: "activity" };
     case "tenants":
       return { name: "tenant", id, facet: facetOf(TENANT_FACETS, facet) };
     case "clients":

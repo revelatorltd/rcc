@@ -18,6 +18,7 @@ import {
   type EnterpriseFacet,
 } from "../route";
 import { EnterprisePayees, EnterpriseUsers } from "./account-tables";
+import { activityOf, activityPanel, impersonateClient } from "./activity";
 import { editCommand, enterpriseMark } from "./enterprises";
 import { enterpriseById, payees, usersOf, type Enterprise } from "./mock";
 
@@ -85,7 +86,8 @@ export function EnterpriseDetail({ id, facet }: { id: string; facet: EnterpriseF
         kind: "Client account",
         facts: [{ identifier: enterprise.enterpriseId, standard: "id" }],
         actions: [editCommand(enterprise)],
-        more: [{ label: "Open parent", opens: tenantHref(parent.enterpriseId) }],
+        more: [{ label: "Open parent", opens: tenantHref(parent.enterpriseId) }, impersonateClient(enterprise)],
+        activity: activityPanel(activityOf("Client", enterprise.enterpriseId)),
       }}
       facet={shown.header}
     >

@@ -5,6 +5,7 @@ import "@revelator/pro-ui/styles.css";
 import { TodayProvider, type ShellPlace } from "@revelator/pro-ui";
 
 import { EnterpriseDetail, enterprisePlace } from "./accounts/enterprise";
+import { ActivityLog } from "./accounts/activity";
 import { Clients } from "./accounts/clients";
 import { Enterprises } from "./accounts/enterprises";
 import { PartnerDetail, partnerPlace } from "./accounts/partner";
@@ -34,6 +35,7 @@ import { Frame } from "./shell";
 
 /** Each Accounts page, by the name its nav entry gives it. */
 const PAGE_NAMES: Record<AccountsPage, string> = {
+  activity: "Activity log",
   tenants: "Tenants",
   clients: "Clients",
   enterprises: "Enterprises",
@@ -154,6 +156,7 @@ function pageOf(route: Route) {
   if (route.name === "payee") return <PayeeDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "user") return <UserDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
   if (route.name === "white-label") return <WhiteLabelDetail key={`${route.id}/${route.facet}`} id={route.id} facet={route.facet} />;
+  if (route.name === "accounts" && route.page === "activity") return <ActivityLog />;
   if (route.name === "accounts" && route.page === "clients") return <Clients />;
   if (route.name === "accounts" && route.page === "enterprises") return <Enterprises />;
   if (route.name === "accounts" && route.page === "partners") return <Partners />;

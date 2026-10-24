@@ -12,6 +12,7 @@ import {
 
 import { PARTNER_FACETS, accountsHref, partnerHref, tenantHref, userHref, type PartnerFacet } from "../route";
 import { PARTNERS, partnerById, tenantsOfPartner } from "./mock";
+import { activityOf, activityPanel } from "./activity";
 import { EditPartner, partnerMark, usersOfPartner } from "./partners";
 import { tenantMark } from "./tenants";
 
@@ -97,6 +98,7 @@ export function PartnerDetail({ id, facet }: { id: string; facet: PartnerFacet }
         kind: "API partner",
         facts: [{ identifier: partner.id, standard: "id" }, { as: "count", value: sandboxes.length, noun: { one: "sandbox", many: "sandboxes" } }],
         actions: [{ label: "Edit", dialog: <EditPartner partner={partner} /> }],
+        activity: activityPanel(activityOf("Partner", partner.id)),
       }}
       facet={shown.header}
     >

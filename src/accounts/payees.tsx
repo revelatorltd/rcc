@@ -2,6 +2,7 @@ import { Avatar, Badge, Chip, CollectionPage, Field, FormDialog, owed, type Held
 
 import { payeeHref } from "../route";
 import { enterpriseMark, enterprisePicture } from "./enterprises";
+import { impersonatePayee } from "./activity";
 import { payees, updatePayee, type Payee, type PayeeStatus } from "./mock";
 
 const yesNo = (value: boolean) => (value ? "Yes" : "No");
@@ -157,6 +158,7 @@ export function Payees() {
         commands: (one) => [
           { label: "Open", opens: payeeHref(one.payeeId) },
           { label: "Edit tax domicile country", dialog: <EditTaxCountry payee={one} /> },
+          impersonatePayee(one),
           // Transactions are Finance's, a section this rebuild does not hold.
           { label: "Transactions" },
         ],

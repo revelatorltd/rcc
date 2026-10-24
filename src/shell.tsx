@@ -28,6 +28,7 @@ const PRODUCT: ShellProduct = {
             { name: "Tenants", opens: accountsHref("tenants") },
             { name: "Clients", opens: accountsHref("clients") },
             { name: "Users", opens: accountsHref("users") },
+            { name: "Activity log", opens: accountsHref("activity") },
           ],
         },
         // ON THEIR WAY OUT: still opened, listed apart so nobody starts new work there.

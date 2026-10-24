@@ -533,13 +533,16 @@ export function addClient(parentId: string, name: string, currency?: string): st
 /** A tenant signed up — its enterprise, its payee and its owner — in front of the set. */
 export function addTenant(tenant: Tenant): string {
   TENANTS = [tenant, ...TENANTS];
+  record({ category: "Details", resource: { type: "Tenant", id: tenant.enterpriseId, name: tenant.name }, tenantId: tenant.enterpriseId, entries: [{ action: "signed up the tenant" }] });
   changed();
   return tenant.enterpriseId;
 }
 
 /** A tenant changed where the patch says. */
 export function updateTenant(id: string, patch: Partial<Tenant>) {
+  const before = TENANTS.find((one) => one.enterpriseId === id);
   TENANTS = TENANTS.map((one) => (one.enterpriseId === id ? { ...one, ...patch } : one));
+  if (before) recordTenantChange(before, { ...before, ...patch }, patch);
   changed();
 }
 
@@ -557,7 +560,7 @@ export function saveIntegration(id: string, integration: Integration) {
 }
 
 /** Who is signed in to RCC — the author of what is written here. */
-export const OPERATOR = "Ines Calder";
+export const OPERATOR = "Noa Lindqvist";
 
 /** A note written about a tenant, as today's, by whoever is signed in. */
 export function addNote(id: string, content: string, author = OPERATOR) {
@@ -778,8 +781,17 @@ export interface EnterpriseCore {
  * moved to another parent where one was picked — and its settings.
  */
 export function saveEnterprise(id: string, core: EnterpriseCore, settings: Partial<EnterpriseSettings>, parentId?: string) {
+  const was = settingsOf(id);
   ENTERPRISE_SETTINGS = { ...ENTERPRISE_SETTINGS, [id]: { ...ENTERPRISE_SETTINGS[id], ...settings } };
   const tenant = TENANTS.find((one) => one.enterpriseId === id);
+  const holder = tenant ?? TENANTS.find((one) => one.children.some((each) => each.enterpriseId === id));
+  const named = tenant?.name ?? holder?.children.find((each) => each.enterpriseId === id)?.name ?? core.name;
+  record({
+    category: "Settings",
+    resource: { type: tenant ? "Tenant" : "Client", id, name: named },
+    tenantId: holder?.enterpriseId,
+    entries: changedLines(was, settingsOf(id), undefined, days),
+  });
   if (tenant) return updateTenant(id, core);
   const parent = TENANTS.find((one) => one.children.some((each) => each.enterpriseId === id));
   if (!parent) return changed();
@@ -787,6 +799,7 @@ export function saveEnterprise(id: string, core: EnterpriseCore, settings: Parti
   const to = parentId && parentId !== parent.enterpriseId ? TENANTS.find((one) => one.enterpriseId === parentId) : undefined;
   if (!to) return updateTenant(parent.enterpriseId, { children: parent.children.map((each) => (each.enterpriseId === id ? saved : each)) });
   // MOVED: it leaves one parent's client accounts and joins another's.
+  record({ category: "People", resource: { type: "Client", id, name: saved.name }, tenantId: to.enterpriseId, entries: [{ action: "moved the client account", property: "Parent enterprise", changes: [{ before: parent.name, after: to.name }] }] });
   TENANTS = TENANTS.map((one) =>
     one.enterpriseId === parent.enterpriseId
       ? { ...one, children: one.children.filter((each) => each.enterpriseId !== id) }
@@ -799,6 +812,7 @@ export function saveEnterprise(id: string, core: EnterpriseCore, settings: Parti
 
 /** How long a tenant's analytics are kept, changed on its own. */
 export function updateAnalytics(id: string, analytics: TenantAnalytics) {
+  const was = settingsOf(id);
   ENTERPRISE_SETTINGS = {
     ...ENTERPRISE_SETTINGS,
     [id]: {
@@ -809,6 +823,12 @@ export function updateAnalytics(id: string, analytics: TenantAnalytics) {
       v3TrendsDays: analytics.v3TrendsDays,
     },
   };
+  record({
+    category: "Settings",
+    resource: { type: "Tenant", id, name: tenantById(id).name },
+    tenantId: id,
+    entries: changedLines(was, settingsOf(id), ["analyticsEnabled", "trendsDays", "revenueDays", "v3TrendsDays"], days),
+  });
   changed();
 }
 
@@ -844,12 +864,16 @@ export const tenantsOfPartner = (id: string) => TENANTS.filter((one) => one.part
 export function addPartner(partner: Omit<Partner, "id" | "created">): string {
   const id = after(PARTNERS.map((one) => one.id), 1);
   PARTNERS = [{ ...partner, id, created: TODAY }, ...PARTNERS];
+  record({ category: "Details", resource: { type: "Partner", id, name: partner.name }, entries: [{ action: "created the partner" }] });
   changed();
   return id;
 }
 
 export function updatePartner(id: string, patch: Partial<Partner>) {
+  const before = PARTNERS.find((one) => one.id === id);
   PARTNERS = PARTNERS.map((one) => (one.id === id ? { ...one, ...patch } : one));
+  const after = PARTNERS.find((one) => one.id === id);
+  if (before && after) record({ category: "Details", resource: { type: "Partner", id, name: after.name }, entries: changedLines(before, after, Object.keys(patch)) });
   changed();
 }
 
@@ -950,7 +974,16 @@ export function payees(): readonly Payee[] {
 export const payeeById = (id: string) => payees().find((one) => one.payeeId === id);
 
 export function updatePayee(id: string, patch: Partial<Pick<Payee, "taxCountry" | "settingsAllowed">>) {
+  const before = payeeById(id);
   PAYEE_EDITS = { ...PAYEE_EDITS, [id]: { ...PAYEE_EDITS[id], ...patch } };
+  const after = payeeById(id);
+  if (before && after)
+    record({
+      category: "Details",
+      resource: { type: "Payee", id, name: after.name },
+      tenantId: (after.enterprise.tenant ?? after.enterprise.parent)?.enterpriseId,
+      entries: changedLines(before, after, Object.keys(patch)),
+    });
   changed();
 }
 
@@ -1027,7 +1060,16 @@ export function accounts(): readonly Account[] {
 export const accountById = (id: string) => accounts().find((one) => one.userId === id);
 
 export function updateAccount(email: string, patch: AccountEdit) {
+  const before = accounts().find((one) => one.email === email);
   USER_EDITS = { ...USER_EDITS, [email]: { ...USER_EDITS[email], ...patch } };
+  const after = accounts().find((one) => one.email === email);
+  if (before && after)
+    record({
+      category: "Details",
+      resource: { type: "User", id: after.userId, name: after.name },
+      tenantId: after.memberships[0]?.tenant.enterpriseId,
+      entries: changedLines(before, after, Object.keys(patch)),
+    });
   changed();
 }
 
@@ -1065,12 +1107,18 @@ export const nextWhiteLabelId = () => String(Math.max(...whiteLabels().map((one)
 
 /** A white label saved where it is kept: on the tenant it now loads, or among Revelator's own. */
 export function saveWhiteLabel(label: WhiteLabel, tenantId?: string) {
+  const before = whiteLabelById(label.id);
   LOOSE_WHITE_LABELS = LOOSE_WHITE_LABELS.filter((one) => one.id !== label.id);
   TENANTS = TENANTS.map((one) =>
     one.whiteLabel?.id === label.id && one.enterpriseId !== tenantId ? { ...one, whiteLabel: undefined } : one,
   );
   if (tenantId) updateTenant(tenantId, { whiteLabel: label });
   else {
+    record({
+      category: "Settings",
+      resource: { type: "White label", id: label.id, name: label.domain },
+      entries: before ? changedLines(before, label, Object.keys(label)) : [{ action: "created the white label", property: "Domain", changes: [{ after: label.domain }] }],
+    });
     LOOSE_WHITE_LABELS = [...LOOSE_WHITE_LABELS, label];
     changed();
   }
@@ -1078,7 +1126,230 @@ export function saveWhiteLabel(label: WhiteLabel, tenantId?: string) {
 
 /** A white label deleted — its tenant, if it had one, no longer loads. */
 export function deleteWhiteLabel(id: string) {
+  const label = whiteLabelById(id);
+  if (label)
+    record({ category: "Settings", resource: { type: "White label", id, name: label.domain }, tenantId: label.tenant?.enterpriseId, entries: [{ action: "deleted the white label" }] });
   LOOSE_WHITE_LABELS = LOOSE_WHITE_LABELS.filter((one) => one.id !== id);
   TENANTS = TENANTS.map((one) => (one.whiteLabel?.id === id ? { ...one, whiteLabel: undefined } : one));
+  changed();
+}
+
+/* ---------- Activity ---------- */
+
+/** What a record is, as the activity log names it. */
+export type ResourceType = "Tenant" | "Client" | "Payee" | "User" | "White label" | "Partner";
+
+/** What a save was about — the part of a record it touched, or a sign-in as someone. */
+export type ActivityCategory = "Impersonation" | "Details" | "People" | "Settings" | "Setup" | "Notes";
+export const ACTIVITY_CATEGORIES: readonly ActivityCategory[] = ["Impersonation", "Details", "People", "Settings", "Setup", "Notes"];
+
+/** The record a save was made on. */
+export interface ActivityResource {
+  type: ResourceType;
+  id: string;
+  name: string;
+}
+
+/** One value that moved, and the part of the property it belongs to. */
+export interface ActivityLineChange {
+  subProperty?: string;
+  before?: string;
+  after?: string;
+}
+
+/** One thing a save did: the act, the property it touched, and what moved. */
+export interface ActivityLine {
+  action: string;
+  property?: string;
+  changes?: ActivityLineChange[];
+}
+
+/**
+ * ONE SAVE: everything one person — or the system — did to one record at one moment, and why where
+ * it was a sign-in as someone. Kept at the resource level, so every record reads its own history and
+ * the log reads all of them.
+ */
+export interface ActivityEvent {
+  id: string;
+  at: Date;
+  actor: string;
+  /** Done by the system, not a person: a lock on an unpaid invoice, an import. */
+  machine?: boolean;
+  category: ActivityCategory;
+  resource: ActivityResource;
+  /** The tenant it happened in, where it happened in one. */
+  tenantId?: string;
+  entries: readonly ActivityLine[];
+  reason?: string;
+}
+
+/** The person signed in to RCC — the actor of everything done here. */
+export const SIGNED_IN = "Noa Lindqvist";
+
+const at = (year: number, month: number, date: number, hour: number, minute: number) => new Date(year, month - 1, date, hour, minute);
+
+/** What happened before this session — invented, as every fixture here is. */
+let ACTIVITY: readonly ActivityEvent[] = [
+  { id: "a-14", at: at(2026, 10, 15, 16, 42), actor: "Ines Calder", category: "Impersonation", resource: { type: "Tenant", id: "606402", name: "Opaline" }, tenantId: "606402", reason: "Clémence reported the royalty statement for September shows the wrong currency; checking what she sees.", entries: [{ action: "signed in as Clémence Roy in V2", property: "Reason", changes: [{ after: "Clémence reported the royalty statement for September shows the wrong currency; checking what she sees." }] }] },
+  { id: "a-13", at: at(2026, 10, 15, 11, 5), actor: "Dario Mendel", category: "Settings", resource: { type: "Tenant", id: "604377", name: "Eastgate Music" }, tenantId: "604377", entries: [{ action: "changed", property: "Master channel enabled", changes: [{ before: "Not set", after: "Yes" }] }, { action: "changed", property: "Feature.fm enabled", changes: [{ before: "Not set", after: "Yes" }] }] },
+  { id: "a-12", at: at(2026, 10, 14, 9, 30), actor: "Noa Lindqvist", category: "Details", resource: { type: "Tenant", id: "612240", name: "Saltmarsh Tapes" }, tenantId: "612240", entries: [{ action: "signed up the tenant" }] },
+  { id: "a-11", at: at(2026, 10, 13, 17, 12), actor: "Ines Calder", category: "Impersonation", resource: { type: "Payee", id: "915602", name: "Elbe Strings" }, tenantId: "604377", reason: "Payee can't see the August statement in the portal.", entries: [{ action: "signed in as Katrin Lüders in API", property: "Reason", changes: [{ after: "Payee can't see the August statement in the portal." }] }] },
+  { id: "a-10", at: at(2026, 10, 10, 14, 0), actor: "Dario Mendel", category: "People", resource: { type: "Tenant", id: "598215", name: "Bluefen Distribution" }, tenantId: "598215", entries: [{ action: "gave Astrid Holm access", property: "Access", changes: [{ after: "Artist Portal" }] }] },
+  { id: "a-09", at: at(2026, 10, 8, 10, 24), actor: "Noa Lindqvist", category: "Settings", resource: { type: "Tenant", id: "609881", name: "Corvid Lane" }, tenantId: "609881", entries: [{ action: "connected PayPal" }] },
+  { id: "a-08", at: at(2026, 10, 1, 8, 0), actor: "System", machine: true, category: "Details", resource: { type: "Tenant", id: "605118", name: "Brackenridge Audio" }, tenantId: "605118", entries: [{ action: "changed", property: "Locked out", changes: [{ before: "No", after: "Yes" }] }, { action: "changed", property: "Payment blocked", changes: [{ before: "No", after: "Yes" }] }] },
+  { id: "a-07", at: at(2026, 9, 30, 15, 10), actor: "Ines Calder", category: "Notes", resource: { type: "Tenant", id: "605118", name: "Brackenridge Audio" }, tenantId: "605118", entries: [{ action: "added a note", property: "Note", changes: [{ after: "Locked out and payment blocked over the unpaid June invoice. Unlock only once Finance confirms." }] }] },
+  { id: "a-06", at: at(2026, 9, 22, 12, 40), actor: "Ines Calder", category: "Impersonation", resource: { type: "User", id: "rui@corvidlane.com", name: "Rui Tanaka" }, tenantId: "609881", reason: "Rui can't upload artwork larger than 5 MB.", entries: [{ action: "signed in as Rui Tanaka in V2", property: "Reason", changes: [{ after: "Rui can't upload artwork larger than 5 MB." }] }] },
+  { id: "a-05", at: at(2026, 8, 18, 9, 15), actor: "Ines Calder", category: "Notes", resource: { type: "Tenant", id: "606402", name: "Opaline" }, tenantId: "606402", entries: [{ action: "added a note", property: "Note", changes: [{ after: "Client accounts import in batches of 50: the template times out above that." }] }] },
+  { id: "a-04", at: at(2026, 8, 14, 11, 2), actor: "Bulk Import", machine: true, category: "People", resource: { type: "Client", id: "606511", name: "Maison Brune" }, tenantId: "606402", entries: [{ action: "created the client account" }] },
+  { id: "a-03", at: at(2026, 7, 9, 16, 30), actor: "Dario Mendel", category: "Settings", resource: { type: "Tenant", id: "606402", name: "Opaline" }, tenantId: "606402", entries: [{ action: "changed", property: "Revenue retention", changes: [{ before: "730 days", after: "1095 days" }] }] },
+];
+
+/** Every save, newest first. */
+export const activity = (): readonly ActivityEvent[] => [...ACTIVITY].sort((a, b) => b.at.getTime() - a.at.getTime());
+
+/** A save written to the log, as the person signed in did it now. */
+function record(event: Omit<ActivityEvent, "id" | "at" | "actor"> & Partial<Pick<ActivityEvent, "actor">>) {
+  if (!event.entries.length) return;
+  ACTIVITY = [{ id: `a-${Date.now()}-${ACTIVITY.length}`, at: new Date(), actor: SIGNED_IN, ...event }, ...ACTIVITY];
+}
+
+/** A value as the log writes it — words, never markup; none where it had none. */
+const shown = (value: unknown): string | undefined =>
+  value === undefined || value === ""
+    ? undefined
+    : value === null
+      ? "Not set"
+      : typeof value === "boolean"
+        ? value ? "Yes" : "No"
+        : typeof value === "number" || typeof value === "string"
+          ? String(value)
+          : undefined;
+
+/** The words a field is known by — its own where the form gives one, else its name read aloud. */
+const LABELS: Readonly<Record<string, string>> = {
+  onTrial: "On trial",
+  lockedOut: "Locked out",
+  paymentBlocked: "Payment blocked",
+  fusionAuth: "Uses FusionAuth",
+  minimumPayment: "Minimum payment",
+  partnerId: "Partner ID",
+  taxCountry: "Tax domicile country",
+  authTenantId: "Auth tenant ID",
+  authClientId: "Auth client ID",
+  featureFm: "Feature.fm enabled",
+  marketplacePage: "Marketplace page enabled",
+  masterChannel: "Master channel enabled",
+  minAudioLength: "Minimum audio length validated",
+  noTransactionalEmails: "Transactional emails turned off",
+  domainV2: "Domain V2",
+  authBaseUrl: "Auth base URL",
+  enabled: "White label enabled",
+  trendsDays: "Trends retention",
+  revenueDays: "Revenue retention",
+  v3TrendsDays: "V3 trends retention",
+  analyticsEnabled: "Analytics enabled",
+  settingsAllowed: "Payee settings changes allowed",
+  partnerUserId: "Partner user ID",
+};
+const labelOf = (key: string) => LABELS[key] ?? key.replace(/([A-Z])/g, " $1").replace(/^./, (first) => first.toUpperCase()).replace(/ ([A-Z])/g, (_, c: string) => ` ${c.toLowerCase()}`);
+
+/** What moved between two versions of a record, field by field, in the order the record lists them. */
+function changedLines(before: object, after: object, only?: readonly string[], unit = (_key: string, value?: string) => value): ActivityLine[] {
+  const b = before as Record<string, unknown>;
+  const a = after as Record<string, unknown>;
+  const keys = only ?? [...new Set([...Object.keys(b), ...Object.keys(a)])];
+  return keys.flatMap((key) => {
+    const was = unit(key, shown(b[key]));
+    const is = unit(key, shown(a[key]));
+    return was === is || (was === undefined && is === undefined) ? [] : [{ action: "changed", property: labelOf(key), changes: [{ before: was, after: is }] }];
+  });
+}
+
+const days = (key: string, value?: string) => (value && /Days$/.test(key) ? `${value} days` : value);
+
+const DETAIL_FIELDS = ["name", "onTrial", "lockedOut", "paymentBlocked", "currency", "minimumPayment", "partnerId", "taxCountry"] as const;
+const SETTING_FIELDS = ["environment", "domain", "fusionAuth"] as const;
+const CLIENT_FIELDS = ["name", "onTrial", "lockedOut", "paymentBlocked", "partnerId", "currency", "minimumPayment"] as const;
+
+const storeState = (one: TenantStore) => (one.active && one.displayed ? "On" : one.active ? "On, hidden" : "Off");
+
+/** Everything a change to a tenant did, filed by what it touched — and a client account's own. */
+function recordTenantChange(before: Tenant, after: Tenant, patch: Partial<Tenant>) {
+  const resource: ActivityResource = { type: "Tenant", id: before.enterpriseId, name: after.name };
+  const lines: Record<ActivityCategory, ActivityLine[]> = { Impersonation: [], Details: [], People: [], Settings: [], Setup: [], Notes: [] };
+  const keys = Object.keys(patch) as (keyof Tenant)[];
+  const has = (key: keyof Tenant) => keys.includes(key);
+
+  lines.Details.push(...changedLines(before, after, DETAIL_FIELDS.filter(has)));
+  lines.Settings.push(...changedLines(before, after, SETTING_FIELDS.filter(has)));
+  if (has("rates")) {
+    const changes = (["dsp", "ugc", "youtube"] as const)
+      .filter((key) => before.rates[key] !== after.rates[key])
+      .map((key) => ({ subProperty: { dsp: "DSP rate", ugc: "UGC rate", youtube: "YouTube channel rate" }[key], before: `${before.rates[key]}%`, after: `${after.rates[key]}%` }));
+    if (changes.length) lines.Details.push({ action: "changed", property: "Distribution contract", changes });
+  }
+  if (has("owner") || has("team")) {
+    const people = (one: Tenant) => new Map([one.owner, ...one.team].map((each) => [each.email, each as TeamMember]));
+    const was = people(before);
+    const is = people(after);
+    for (const [email, one] of is)
+      if (!was.has(email)) lines.People.push({ action: `gave ${one.name} access`, property: "Access", changes: [{ after: one.access ?? "Team Members" }] });
+      else if ((was.get(email)!.access ?? "Team Members") !== (one.access ?? "Team Members"))
+        lines.People.push({ action: "changed", property: `${one.name}'s access`, changes: [{ before: was.get(email)!.access ?? "Team Members", after: one.access ?? "Team Members" }] });
+    for (const [email, one] of was) if (!is.has(email)) lines.People.push({ action: `removed ${one.name}'s access` });
+    if (before.owner.email !== after.owner.email) lines.People.push({ action: `made ${after.owner.name} the owner`, property: "Owner", changes: [{ before: before.owner.name, after: after.owner.name }] });
+  }
+  if (has("stores") || has("storesLive")) {
+    const was = new Map(storesOf(before).map((one) => [one.name, storeState(one)]));
+    const changes = storesOf(after).flatMap((one) =>
+      was.get(one.name) !== undefined && was.get(one.name) !== storeState(one) ? [{ subProperty: one.name, before: was.get(one.name), after: storeState(one) }] : [],
+    );
+    if (changes.length) lines.Settings.push({ action: "switched", property: "DSPs", changes });
+  }
+  if (has("integrations")) {
+    const was = new Map(integrationsOf(before).map((one) => [one.providerId, one]));
+    for (const one of integrationsOf(after)) {
+      const prior = was.get(one.providerId);
+      if (!prior) lines.Settings.push({ action: `connected ${one.provider}`, property: "Provider ID", changes: [{ after: one.providerId }] });
+      else if (prior.connected !== one.connected) lines.Settings.push({ action: `${one.connected ? "reconnected" : "disconnected"} ${one.provider}` });
+    }
+  }
+  if (has("config")) lines.Settings.push(...changedLines(configDefaultsOf(before), configDefaultsOf(after)));
+  if (has("whiteLabel")) {
+    if (!before.whiteLabel && after.whiteLabel) lines.Settings.push({ action: "created the white label", property: "Domain", changes: [{ after: after.whiteLabel.domain }] });
+    else if (before.whiteLabel && !after.whiteLabel) lines.Settings.push({ action: "removed the white label" });
+    else if (before.whiteLabel && after.whiteLabel) lines.Settings.push(...changedLines(before.whiteLabel, after.whiteLabel));
+  }
+  if (has("tested") && after.tested && !before.tested) lines.Setup.push({ action: "marked the login tested" });
+  if (has("emailed") && after.emailed && !before.emailed) lines.Setup.push({ action: "copied the handover email" });
+  if (has("notes")) {
+    const was = new Map((before.notes ?? []).map((one) => [one.id, one]));
+    const is = new Map((after.notes ?? []).map((one) => [one.id, one]));
+    for (const [id, one] of is) if (!was.has(id)) lines.Notes.push({ action: "added a note", property: "Note", changes: [{ after: one.content }] });
+    for (const [id, one] of was) if (!is.has(id)) lines.Notes.push({ action: "deleted a note", property: "Note", changes: [{ before: one.content }] });
+  }
+  for (const category of ACTIVITY_CATEGORIES) record({ category, resource, tenantId: before.enterpriseId, entries: lines[category] });
+
+  // A CLIENT ACCOUNT'S own history: made here, or changed on its own form.
+  if (has("children")) {
+    const was = new Map(before.children.map((one) => [one.enterpriseId, one]));
+    for (const one of after.children) {
+      const client: ActivityResource = { type: "Client", id: one.enterpriseId, name: one.name };
+      const prior = was.get(one.enterpriseId);
+      if (!prior) record({ category: "People", resource: client, tenantId: before.enterpriseId, entries: [{ action: "created the client account" }] });
+      else record({ category: "Details", resource: client, tenantId: before.enterpriseId, entries: changedLines(prior, one, CLIENT_FIELDS) });
+    }
+  }
+}
+
+/** A sign-in as someone else — who, where, and why — written to the log before it happens. */
+export function recordImpersonation(input: { tenantId: string; resource: ActivityResource; as: string; surface: string; reason: string }) {
+  record({
+    category: "Impersonation",
+    resource: input.resource,
+    tenantId: input.tenantId,
+    reason: input.reason,
+    entries: [{ action: `signed in as ${input.as} in ${input.surface}`, property: "Reason", changes: [{ after: input.reason }] }],
+  });
   changed();
 }

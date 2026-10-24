@@ -17,6 +17,7 @@ import {
   type WhiteLabelFacet,
 } from "../route";
 import { whiteLabelById, whiteLabels } from "./mock";
+import { activityOf, activityPanel } from "./activity";
 import { DeleteWhiteLabel, WhiteLabelFacts, whiteLabelMark } from "./white-labels";
 
 /** The white label the address names, or the first. */
@@ -54,6 +55,7 @@ export function WhiteLabelDetail({ id, facet }: { id: string; facet: WhiteLabelF
         facts: [{ identifier: label.id, standard: "id" }, { text: label.tenant ? label.tenant.name : "Revelator's own" }],
         actions: [{ label: "Edit", opens: editWhiteLabelHref(label.id) }],
         more,
+        activity: activityPanel(activityOf("White label", label.id)),
       }}
       facet={shown.header}
     >

@@ -16,6 +16,7 @@ import {
 
 import { editUserHref, go, userHref } from "../route";
 import { PARTNERS, accountById, accounts, partnerById, updateAccount, usersOf, type Account } from "./mock";
+import { Impersonate } from "./activity";
 
 /** A user, as the mark a person is known by — round, their initials. */
 export const userMark = (one: { name: string }) => <Avatar kind="person" name={one.name} />;
@@ -168,8 +169,13 @@ export function Users() {
         commands: (one) => [
           { label: "Open", opens: userHref(one.userId) },
           { label: "Edit", opens: editUserHref(one.userId) },
-          // Signing in as them leaves RCC, which this rebuild does not model.
-          { label: "Impersonate" },
+          // A sign-in as them, in the first tenant that gave them access — asked why, and logged.
+          one.memberships[0]
+            ? {
+                label: "Impersonate",
+                dialog: <Impersonate tenant={one.memberships[0].tenant} as={one.name} resource={{ type: "User", id: one.userId, name: one.name }} />,
+              }
+            : { label: "Impersonate", unavailable: "They have access to no tenant." },
         ],
       }}
     />

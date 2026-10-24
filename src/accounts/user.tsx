@@ -14,6 +14,7 @@ import {
 
 import { USER_FACETS, accountsHref, editUserHref, partnerHref, tenantHref, userHref, type UserFacet } from "../route";
 import { accountById, accounts, partnerById, type Account, type Membership } from "./mock";
+import { Impersonate, activityOf, activityPanel } from "./activity";
 import { RemoveAccess, SetOwner } from "./tenant-dialogs";
 import { tenantMark } from "./tenants";
 import { generatePartnerUserId, userMark } from "./users";
@@ -104,8 +105,13 @@ export function UserDetail({ id, facet }: { id: string; facet: UserFacet }) {
 
   const more: Command[] = [
     ...(owesId ? [{ label: "Generate partner user ID", opens: generatePartnerUserId(user) }] : []),
-    // Signing in as them leaves RCC, which this rebuild does not model.
-    { label: "Impersonate" },
+    // A sign-in as them, in the first tenant that gave them access — asked why, and logged.
+    user.memberships[0]
+      ? {
+          label: "Impersonate",
+          dialog: <Impersonate tenant={user.memberships[0].tenant} as={user.name} resource={{ type: "User", id: user.userId, name: user.name }} />,
+        }
+      : { label: "Impersonate", unavailable: "They have access to no tenant." },
   ];
 
   return (
@@ -116,6 +122,7 @@ export function UserDetail({ id, facet }: { id: string; facet: UserFacet }) {
         facts: [{ identifier: user.userId, standard: "id" }, { text: user.email }],
         actions: [{ label: "Edit user", opens: editUserHref(user.userId) }],
         more,
+        activity: activityPanel(activityOf("User", user.userId)),
       }}
       facet={shown.header}
     >
