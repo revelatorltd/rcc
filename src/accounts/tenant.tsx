@@ -81,7 +81,8 @@ function commandOf(one: Tenant, step: SetupStep): Command {
         ? { label: "Open white label", opens: tenantHref(one.enterpriseId, "White label") }
         : { label: "Create white label", opens: tenantFormHref(one.enterpriseId, "new-white-label") };
     case "stores":
-      return { label: step.done ? "Open DSPs" : "Turn on DSPs", opens: tenantHref(one.enterpriseId, "DSPs") };
+      // Turning them on is the DSPs facet's own command: the step leads there.
+      return { label: "Open DSPs", opens: tenantHref(one.enterpriseId, "DSPs") };
     case "partner":
       return one.partnerId
         ? { label: "Open partner", opens: partnerHref(one.partnerId) }
@@ -118,13 +119,11 @@ const owedOf = (one: Tenant) => setupOf(one).find((step) => !step.done && !step.
 /**
  * One tenant, as a record with facets.
  *
- * The band says WHO, and the one step owed next; every facet below it is a page of its own. The
+ * The band says WHO; every facet below it is a page of its own, leading with its own command. The
  * Overview reads none of them in full: it is the recap, one tile per facet with the way in.
  */
 export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) {
   const tenant = tenantById(id);
-  const owed = owedOf(tenant);
-  const next = owed ? commandOf(tenant, owed) : undefined;
 
   // DSPs still off, which the DSPs facet's one command turns on and shows together.
   const stores = storesOf(tenant);
@@ -135,14 +134,8 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
   // facet never wears another's.
   const FACETS: Record<TenantFacet, { header?: DetailFacet; body: ReactNode }> = {
     Overview: { body: <TenantOverview tenant={tenant} /> },
-    Setup: {
-      // The step owed next; a tenant handed over owes none.
-      header: {
-        name: "Setup",
-        actions: next ? [next.opens ? { label: next.label, opens: next.opens, primary: true } : { label: next.label, primary: true }] : [],
-      },
-      body: <TenantSetup tenant={tenant} />,
-    },
+    // Each step carries its own command in its row: the header adds none.
+    Setup: { header: { name: "Setup" }, body: <TenantSetup tenant={tenant} /> },
     Details: {
       header: { name: "Details", actions: [{ label: "Edit enterprise", opens: editEnterpriseHref(tenant.enterpriseId), primary: true }] },
       body: <TenantDetails tenant={tenant} />,
