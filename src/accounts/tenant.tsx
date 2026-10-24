@@ -52,7 +52,7 @@ import {
   type Tenant,
   type TenantStore,
 } from "./mock";
-import { AddUser, ConvertToProduction, InviteUser, ResetBalances } from "./tenant-dialogs";
+import { AddUser, ConvertToProduction, CreateClient, InviteUser, ResetBalances } from "./tenant-dialogs";
 import {
   AddNote,
   ConnectProvider,
@@ -152,7 +152,8 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
     Clients: {
       header: {
         name: "Clients",
-        actions: [{ label: "Import client accounts", primary: true, opens: tenantFormHref(tenant.enterpriseId, "import") }],
+        actions: [{ label: "Create client", creates: true, primary: true, dialog: <CreateClient tenant={tenant} /> }],
+        more: [{ label: "Import client accounts", opens: tenantFormHref(tenant.enterpriseId, "import") }],
       },
       body: <TenantClients tenant={tenant} />,
     },

@@ -3,6 +3,7 @@ import { ConfirmationDialog, Field, FormDialog, owed, type HeldBy } from "@revel
 import {
   USER_ACCESS,
   accounts,
+  addClient,
   payees,
   updateTenant,
   usersOf,
@@ -40,6 +41,34 @@ export function ConvertToProduction({ tenant, ...held }: HeldBy & { tenant: Tena
       confirm="Convert"
       onCommit={() => updateTenant(tenant.enterpriseId, { environment: "Production", stores: undefined, storesLive: 0, partnerId: undefined })}
     />
+  );
+}
+
+/** The currencies a client account is paid in. */
+const CURRENCIES = ["USD", "EUR", "GBP", "SEK", "CAD", "AUD", "ILS", "JPY", "BRL", "MXN"];
+
+/**
+ * One client account made on a parent tenant — a catalogue and a payee of its own, paid by the
+ * parent. Many at once are imported from a template instead.
+ */
+export function CreateClient({ tenant, ...held }: HeldBy & { tenant: Tenant }) {
+  return (
+    <FormDialog
+      {...held}
+      confirm="Create"
+      draft={{ name: owed.text, currency: owed<string>(tenant.currency) }}
+      onCommit={(draft) => addClient(tenant.enterpriseId, draft.name.trim(), draft.currency)}
+    >
+      <Field as="text" name="name" label="Name" help="The label or artist the client account is for." />
+      <Field
+        as="choice"
+        name="currency"
+        label="Currency"
+        noun={{ one: "currency", many: "currencies" }}
+        options={CURRENCIES.map((one) => ({ value: one, title: one }))}
+        help={`Its payee is paid by ${tenant.name}, in ${tenant.currency} unless another is picked.`}
+      />
+    </FormDialog>
   );
 }
 

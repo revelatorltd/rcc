@@ -522,6 +522,14 @@ const after = (ids: readonly string[], step: number) => String(Math.max(...ids.m
 export const nextEnterpriseId = () =>
   after([...TENANTS.map((one) => one.enterpriseId), ...TENANTS.flatMap((one) => one.children.map((each) => each.enterpriseId))], 7);
 
+/** A client account made on its parent — its enterprise and its payee — the newest of its clients. */
+export function addClient(parentId: string, name: string, currency?: string): string {
+  const parent = tenantById(parentId);
+  const made = { ...child(nextEnterpriseId(), name, TODAY), ...(currency && currency !== parent.currency ? { currency } : {}) };
+  updateTenant(parentId, { children: [...parent.children, made] });
+  return made.enterpriseId;
+}
+
 /** A tenant signed up — its enterprise, its payee and its owner — in front of the set. */
 export function addTenant(tenant: Tenant): string {
   TENANTS = [tenant, ...TENANTS];
