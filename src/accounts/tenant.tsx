@@ -126,77 +126,101 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
   const owed = owedOf(tenant);
   const next = owed ? commandOf(tenant, owed) : undefined;
 
+  // DSPs still off, which the DSPs facet's one command turns on and shows together.
+  const stores = storesOf(tenant);
+  const off = stores.filter((one) => !one.active || !one.displayed).map((one) => one.name);
+  const migrate = { label: "Migrate to white label", dialog: <MigrateToWhiteLabel tenant={tenant} /> };
+
+  // EACH FACET leads with the one command its page is for — the band holds none of its own, so a
+  // facet never wears another's.
   const FACETS: Record<TenantFacet, { header?: DetailFacet; body: ReactNode }> = {
     Overview: { body: <TenantOverview tenant={tenant} /> },
-    Setup: { header: { name: "Setup" }, body: <TenantSetup tenant={tenant} /> },
-    Details: {
+    Setup: {
+      // The step owed next; a tenant handed over owes none.
       header: {
-        name: "Details",
-        more: [
-          { label: "Edit enterprise", opens: editEnterpriseHref(tenant.enterpriseId) },
-          { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
-        ],
+        name: "Setup",
+        actions: next ? [next.opens ? { label: next.label, opens: next.opens, primary: true } : { label: next.label, primary: true }] : [],
       },
+      body: <TenantSetup tenant={tenant} />,
+    },
+    Details: {
+      header: { name: "Details", actions: [{ label: "Edit enterprise", opens: editEnterpriseHref(tenant.enterpriseId), primary: true }] },
       body: <TenantDetails tenant={tenant} />,
     },
     Users: {
       header: {
         name: "Users",
-        actions: [{ label: "Add user", creates: true, dialog: <AddUser tenant={tenant} /> }],
+        actions: [{ label: "Add user", creates: true, primary: true, dialog: <AddUser tenant={tenant} /> }],
         more: [{ label: "Invite new user", dialog: <InviteUser tenant={tenant} /> }, { label: "Download as CSV" }],
       },
       body: <TenantUsers tenant={tenant} />,
     },
-    Payees: { header: { name: "Payees" }, body: <TenantPayees tenant={tenant} /> },
+    Payees: { header: { name: "Payees", more: [{ label: "Download" }] }, body: <TenantPayees tenant={tenant} /> },
+    Clients: {
+      header: {
+        name: "Clients",
+        actions: [{ label: "Import client accounts", primary: true, opens: tenantFormHref(tenant.enterpriseId, "import") }],
+      },
+      body: <TenantClients tenant={tenant} />,
+    },
+    "Tenant configuration": {
+      header: {
+        name: "Tenant configuration",
+        actions: [{ label: "Edit tenant configuration", primary: true, opens: tenantFormHref(tenant.enterpriseId, "configure") }],
+        more: [migrate],
+      },
+      body: <TenantConfigurationFacet tenant={tenant} />,
+    },
+    "White label": {
+      header: {
+        name: "White label",
+        actions: tenant.whiteLabel
+          ? [{ label: "Edit white label", primary: true, opens: tenantFormHref(tenant.enterpriseId, "edit-white-label") }]
+          : [{ label: "Create white label", primary: true, opens: tenantFormHref(tenant.enterpriseId, "new-white-label") }],
+        more: [migrate],
+      },
+      body: <TenantWhiteLabel tenant={tenant} />,
+    },
+    DSPs: {
+      header: {
+        name: "DSPs",
+        // Every DSP on and shown at once; held DSPs are switched one by one from the table.
+        actions: off.length
+          ? [{ label: off.length === stores.length ? "Turn on DSPs" : "Turn on the rest", primary: true, opens: () => switchStores(tenant.enterpriseId, off, { active: true, displayed: true }) }]
+          : [],
+        more: [
+          ...(off.length < stores.length
+            ? [{ label: "Turn off every DSP", opens: () => switchStores(tenant.enterpriseId, stores.map((one) => one.name), { active: false, displayed: false }) }]
+            : []),
+          { label: "Export" },
+        ],
+      },
+      body: <TenantStores tenant={tenant} />,
+    },
     Integrations: {
-      header: { name: "Integrations", actions: [{ label: "Connect provider", creates: true, dialog: <ConnectProvider tenant={tenant} /> }] },
+      header: {
+        name: "Integrations",
+        actions: [{ label: "Connect provider", creates: true, primary: true, dialog: <ConnectProvider tenant={tenant} /> }],
+      },
       body: <TenantIntegrations tenant={tenant} />,
+    },
+    Analytics: {
+      header: { name: "Analytics", actions: [{ label: "Edit analytics", primary: true, dialog: <EditAnalytics tenant={tenant} /> }] },
+      body: <TenantAnalytics tenant={tenant} />,
     },
     "Transactions by payor": {
       header: { name: "Transactions by payor", more: [{ label: "Export" }] },
       body: <TenantTransactions tenant={tenant} />,
     },
-    DSPs: { header: { name: "DSPs", more: [{ label: "Export" }] }, body: <TenantStores tenant={tenant} /> },
-    Analytics: {
-      header: { name: "Analytics", more: [{ label: "Edit analytics", dialog: <EditAnalytics tenant={tenant} /> }] },
-      body: <TenantAnalytics tenant={tenant} />,
-    },
-    "Tenant configuration": {
-      header: {
-        name: "Tenant configuration",
-        more: [
-          { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
-          { label: "Migrate to white label", dialog: <MigrateToWhiteLabel tenant={tenant} /> },
-        ],
-      },
-      body: <TenantConfigurationFacet tenant={tenant} />,
-    },
     Notes: {
-      header: { name: "Notes", actions: [{ label: "Add note", creates: true, dialog: <AddNote tenant={tenant} /> }] },
+      header: { name: "Notes", actions: [{ label: "Add note", creates: true, primary: true, dialog: <AddNote tenant={tenant} /> }] },
       body: <TenantNotes tenant={tenant} />,
-    },
-    "White label": {
-      header: {
-        name: "White label",
-        more: tenant.whiteLabel ? [{ label: "Edit white label", opens: tenantFormHref(tenant.enterpriseId, "edit-white-label") }] : [],
-      },
-      body: <TenantWhiteLabel tenant={tenant} />,
-    },
-    Clients: {
-      header: { name: "Clients", actions: [{ label: "Import client accounts", opens: tenantFormHref(tenant.enterpriseId, "import") }] },
-      body: <TenantClients tenant={tenant} />,
     },
   };
   const shown = FACETS[facet];
 
-  // ONE command stands out, and it is the step owed next; a tenant handed over owes none. A
-  // sandbox can be moved to production — the rest wait in the overflow.
-  const actions = next
-    ? [next.opens ? { label: next.label, opens: next.opens, primary: true } : { label: next.label, primary: true }]
-    : [];
+  // The band's overflow holds what acts on the TENANT as a whole, wherever the reader is in it.
   const more: Command[] = [
-    { label: "Edit enterprise", opens: editEnterpriseHref(tenant.enterpriseId) },
-    { label: "Edit tenant configuration", opens: tenantFormHref(tenant.enterpriseId, "configure") },
     ...(isSandbox(tenant) ? [{ label: "Convert to production", dialog: <ConvertToProduction tenant={tenant} /> }] : []),
     { label: "Billing" },
     { label: "Reset balances", destructive: true, dialog: <ResetBalances tenant={tenant} /> },
@@ -217,7 +241,6 @@ export function TenantDetail({ id, facet }: { id: string; facet: TenantFacet }) 
           // WHERE ITS RELEASES GO: it changes what every store and step below it means.
           { text: tenant.environment },
         ],
-        actions,
         more,
       }}
       facet={shown.header}
